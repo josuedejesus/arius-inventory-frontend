@@ -17,8 +17,7 @@ export default function StatCard({
 }: StatCardProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-5">
-        {/* Header */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-5 min-w-[300px]">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center justify-center rounded-lg p-3 bg-blue-50 text-blue-600">
             {icon}
@@ -31,6 +30,7 @@ export default function StatCard({
             <p className="text-lg font-semibold text-gray-900">{count}</p>
           </div>
         </div>
+
         <div className="space-y-1 text-sm">{children}</div>
       </div>
     </div>
