@@ -1,9 +1,6 @@
 "use client";
 
 import Modal from "@/app/components/Modal";
-import NewPersonForm from "@/app/dashboard/persons/components/NewPersonForm";
-import SearchBar from "@/app/components/SearchBar";
-import UpdatePersonForm from "@/app/dashboard/persons/components/UpdatePersonForm";
 import PersonCard from "@/app/components/cards/PersonCard";
 import axios from "axios";
 import { useEffect, useState } from "react";

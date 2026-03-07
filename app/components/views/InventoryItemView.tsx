@@ -89,78 +89,8 @@ export default function InventoryItemView({ itemId }: InventoryItemViewProps) {
 
   return (
     <>
-      <div className="space-y-4">
-        {/* TABS */}
-
-        <FormSection title="" description="">
-          <div className="rounded-xl border bg-white p-5 shadow-sm space-y-4">
-            {/* HEADER */}
-            <div className="flex items-center gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {item.name}
-                </h2>
-                <p className="text-sm text-gray-500">
-                  {item.brand} · {item.model || "—"}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-500">
-              Tracking:{" "}
-              <span className="font-medium text-gray-700">
-                {item.tracking === "SERIAL" ? "Por unidad" : "Por cantidad"}
-              </span>
-            </p>
-
-            <div>
-              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={`
-                  h-full transition-all
-                  ${
-                    availabilityPercent > 50
-                      ? "bg-green-500"
-                      : availabilityPercent > 20
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
-                  }
-                `}
-                  style={{ width: `${availabilityPercent}%` }}
-                />
-              </div>
-
-              <p className="text-xs text-gray-500 mt-1">
-                {available} / {existing} ({availabilityPercent}%)
-              </p>
-            </div>
-
-            {/* DESCRIPTION */}
-            {item.description && (
-              <p className="text-sm text-gray-600 border-t pt-3">
-                {item.description}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            {items.length ? (
-              items.map((u: any) => (
-                <ItemUnitCard key={u.id} item={u} onClick={handleSelectUnit} />
-              ))
-            ) : (
-              <p className="text-sm text-gray-400"></p>
-            )}
-          </div>
-        </FormSection>
+      <div className="flex flex-col md:flex-row items-start gap-6">
       </div>
-      <Modal
-        open={showSelectedUnit}
-        title="Articulo"
-        onClose={() => setShowSelectedUnit(false)}
-      >
-        <InventoryUnitView unitId={selectedUnit} />
-      </Modal>
     </>
   );
 }

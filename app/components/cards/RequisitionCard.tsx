@@ -2,13 +2,14 @@ import { REQUISITION_STATUS_LABELS } from "@/constants/RequisitionStatus";
 import { formatDate } from "../../utils/formatters";
 import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
 import { RETURN_STATUS_LABELS } from "@/constants/ReturnStatus";
+import { RequisitionType } from "@/app/dashboard/requisitions/types/requisition-type.enum";
 
 type Requisition = {
   id: number;
   requested_by: number;
   source_location_id: number;
   destination_location_id: number;
-  type: string;
+  type: RequisitionType;
   status: string;
   notes: string;
   created_at: string;
