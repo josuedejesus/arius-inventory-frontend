@@ -22,6 +22,9 @@ import SearchBar from "@/app/components/SearchBar";
 import Modal from "@/app/components/Modal";
 import ItemUnitForm from "./ItemUnitForm";
 import { UpdateItemDto } from "../types/update-item.dto";
+import ItemCard from "./ItemCard";
+import { MdInventory } from "react-icons/md";
+import ItemHeader from "./ItemHeader";
 
 type Item = {
   name: string;
@@ -293,7 +296,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
   const handleGetItemUnits = async () => {
     try {
       const response = await axios.get(`${apiUrl}/item-units/item/${itemId}`);
-      console.log("las unidades son", response.data.data);
       setItemUnits(response.data.data);
     } catch (error: any) {
       console.log(error);
@@ -469,22 +471,8 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 title="Accesorios"
                 description="Accesorios relacionados al articulo"
               >
-                <div className="bg-white rounded-lg border px-4 py-3 space-y-1">
-                  {/* Marca */}
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    {form?.brand}
-                  </p>
+                                <ItemHeader item={form}/>
 
-                  {/* Nombre */}
-                  <p className="text-base font-semibold text-gray-800">
-                    {form?.name}
-                  </p>
-
-                  {/* Modelo */}
-                  <p className="text-sm text-gray-600">
-                    Modelo: <span className="font-medium">{form?.model}</span>
-                  </p>
-                </div>
                 <Autocomplete
                   items={accessories}
                   placeholder="Agregar accesorio..."
@@ -529,22 +517,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 title="Unidades"
                 description="Creacion y edicion de unidades del articulo"
               >
-                <div className="bg-white rounded-lg border px-4 py-3 space-y-1">
-                  {/* Marca */}
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    {form?.brand}
-                  </p>
-
-                  {/* Nombre */}
-                  <p className="text-base font-semibold text-gray-800">
-                    {form?.name}
-                  </p>
-
-                  {/* Modelo */}
-                  <p className="text-sm text-gray-600">
-                    Modelo: <span className="font-medium">{form?.model}</span>
-                  </p>
-                </div>
+                <ItemHeader item={form}/>
 
                 <div className="flex requisitions-center justify-between space-x-2">
                   <SearchBar

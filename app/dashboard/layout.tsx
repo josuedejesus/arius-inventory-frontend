@@ -5,6 +5,8 @@ import Topbar from "../components/Topbar";
 import { Toaster } from "sonner";
 import AuthGuard from "../components/AuthGuard";
 
+
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 

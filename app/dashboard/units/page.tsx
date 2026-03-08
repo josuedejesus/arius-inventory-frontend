@@ -8,6 +8,8 @@ import UnitCard from "@/app/components/cards/UnitCard";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
+import { set } from "date-fns";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -18,43 +20,34 @@ export default function Units() {
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  //Units
   const [units, setUnits] = useState<any>([]);
-
   const [selectedUnit, setSelectedUnit] = useState<any | null>(null);
-
-  //SearchBar
-  const [searchValue, setSearchValue] = useState<string>("");
-
-  const filteredUnits = units.filter((u: any) =>
-    `${u.name} ${u.lastname} ${u.unitname} ${u.email} ${u.phone}`
-      .toLowerCase()
-      .includes(searchValue.toLowerCase()),
-  );
-
-  //Update Unit
   const [showUnitForm, setShowUnitForm] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleGetUnits = () => {
-    axios
-      .get(`${apiUrl}/units`)
-      .then((response) => {
-        console.log(response);
-        setUnits(response.data.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {});
+  const handleGetUnits = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/units`);
+      setUnits(response.data.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
+    setLoading(true);
     handleGetUnits();
   }, []);
 
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="">
-      <div className="flex items-center justify-between space-x-2 pb-4">
+      <div className="flex items-start justify-between space-x-2 pb-4">
         <h1 className="text-2xl font-semibold text-gray-800 mb-6">Unidades</h1>
 
         <button

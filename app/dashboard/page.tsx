@@ -23,6 +23,7 @@ import {
 import ItemPercentageCard from "../components/cards/ItemPercentageCard";
 import { MoonLoader } from "react-spinners";
 import { useSSE } from "@/hooks/userSSE";
+import LoadingScreen from "../components/LoadingScreen";
 
 const columns: ColumnDef<any>[] = [
   { key: "internal_code", title: "Código" },
@@ -174,11 +175,7 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-        <MoonLoader color="#2563eb" />{" "}
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

@@ -18,13 +18,13 @@ type Item = {
 
 type ItemCardProps = {
   item: ItemViewModel;
-  onClick: (item: ItemViewModel) => void;
+  onClick?: (item: ItemViewModel) => void;
 };
 
 export default function ItemCard({ item, onClick }: ItemCardProps) {
   return (
     <div
-      onClick={() => onClick(item)}
+      onClick={() => onClick && onClick(item)}
       className="
     cursor-pointer
     px-4 py-3

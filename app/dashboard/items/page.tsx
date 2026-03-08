@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import ItemForm from "@/app/dashboard/items/components/ItemForm";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Articulo" },
@@ -25,45 +26,31 @@ export default function Items() {
   //Items
   const [items, setItems] = useState<any>([]);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  //SearchBar
-  const [searchValue, setSearchValue] = useState<string>("");
-
-  const filteredItems = items.filter((u: any) =>
-    `${u.name} ${u.model} ${u.brand} ${u.email}`
-      .toLowerCase()
-      .includes(searchValue.toLowerCase()),
-  );
-
-  //New Item
-  const [showNewItem, setShowNewItem] = useState<boolean>(false);
-
-  //Update Item
-  const [showUpdateItem, setShowUpdateItem] = useState<boolean>(false);
-
-  //Item Accessories
-  const [itemAccessories, setItemAccessories] = useState<any[]>([]);
-
-  const handleGetItems = () => {
-    axios
-      .get(`${apiUrl}/items`, {
+  const handleGetItems = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/items`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
-      })
-      .then((response) => {
-        console.log(response.data.data);
-        setItems(response.data.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {});
+      });
+      setItems(response.data.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
+    setLoading(true);
     handleGetItems();
   }, []);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="">

@@ -22,6 +22,7 @@ import { ItemViewModel } from "../types/item-view.model";
 import ItemCard from "./ItemCard";
 import { format } from "path";
 import { formatDate } from "@/app/utils/formatters";
+import ItemHeader from "./ItemHeader";
 
 type ItemUnitFormProps = {
   item?: ItemViewModel;
@@ -102,69 +103,6 @@ export default function ItemUnitForm({
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
-  /*const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const payload = {
-      id: form?.id,
-      item_id: form?.item_id,
-      serial_number: form?.serial_number,
-      internal_code: form?.internal_code,
-      status: form?.status,
-      condition: form?.condition,
-      location_id: form?.location_id,
-      description: form?.description,
-      observations: form?.observations,
-      is_active: form?.is_active,
-    };
-
-    const formData = new FormData();
-
-    formData.append("id", form?.id);
-    formData.append("item_id", form?.item_id);
-    formData.append("serial_number", form?.serial_number);
-    formData.append("internal_code", form?.internal_code);
-    formData.append("status", form?.status);
-    formData.append("condition", form?.condition);
-    formData.append("location_id", form?.location_id);
-    formData.append("description", form?.description);
-    formData.append("observations", form?.observations);
-    formData.append("is_active", String(form?.is_active));
-
-    if (imageFile) {
-      formData.append("image", imageFile);
-    }
-
-    axios
-      .post(`${apiUrl}/item-units/update-item-unit`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        toast.success(response.data.message);
-        onSuccess();
-      })
-      .catch((error) => {
-        if (error.response) {
-          setError(error.response.data.message);
-          toast.error(error.response.data.message);
-        } else {
-          setError(
-            "El servidor no está disponible en este momento. Intente más tarde.",
-          );
-          toast.error(
-            "El servidor no está disponible en este momento. Intente más tarde.",
-          );
-        }
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };*/
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,8 +261,6 @@ export default function ItemUnitForm({
       }
     }
 
-    //handleGetAccessories();
-    //handleGetItemAccessories(item?.id);
   }, []);
 
   return (
@@ -353,22 +289,7 @@ export default function ItemUnitForm({
             apiUrl={apiUrl!}
             onChange={setImageFile}
           />
-          <div className="bg-white px-4 py-3 space-y-1">
-            {/* Marca */}
-            <p className="text-xs text-gray-500 uppercase tracking-wide">
-              {item?.brand}
-            </p>
-
-            {/* Nombre */}
-            <p className="text-base font-semibold text-gray-800">
-              {item?.name}
-            </p>
-
-            {/* Modelo */}
-            <p className="text-sm text-gray-600">
-              Modelo: <span className="font-medium">{item?.model}</span>
-            </p>
-          </div>
+          <ItemHeader item={item} />
         </div>
 
         <FormSection
