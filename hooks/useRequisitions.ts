@@ -19,8 +19,13 @@ export function useRequisitions() {
     }
   };
 
+  const getAll = () => withLoading(() => RequisitionsService.getAll());
+
   const getById = (id: number) =>
     withLoading(() => RequisitionsService.getById(id));
+
+  const create = (dto: any) =>
+    withLoading(() => RequisitionsService.create(dto));
 
   const update = (id: number, dto: any) =>
     withLoading(() => RequisitionsService.update(id, dto));
@@ -28,5 +33,11 @@ export function useRequisitions() {
   const approve = (id: number) =>
     withLoading(() => RequisitionsService.approve(id));
 
-  return { getById, update, approve, loading };
+  const execute = (id: number) =>
+    withLoading(() => RequisitionsService.execute(id));
+
+  const receive = (id: number) =>
+    withLoading(() => RequisitionsService.receive(id));
+
+  return { getAll, getById, create, update, approve, execute, receive, loading };
 }

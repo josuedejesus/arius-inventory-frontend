@@ -26,6 +26,8 @@ export default function LoginForm() {
     setError("");
     setLoading(true);
 
+    
+
     try {
       const response = await axios.post(`${apiUrl}/auth/login`, {
         username: username,
@@ -38,13 +40,9 @@ export default function LoginForm() {
       await reloadUser();
       router.push("/dashboard");
     } catch (error: any) {
-      if (error.response) {
-        setError(error.response.data.message);
-      } else {
-        setError(
-          "El servidor no está disponible en este momento. Intente más tarde.",
-        );
-      }
+      const message = error?.response?.message ?? 
+      "El servidor no está disponible en este momento. Intente más tarde.";
+      setError(message);
     } finally {
       setLoading(false);
     }

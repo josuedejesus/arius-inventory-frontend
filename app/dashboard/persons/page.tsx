@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import PersonsForm from "./components/PersonsForm";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -42,8 +43,11 @@ export default function Persons() {
   //Update Person
   const [showUpdatePerson, setShowUpdatePerson] = useState<boolean>(false);
 
+  const [loading, setloading] = useState<boolean>(false);
+
   const handleGetPersons = async () => {
     try {
+      setloading(true);
       const response = await axios.get(`${apiUrl}/persons`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -56,6 +60,8 @@ export default function Persons() {
         error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
       toast.error(message);
+    } finally {
+      setloading(false);
     }
   };
 
@@ -68,6 +74,10 @@ export default function Persons() {
     setSelectedPerson(person);
     setShowUpdatePerson(true);
   };
+
+  if (loading) {
+    return <LoadingScreen/>
+  }
 
   return (
     <div className="">
@@ -83,37 +93,13 @@ export default function Persons() {
         </button>
       </div>
 
-      {/*<Modal
-        open={showNewPerson}
-        title="Nueva Persona"
-        onClose={() => setShowNewPerson(false)}
-      >
-        <NewPersonForm
-          onSuccess={() => {
-            setShowNewPerson(false);
-            handleGetPersons();
-          }}
-        />
-      </Modal>*/}
-
-      {/*<Modal
-        open={showUpdatePerson}
-        title="Actualizar Persona"
-        onClose={() => setShowUpdatePerson(false)}
-      >
-        <UpdatePersonForm
-          person={selectedPerson}
-          onSuccess={() => {
-            setShowUpdatePerson(false);
-            handleGetPersons();
-          }}
-        />
-      </Modal>*/}
-
       <Modal
         open={showForm}
         title="Actualizar Persona"
-        onClose={() => {setShowForm(false); setSelectedPerson(undefined)}}
+        onClose={() => {
+          setShowForm(false);
+          setSelectedPerson(undefined);
+        }}
       >
         <PersonsForm
           personId={selectedPerson?.id}

@@ -65,21 +65,10 @@ export default function Items() {
     handleGetItems();
   }, []);
 
-  const handleUpdateItem = (item: any) => {
-    setSelectedItem(item);
-    setShowUpdateItem(true);
-  };
-
   return (
     <div className="">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Articulos</h1>
-
-      <div className="flex items-center justify-between space-x-2 pb-4">
-        <SearchBar
-          value={searchValue}
-          placeholder="Buscar articulos..."
-          onChange={setSearchValue}
-        />
+      <div className="flex items-start justify-between space-x-2 pb-4">
+        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Articulos</h1>
 
         <button
           onClick={() => setShowItemForm(true)}

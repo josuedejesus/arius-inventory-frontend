@@ -284,6 +284,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       .get(`${apiUrl}/units`)
       .then((response) => {
         setUnits(response.data.data);
+        console.log("units: ", response.data.data);
       })
       .catch((error) => {})
       .finally(() => {});

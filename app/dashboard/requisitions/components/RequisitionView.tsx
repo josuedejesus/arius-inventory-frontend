@@ -24,6 +24,7 @@ import { GridLoader, MoonLoader } from "react-spinners";
 import { RequisitionStatus } from "../types/requisition-status.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { useRequisitionLines } from "@/hooks/useRequisitionLines";
+import { on } from "events";
 
 const columns = [
   { key: "item", title: "Ítem" },
@@ -63,12 +64,16 @@ export default function RequisitionView({
   );
   const [requisitionLines, setRequisitionLiness] = useState<any[]>([]);
 
-  const { getById: getRequisition, approve: approveRequisition } =
-    useRequisitions();
+  const {
+    getById: getRequisition,
+    approve: approveRequisition,
+    execute: executeRequisition,
+    receive: receiveRequisition,
+  } = useRequisitions();
   const { getByRequisitionId: getRequisitionLines } = useRequisitionLines();
 
   useEffect(() => {
-    const loacdData = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
         Promise.all([handleGetRequisition(), handleGetLines()]);
@@ -80,7 +85,7 @@ export default function RequisitionView({
     };
 
     if (requisition?.id) {
-      loacdData();
+      loadData();
     }
   }, [requisition?.id]);
 
@@ -112,51 +117,6 @@ export default function RequisitionView({
     if (returnedLines < totalLines && returnedLines > 0)
       setReturnStatus(ReturnStatus.PARTIAL);
     if (returnedLines === totalLines) setReturnStatus(ReturnStatus.FULL);
-  };
-
-  const handleExecute = async () => {
-    try {
-      const response = await axios.post(
-        `${apiUrl}/requisitions/${requisition?.id}/execute`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-      toast.success(response.data.message);
-      onSuccess();
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "No se pudo ejecutar la requisición",
-      );
-      //throw error;
-    }
-  };
-
-  const handleReceive = async () => {
-    axios
-      .post(
-        `${apiUrl}/requisitions/${requisition?.id}/receive`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      )
-      .then((response) => {
-        toast.success(response.data.message);
-        onSuccess();
-      })
-      .catch((error) => {
-        if (error.response) {
-          toast.error(error.response.data.message);
-        } else {
-        }
-      })
-      .finally(() => {});
   };
 
   const handleUploadPhotos = async (files: any[]) => {
@@ -202,7 +162,27 @@ export default function RequisitionView({
   };
 
   const handleApprove = async () => {
-    await approveRequisition(Number(requisition?.id));
+    const { success } = await approveRequisition(Number(requisition?.id));
+    if (success) {
+      onSuccess();
+      toast.success("Requisición aprobada exitosamente");
+    }
+  };
+
+  const handleExecute = async () => {
+    const { success } = await executeRequisition(Number(requisition?.id));
+    if (success) {
+      onSuccess();
+      toast.success("Requisición ejecutada exitosamente");
+    }
+  };
+
+  const handleReceive = async () => {
+    const { success } = await receiveRequisition(Number(requisition?.id));
+    if (success) {
+      onSuccess();
+      toast.success("Requisición recibida exitosamente");
+    }
   };
 
   const ReadOnlyView = () => (
@@ -261,9 +241,7 @@ export default function RequisitionView({
   );
 
   if (loading) {
-    <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-      <MoonLoader color="#2563eb" />{" "}
-    </div>;
+    return <LoadingScreen />;
   }
 
   return (

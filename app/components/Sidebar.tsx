@@ -18,6 +18,8 @@ import {
   MdPlace,
   MdInventory2,
   MdSwapHoriz,
+  MdSettings,
+  MdLogout,
 } from "react-icons/md";
 
 import { IoMdLogOut, IoMdSettings } from "react-icons/io";
@@ -113,7 +115,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             onClick={onClose}
             className="flex items-center gap-3 px-4 py-2 rounded text-gray-300 hover:bg-gray-800 transition"
           >
-            <IoMdSettings size={20} />
+            <MdSettings size={20} />
             {!collapsed && <span>Configuración</span>}
           </Link>
 
@@ -124,7 +126,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             }}
             className="w-full flex items-center gap-3 px-4 py-2 rounded text-gray-300 hover:bg-red-900/40 hover:text-red-400 transition"
           >
-            <IoMdLogOut size={20} />
+            <MdLogout size={20} />
             {!collapsed && <span>Cerrar sesión</span>}
           </button>
         </div>

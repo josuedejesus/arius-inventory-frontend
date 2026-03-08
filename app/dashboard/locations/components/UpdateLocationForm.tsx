@@ -3,7 +3,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import Autocomplete from "../../../components/Autocomplete";
 import AddedItemsContainer from "../../../components/AddedItemsContainer";
 import { FormLayout } from "../../../components/form/FormLayout";
 import FormTabs from "../../../components/form/FormTabs";
@@ -67,7 +66,7 @@ export default function UpdateLocationForm({
         setLoading(true);
         if (locationId) {
           console.log("is edit");
-
+          handleGetUsers();
           setIsEdit(true);
           await Promise.all([handleGetLocation(), handlGetMembers()]);
           return;

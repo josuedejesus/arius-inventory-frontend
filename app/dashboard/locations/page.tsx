@@ -10,6 +10,7 @@ import NewLocationForm from "@/app/components/create-forms/NewLocationForm";
 import LocationCard from "@/app/dashboard/locations/components/LocationCard";
 import { toast } from "sonner";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -30,21 +31,13 @@ export default function Warehouses() {
   //SearchBar
   const [searchValue, setSearchValue] = useState<string>("");
 
-  const filteredWarehouses = warehouses.filter((u: any) =>
-    `${u.name} ${u.lastname} ${u.warehousename} ${u.email} ${u.phone}`
-      .toLowerCase()
-      .includes(searchValue.toLowerCase()),
-  );
+  const [loading, setLoading] = useState<boolean>(false);
 
-  //New Warehouse
-  const [showNewWarehouse, setShowNewWarehouse] = useState<boolean>(false);
   const [showLocationForm, setShowLocationForm] = useState<boolean>(false);
-  //Update Warehouse
-  const [showUpdateWarehouse, setShowUpdateWarehouse] =
-    useState<boolean>(false);
 
-  const handleGetWarehouses = async () => {
+  const handleGetLocations = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${apiUrl}/locations`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -57,12 +50,17 @@ export default function Warehouses() {
         toast.error(error.response.data.message);
       }
     } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    handleGetWarehouses();
+    handleGetLocations();
   }, []);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="">
@@ -79,19 +77,6 @@ export default function Warehouses() {
           <span className="text-lg">＋</span>
         </button>
       </div>
-
-      {/*<Modal
-        open={showNewWarehouse}
-        title="Nueva  Ubicacion"
-        onClose={() => setShowNewWarehouse(false)}
-      >
-        <NewLocationForm
-          onSuccess={() => {
-            setShowNewWarehouse(false);
-            handleGetWarehouses();
-          }}
-        />
-      </Modal>*/}
 
       <DataGrid<any>
         columns={columns}
@@ -114,14 +99,17 @@ export default function Warehouses() {
       <Modal
         open={showLocationForm}
         title="Actualizar Ubicacion"
-        onClose={() => {setShowLocationForm(false); setSelectedWarehouse(undefined);}}
+        onClose={() => {
+          setShowLocationForm(false);
+          setSelectedWarehouse(undefined);
+        }}
       >
         <UpdateLocationForm
           locationId={selectedWarehouse?.id}
           onSuccess={() => {
             setSelectedWarehouse(undefined);
             setShowLocationForm(false);
-            handleGetWarehouses();
+            handleGetLocations();
           }}
         />
       </Modal>

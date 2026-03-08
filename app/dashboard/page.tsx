@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import StatCard from "../components/StatCard";
 import axios from "axios";
 import { ItemUnitStatus } from "../components/item-units/types/item-units-status.enum";
@@ -22,6 +22,7 @@ import {
 } from "react-icons/md";
 import ItemPercentageCard from "../components/cards/ItemPercentageCard";
 import { MoonLoader } from "react-spinners";
+import { useSSE } from "@/hooks/userSSE";
 
 const columns: ColumnDef<any>[] = [
   { key: "internal_code", title: "Código" },
@@ -132,25 +133,44 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        Promise.all([
-          handleGetItemUnitsStats(),
-          handleGetLocationsStats(),
-          handleGetSuppliesStats(),
-          handleGetUsersStats(),
-          handleGetStockLevels(),
-        ]);
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const refreshAll = useCallback(async () => {
+    try {
+      await Promise.all([
+        handleGetItemUnitsStats(),
+        handleGetLocationsStats(),
+        handleGetSuppliesStats(),
+        handleGetUsersStats(),
+        handleGetStockLevels(),
+      ]);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    loadData();
+  useSSE({
+    "requisition.created": () => {
+      toast.info("Nueva requisición creada");
+      refreshAll();
+    },
+    "requisition.approved": () => {
+      toast.info("Una requisición fue aprobada");
+      refreshAll();
+    },
+    "requisition.executed": () => {
+      toast.info("Una requisición fue ejecutada");
+      refreshAll();
+    },
+    "requisition.received": () => {
+      toast.info("Una requisición fue recibida");
+      refreshAll();
+    },
+  });
+
+  useEffect(() => {
+    setLoading(true);
+    refreshAll();
   }, []);
 
   if (loading) {
@@ -194,17 +214,39 @@ export default function Dashboard() {
             </button>
 
             <button
+              onClick={() =>
+                handleGetItemUnits({
+                  status: "AVAILABLE",
+                  requireLocation: true,
+                })
+              }
+              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
+    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-orange-500">●</span>
+                <span>Reservados</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-orange-400">
+                  {itemUnitsStats?.reserved_units}
+                </span>
+              </div>
+            </button>
+
+            <button
               onClick={() => handleGetItemUnits({ withoutLocation: true })}
               className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
     text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
             >
               <div className="flex items-center gap-2">
-                <span className="text-red-400">●</span>
+                <span className="text-red-500">●</span>
                 <span>Sin ubicación</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-500">
+                <span className="font-semibold text-red-400">
                   {itemUnitsStats?.without_location}
                 </span>
               </div>
@@ -221,7 +263,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-orange-500">
+                <span className="font-semibold text-blue-500">
                   {itemUnitsStats?.rented_units}
                 </span>
               </div>
@@ -233,12 +275,12 @@ export default function Dashboard() {
     text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
             >
               <div className="flex items-center gap-2">
-                <span className="text-yellow-600">●</span>
+                <span className="text-yellow-500">●</span>
                 <span>En tránsito</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-purple-500">
+                <span className="font-semibold text-yellow-400">
                   {itemUnitsStats?.in_transit_units}
                 </span>
               </div>

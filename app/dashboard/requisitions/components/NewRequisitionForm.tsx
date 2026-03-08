@@ -23,6 +23,7 @@ import { DataGridCell } from "@/app/components/datagrid/DataGridCell";
 import { RequisitionViewModel } from "../types/requisition-view.model";
 import { RequisitionStatus } from "../types/requisition-status.enum";
 import { ItemType } from "../../items/types/item-type.enum";
+import { useRequisitions } from "@/hooks/useRequisitions";
 
 const REQUISITION_TYPE_OPTIONS = [
   /*{
@@ -196,6 +197,8 @@ export default function NewRequisitionForm({
     (t) => t.value === form.type,
   );
 
+  const { create: createRequisition } = useRequisitions();
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -204,7 +207,7 @@ export default function NewRequisitionForm({
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -227,25 +230,11 @@ export default function NewRequisitionForm({
       schedulled_at: form.schedulled_at,
     };
 
-    try {
-      const response = await axios.post(`${apiUrl}/requisitions`, payload, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
+    const { success } = await createRequisition(payload);
 
-      toast.success(response.data.message);
+    if (success) {
       onSuccess();
-    } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error(
-          "El servidor no está disponible en este momento. Intente más tarde.",
-        );
-      }
-    } finally {
-      setLoading(false);
+      toast.success("Requisición creada exitosamente");
     }
   };
 
@@ -436,7 +425,7 @@ export default function NewRequisitionForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6 text-gray-800">
+      <form onSubmit={handleCreate} className="space-y-6 text-gray-800">
         {/* STEPPER */}
         <div className="w-full flex items-center mb-8">
           {[1, 2, 3].map((s, idx) => {

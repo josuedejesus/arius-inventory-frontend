@@ -54,14 +54,8 @@ export default function Units() {
 
   return (
     <div className="">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Unidades</h1>
-
       <div className="flex items-center justify-between space-x-2 pb-4">
-        <SearchBar
-          value={searchValue}
-          placeholder="Buscar unidades..."
-          onChange={setSearchValue}
-        />
+        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Unidades</h1>
 
         <button
           onClick={() => setShowUnitForm(true)}

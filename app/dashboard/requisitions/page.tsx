@@ -12,6 +12,8 @@ import { useSSE } from "@/hooks/userSSE";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import RequisitionView from "@/app/dashboard/requisitions/components/RequisitionView";
 import UpdateRequisitionForm from "./components/UpdateRequisitionForm";
+import { useRequisitions } from "@/hooks/useRequisitions";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 const columns: ColumnDef<any>[] = [
   { key: "requisition", title: "Requisition" },
@@ -93,26 +95,18 @@ export default function Requisitions() {
     [],
   );
 
+  const { getAll: getRequisitions, loading } = useRequisitions();
+
   //Requisitions
+
   const handleGetRequisitions = async () => {
-    try {
-      const response = await axios.get(`${apiUrl}/requisitions`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      setRequisitions(response.data.data);
-    } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.message);
-      }
-    }
+    const { data } = await getRequisitions();
+    setRequisitions(data);
   };
 
   useEffect(() => {
-    if (!user) return;
     handleGetRequisitions();
-  }, [user]);
+  }, []);
 
   useSSE({
     "requisition.created": () => {
@@ -143,6 +137,10 @@ export default function Requisitions() {
     setMode(nextMode);
     setShowRequisition(true);
   };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <>
