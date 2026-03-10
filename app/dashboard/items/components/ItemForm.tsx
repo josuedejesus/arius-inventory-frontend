@@ -160,6 +160,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       formData.append("unit_id", String(unit?.id) || "");
       formData.append("is_active", String(form.is_active));
       formData.append("minimum_stock", String(form.minimum_stock));
+      formData.append("usage_hours", String(form.usage_hours));
       formData.append("accessories", JSON.stringify(itemAccessories));
       formData.append("item_units", JSON.stringify(itemUnits));
 
@@ -462,6 +463,15 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 placeholder=""
                 onChange={handleChange}
               />
+
+              <FormField
+                label="Horas promedio de uso "
+                name="usage_hours"
+                type="number"
+                value={String(form.usage_hours)}
+                placeholder=""
+                onChange={handleChange}
+              />
             </FormSection>
           </FormTabPanel>
 
@@ -471,7 +481,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 title="Accesorios"
                 description="Accesorios relacionados al articulo"
               >
-                                <ItemHeader item={form}/>
+                <ItemHeader item={form} />
 
                 <Autocomplete
                   items={accessories}
@@ -517,7 +527,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 title="Unidades"
                 description="Creacion y edicion de unidades del articulo"
               >
-                <ItemHeader item={form}/>
+                <ItemHeader item={form} />
 
                 <div className="flex requisitions-center justify-between space-x-2">
                   <SearchBar
