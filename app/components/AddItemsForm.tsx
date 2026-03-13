@@ -7,12 +7,14 @@ import FormSection from "./form/FormSection";
 import { toast } from "sonner";
 import ItemUnitCard from "./cards/ItemUnitCard";
 import SupplyCard from "./cards/SupplyCard";
+import { RequisitionType } from "../dashboard/requisitions/types/requisition-type.enum";
 
 type AddItemsFormProps = {
   itemUnits: any[];
   supplies: any[];
   onAdd: (items: any) => void;
   onAddSupply: (item: any) => void;
+  requisitionType: RequisitionType;
 };
 
 export default function AddItemsForm({
@@ -20,6 +22,7 @@ export default function AddItemsForm({
   supplies,
   onAdd,
   onAddSupply,
+  requisitionType,
 }: AddItemsFormProps) {
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -35,24 +38,27 @@ export default function AddItemsForm({
       .includes(searchValue.toLowerCase()),
   );
 
-  useEffect(() => {
-    //handleGetItemUnits();
-  }, []);
-
+ const requisitionTabs: Partial<Record<RequisitionType, { key: string; label: string }[]>> = {
+  [RequisitionType.ADJUSTMENT]: [
+    { key: "tool", label: "Equipo" },
+    { key: "supply", label: "Insumo" },
+  ],
+  [RequisitionType.PURCHASE_RECEIPT]: [
+    { key: "tool", label: "Equipo" },
+    { key: "supply", label: "Insumo" },
+  ],
+  [RequisitionType.CONSUMPTION]: [
+    { key: "supply", label: "Insumo" },
+  ],
+};
   return (
     <div className="">
       <FormSection
         title="Articulos"
         description="Lista de articulos disponibles"
       >
-        <FormTabs
-          tabs={[
-            { key: "tool", label: "Equipo" },
-            { key: "supply", label: "Insumo" },
-          ]}
-          value={selectedTab}
-          onChange={setSelectedTab}
-        />
+        <FormTabs   tabs={requisitionTabs[requisitionType] ?? [{ key: "tool", label: "Equipo" }]}
+ value={selectedTab} onChange={setSelectedTab} />
         <SearchBar
           placeholder="Buscar artículo..."
           value={searchValue}
@@ -92,7 +98,11 @@ export default function AddItemsForm({
           <div className="space-y-2">
             {supplies?.length > 0 ? (
               supplies.map((s: any) => (
-                <SupplyCard key={s.id} item={s} onClick={(item) => onAddSupply(item)} />
+                <SupplyCard
+                  key={s.id}
+                  item={s}
+                  onClick={(item) => onAddSupply(item)}
+                />
               ))
             ) : (
               <p></p>

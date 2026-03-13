@@ -77,7 +77,7 @@ export default function RequisitionView({
     const loadData = async () => {
       try {
         setLoading(true);
-        Promise.all([handleGetRequisition(), handleGetLines()]);
+        await Promise.all([handleGetRequisition(), handleGetLines()]);
       } catch (error: any) {
         setError(error.message);
       } finally {

@@ -674,6 +674,7 @@ export default function NewRequisitionForm({
         >
           <AddItemsForm
             itemUnits={filteredItemUnits}
+            requisitionType={form?.type}
             supplies={supplies}
             onAdd={(item: any) => {
               setShowAddTool(true);

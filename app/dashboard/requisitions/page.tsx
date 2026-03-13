@@ -145,16 +145,10 @@ export default function Requisitions() {
   return (
     <>
       <div className="">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-6">
-          Requisiciones
-        </h1>
-
-        <div className="flex requisitions-center justify-between space-x-2 pb-4">
-          <SearchBar
-            value={searchValue}
-            placeholder="Buscar requisiciones..."
-            onChange={setSearchValue}
-          />
+        <div className="flex requisitions-start justify-between space-x-2 pb-4">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-6">
+            Requisiciones
+          </h1>
 
           <button
             onClick={() => setShowNewRequisition(true)}
