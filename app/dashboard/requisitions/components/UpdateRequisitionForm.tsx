@@ -707,6 +707,7 @@ export default function UpdateRequisitionForm({
           onClose={() => setShowAddItems(false)}
         >
           <AddItemsForm
+            requisitionType={form?.type}
             itemUnits={filteredItemUnits}
             supplies={supplies}
             onAdd={(item: any) => {
