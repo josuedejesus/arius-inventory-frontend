@@ -404,7 +404,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Uso de equipos" icon={<MdInventory />}>
+        <StatCard title="Uso de equipos" count={unitsForStats?.length} icon={<MdInventory />}>
           <div className="space-y-4 text-sm">
             {/* Equipo */}
             {unitsForStats?.map((unit: any) => (
