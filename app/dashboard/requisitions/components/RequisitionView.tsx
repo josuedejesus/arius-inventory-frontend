@@ -57,6 +57,7 @@ export default function RequisitionView({
   const [form, setForm] = useState<RequisitionViewModel>(undefined!);
   const [selectedItem, setSelectedItem] = useState<any>(undefined);
   const [loading, setLoading] = useState(false);
+  const [showAddPhotos, setShowAddPhotos] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [returnStatus, setReturnStatus] = useState<ReturnStatus>(
@@ -200,6 +201,17 @@ export default function RequisitionView({
             key={line?.id}
             requisition={requisition}
             line={line}
+            onClick={(line) => {
+              console.log("row click", line);
+            }}
+            onPhotos={(line) => {
+              console.log("photos", line);
+              setSelectedItem(line);
+              setShowAddPhotos(true);
+            }}
+            onRemove={(line) => {
+              console.log("removing", line);
+            }}
           />
         ))}
       </DataGrid>
@@ -245,26 +257,40 @@ export default function RequisitionView({
   }
 
   return (
-    <div className="relative">
-      {actionLoading && (
-        <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-          <MoonLoader color="#2563eb" />{" "}
+    <>
+      <div className="relative">
+        {actionLoading && (
+          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+            <MoonLoader color="#2563eb" />{" "}
+          </div>
+        )}
+
+        <div className={actionLoading ? "pointer-events-none opacity-60" : ""}>
+          <div>
+            {requisition?.status === RequisitionStatus.DRAFT && (
+              <ActionButton icon={<MdEdit />} label="Editar" onClick={onEdit} />
+            )}
+          </div>
+
+          <RequisitionHeader requisition={form} />
+
+          <ReadOnlyView />
+
+          <ActionBar />
         </div>
-      )}
-
-      <div className={actionLoading ? "pointer-events-none opacity-60" : ""}>
-        <div>
-          {requisition?.status === RequisitionStatus.DRAFT && (
-            <ActionButton icon={<MdEdit />} label="Editar" onClick={onEdit} />
-          )}
-        </div>
-
-        <RequisitionHeader requisition={form} />
-
-        <ReadOnlyView />
-
-        <ActionBar />
       </div>
-    </div>
+
+      <Modal open={showAddPhotos} onClose={() => setShowAddPhotos(false)}>
+        <RequisitionLinePhotosForm
+          mode={mode}
+          line={selectedItem}
+          onSuccess={() => {
+            setShowAddPhotos(false);
+            handleGetLines();
+          }}
+          onClose={() => setShowAddPhotos(false)}
+        />
+      </Modal>
+    </>
   );
 }

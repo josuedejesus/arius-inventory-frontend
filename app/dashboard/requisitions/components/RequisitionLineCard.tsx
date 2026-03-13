@@ -3,6 +3,7 @@ import {
   MdPendingActions,
   MdCheckCircleOutline,
   MdOutlineCancel,
+  MdNoPhotography,
 } from "react-icons/md";
 import { RequisitionType } from "../types/requisition-type.enum";
 import { DataGridRow } from "@/app/components/datagrid/DataGridRow";
@@ -15,6 +16,7 @@ type RequisitionLineCardProps = {
   requisition?: any;
   onClick?: (line: any) => void;
   onRemove?: (line: any) => void;
+  onPhotos?: (line: any) => void;
 };
 
 export default function RequisitionLineCard({
@@ -22,7 +24,9 @@ export default function RequisitionLineCard({
   requisition,
   onClick,
   onRemove,
+  onPhotos,
 }: RequisitionLineCardProps) {
+  console.log("line", line);
   const isAvailable = (() => {
     if (!line) return false;
 
@@ -54,7 +58,6 @@ export default function RequisitionLineCard({
   return (
     <DataGridRow
       key={line.id}
-      //onClick={() => onClick?.(line)}
       className="group cursor-pointer hover:bg-gray-50/70 transition-colors"
     >
       {/* Artículo */}
@@ -151,42 +154,76 @@ export default function RequisitionLineCard({
 
       <DataGridCell className="flex items-center gap-2">
         {/* Disponibilidad */}
-        {requisition?.status === RequisitionStatus.DRAFT &&
-          (isAvailable ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              <MdCheckCircleOutline className="text-xs" />
-              {line.available_quantity}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-              <MdOutlineCancel className="text-xs" />0
-            </span>
-          ))}
-
-        {/* Fotos */}
-        {line?.photos?.length > 0 ? (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-            <IoMdCamera className="text-xs" />
-            {line.photos.length}
-          </span>
-        ) : (
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-400">
-            <IoMdCamera className="text-xs" />
+        {requisition?.status === RequisitionStatus.DRAFT && (
+          <span
+            className={`inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium
+      ${
+        isAvailable
+          ? "text-emerald-600 bg-emerald-50"
+          : "text-red-600 bg-red-50"
+      }
+    `}
+          >
+            {isAvailable ? (
+              <>
+                <MdCheckCircleOutline className="text-sm" />
+                {line.available_quantity}
+              </>
+            ) : (
+              <>
+                <MdOutlineCancel className="text-sm" />0
+              </>
+            )}
           </span>
         )}
 
+        {/* Fotos */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPhotos?.(line);
+          }}
+          className={`inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium transition-colors
+    ${
+      line?.photos_count > 0
+        ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+        : "text-amber-600 bg-amber-50 hover:bg-amber-100"
+    }
+    opacity-50 group-hover:opacity-100
+  `}
+        >
+          {line?.photos_count > 0 ? (
+            <>
+              <IoMdCamera className="text-sm" />
+              <span>{line.photos_count}</span>
+            </>
+          ) : (
+            <>
+              <MdNoPhotography className="text-sm" />
+            </>
+          )}
+        </button>
+
         {/* Retorno */}
         {(requisition?.type === RequisitionType.RENT ||
-          requisition?.type === RequisitionType.TRANSFER) &&
-          (line?.return_of_id ? (
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 text-emerald-500">
-              <IoMdReturnLeft className="text-xs" />
-            </span>
-          ) : (
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-50 text-amber-400">
-              <MdPendingActions className="text-xs" />
-            </span>
-          ))}
+          requisition?.type === RequisitionType.TRANSFER) && (
+          <span
+            className={`inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium
+      ${
+        line?.return_of_id
+          ? "text-emerald-600 bg-emerald-50"
+          : "text-amber-600 bg-amber-50"
+      }
+    `}
+          >
+            {line?.return_of_id ? (
+              <IoMdReturnLeft className="text-sm" />
+            ) : (
+              <MdPendingActions className="text-sm" />
+            )}
+          </span>
+        )}
       </DataGridCell>
 
       {/* Acción */}

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import StatCard from "../components/StatCard";
 import axios from "axios";
 import { ItemUnitStatus } from "../components/item-units/types/item-units-status.enum";
@@ -24,21 +24,12 @@ import ItemPercentageCard from "../components/cards/ItemPercentageCard";
 import { MoonLoader } from "react-spinners";
 import { useSSE } from "@/hooks/userSSE";
 import LoadingScreen from "../components/LoadingScreen";
+import UserStatCard from "../components/cards/UserStatsCard";
+import ItemUnitUsageCard from "../components/cards/ItemUnitUsageCard";
 
 const columns: ColumnDef<any>[] = [
-  { key: "internal_code", title: "Código" },
-
-  { key: "name", title: "Artículo" },
-
-  { key: "brand", title: "Marca" },
-
-  { key: "model", title: "Modelo" },
-
-  { key: "unit_code", title: "Unidad" },
-
+  { key: "item", title: "Artículo" },
   { key: "status", title: "Estado" },
-
-  { key: "location", title: "Ubicación" },
 ];
 
 export default function Dashboard() {
@@ -59,10 +50,12 @@ export default function Dashboard() {
 
   const [itemUnits, setItemUnits] = useState<any[]>([]);
 
+  const [usageLogs, setUsageLogs] = useState<any>(undefined);
+  const [unitsForStats, setUnitsForStats] = useState<any[]>([]);
+
   const handleGetItemUnitsStats = async () => {
     try {
       const response = await axios.get(`${apiUrl}/item-units/get-stats`);
-      console.log(response.data.data);
       setItemUnitsStats(response.data.data);
     } catch (error: any) {}
   };
@@ -70,11 +63,9 @@ export default function Dashboard() {
   const handleGetLocationsStats = async () => {
     try {
       const response = await axios.get(`${apiUrl}/locations/get-stats`);
-      console.log(response.data.data);
       const stats = response.data.data;
       setLocations(stats.locations);
       setActiveLocations(stats.active_locations);
-      console.log(stats.active_locations);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -84,7 +75,6 @@ export default function Dashboard() {
   const handleGetSuppliesStats = async () => {
     try {
       const response = await axios.get(`${apiUrl}/items/get-supplies-stats`);
-      console.log("supplies stats:", response.data.data);
       const stats = response.data.data;
       setSuppliesStats(response.data.data);
     } catch (error: any) {
@@ -98,7 +88,6 @@ export default function Dashboard() {
       const response = await axios.get(
         `${apiUrl}/item-units/get-stats-by-users`,
       );
-      console.log(response.data.data);
       setUserStats(response.data.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -109,7 +98,6 @@ export default function Dashboard() {
   const handleGetStockLevels = async () => {
     try {
       const response = await axios.get(`${apiUrl}/items/get-stock-levels`);
-      console.log("stock levels", response.data);
       setStockLevels(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -120,12 +108,39 @@ export default function Dashboard() {
   const handleGetItemUnits = async (filters?: any) => {
     try {
       setLoadingItems(true);
-      console.log(filters);
       const response = await axios.get(`${apiUrl}/item-units`, {
         params: filters,
       });
       setItemUnits(response.data.data);
       setShowItemsModal(true);
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    } finally {
+      setLoadingItems(false);
+    }
+  };
+
+  const handleGetItemUnitForStats = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/item-units`);
+      setUnitsForStats(response.data.data);
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    } finally {
+    }
+  };
+
+  const handleGetItemUnitsUsage = async (id: any) => {
+    try {
+      setLoadingItems(true);
+      const response = await axios.get(
+        `${apiUrl}/item-units/${id}/usage-logs`,
+        {},
+      );
+      console.log('logs', response.data);
+      setUsageLogs(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -142,6 +157,7 @@ export default function Dashboard() {
         handleGetSuppliesStats(),
         handleGetUsersStats(),
         handleGetStockLevels(),
+        handleGetItemUnitForStats(),
       ]);
     } catch (error: any) {
       toast.error(error.message);
@@ -213,7 +229,7 @@ export default function Dashboard() {
             <button
               onClick={() =>
                 handleGetItemUnits({
-                  status: "AVAILABLE",
+                  status: "RESERVED",
                   requireLocation: true,
                 })
               }
@@ -381,43 +397,22 @@ export default function Dashboard() {
         >
           <div className="space-y-1 text-sm">
             {userStats?.map((user: any) => (
-              <div
-                key={user.person_id}
-                className="group bg-white border border-gray-100 rounded-xl px-4 py-3
-  hover:border-gray-200 hover:shadow-sm transition-all duration-150"
-              >
-                {/* Header */}
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-sm text-gray-800">{user.person_name}</h3>
-                </div>
-
-                {/* Stats */}
-                <div className="flex items-center gap-4 text-sm">
-                  {/* Locations */}
-                  <div className="flex items-center gap-1.5 text-gray-500">
-                    <MdLocationOn className="text-blue-500 text-base" />
-                    <span className="font-medium text-gray-700">
-                      {user.total_locations}
-                    </span>
-                    <span className="text-xs text-gray-400">ubicaciones</span>
-                  </div>
-
-                  {/* Units */}
-                  <div className="flex items-center gap-1.5 text-gray-500">
-                    <MdInventory className="text-emerald-500 text-base" />
-                    <span className="font-medium text-gray-700">
-                      {user.total_units}
-                    </span>
-                    <span className="text-xs text-gray-400">equipos</span>
-                  </div>
-                </div>
-              </div>
+              <UserStatCard key={user.id} userStat={user} />
             ))}
           </div>
         </StatCard>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Uso de equipos" icon={<MdInventory />}>
+          <div className="space-y-4 text-sm">
+            {/* Equipo */}
+            {unitsForStats?.map((unit: any) => (
+              <ItemUnitUsageCard key={unit.id} itemUnit={unit} />
+            ))}
+          </div>
+        </StatCard>
+      </div>
 
       <Modal
         open={showItemsModal}
@@ -430,7 +425,7 @@ export default function Dashboard() {
           <DataGrid
             columns={columns}
             rows={itemUnits}
-            gridTemplate="4fr 2fr 2fr 2fr"
+            gridTemplate=" 2fr 1fr"
             searchKeys={[
               "internal_code",
               "name",
@@ -441,7 +436,12 @@ export default function Dashboard() {
               "location",
             ]}
             renderCard={(row: any) => (
-              <ItemUnitCard itemUnit={row} onClick={console.log} />
+              <ItemUnitCard
+                itemUnit={row}
+                onClick={() => 
+                  handleGetItemUnitsUsage(row.id)
+                }
+              />
             )}
           />
         )}

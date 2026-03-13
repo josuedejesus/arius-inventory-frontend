@@ -164,9 +164,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       formData.append("accessories", JSON.stringify(itemAccessories));
       formData.append("item_units", JSON.stringify(itemUnits));
 
-      console.log("itemUnits:", itemUnits);
-      console.log("stringify:", JSON.stringify(itemUnits));
-
       imageFiles.forEach((file) => {
         if (file) formData.append("images", file);
       });
@@ -180,7 +177,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       toast.success(respose.data.message);
       onSuccess();
     } catch (error: any) {
-      console.log(error);
       const message =
         error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
@@ -206,7 +202,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
         item_units: itemUnits,
       };
 
-      console.log("payload update", payload);
 
       const response = await axios.put(`${apiUrl}/items/${itemId}`, payload, {
         headers: {
@@ -229,7 +224,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
     axios
       .get(`${apiUrl}/items/${itemId}`)
       .then((response) => {
-        console.log(response.data.data);
         const item = response.data.data;
         setForm(item);
         setUnit({
@@ -288,7 +282,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       .get(`${apiUrl}/units`)
       .then((response) => {
         setUnits(response.data.data);
-        console.log("units: ", response.data.data);
       })
       .catch((error) => {})
       .finally(() => {});
@@ -299,7 +292,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       const response = await axios.get(`${apiUrl}/item-units/item/${itemId}`);
       setItemUnits(response.data.data);
     } catch (error: any) {
-      console.log(error);
     }
   };
 

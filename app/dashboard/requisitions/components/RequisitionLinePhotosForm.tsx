@@ -5,11 +5,7 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const PHOTO_UPLOAD_ROLES = [
-  "WAREHOUSE_MANAGER",
-  "ADMIN",
-  "OPERATION_MANAGER"
-];
+const PHOTO_UPLOAD_ROLES = ["WAREHOUSE_MANAGER", "ADMIN", "OPERATION_MANAGER"];
 
 enum modes {
   VIEW,
@@ -22,15 +18,15 @@ enum modes {
 type RequisitionLinePhotosFormProps = {
   line: any;
   mode: modes;
-  onSubmit: (files: File[]) => void;
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
 export default function RequisitionLinePhotosForm({
   line,
   mode,
-  onSubmit,
   onClose,
+  onSuccess,
 }: RequisitionLinePhotosFormProps) {
   const user = useAuth();
 
@@ -62,21 +58,6 @@ export default function RequisitionLinePhotosForm({
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async () => {
-    if (!files.length) {
-      toast.error("Debes agregar al menos una imagen.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onSubmit(files);
-      onClose();
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleGetPhotos = async () => {
     axios
@@ -92,6 +73,33 @@ export default function RequisitionLinePhotosForm({
       .catch((error) => {
         console.log(error.response.data.message);
       });
+  };
+
+  const handleUpdloadPhotos = async () => {
+    try {
+      const formData = new FormData();
+
+      formData.append("requisition_line_id", line?.id);
+
+      files.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      const response = await axios.post(
+        `${apiUrl}/requisition-line-photos`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      );
+      toast.success("Fotos subidas exitosamente");
+      onSuccess?.();
+    } catch (error) {
+      console.error(error);
+      toast.error("Error subiendo las fotos");
+    }
   };
 
   useEffect(() => {
@@ -218,7 +226,7 @@ export default function RequisitionLinePhotosForm({
 
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={handleUpdloadPhotos}
             disabled={loading || files.length === 0}
             className="
             bg-blue-600 text-white px-5 py-2 rounded-md text-sm

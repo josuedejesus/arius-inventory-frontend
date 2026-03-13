@@ -159,7 +159,6 @@ export default function ItemUnitForm({
       formData.append("observations", form.observations || "");
       formData.append("is_active", form.is_active || "");
 
-      console.log(formData.get("item_id"));
 
       if (imageFile) {
         formData.append("image", imageFile);
@@ -224,7 +223,6 @@ export default function ItemUnitForm({
       toast.success(response.data.message);
       onSuccess();
     } catch (error: any) {
-      console.log(error);
       const message =
         error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
