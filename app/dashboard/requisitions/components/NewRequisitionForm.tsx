@@ -24,6 +24,7 @@ import { RequisitionViewModel } from "../types/requisition-view.model";
 import { RequisitionStatus } from "../types/requisition-status.enum";
 import { ItemType } from "../../items/types/item-type.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
+import { ReturnStatus } from "../types/return-status.enum";
 
 const REQUISITION_TYPE_OPTIONS = [
   /*{
@@ -160,6 +161,7 @@ export default function NewRequisitionForm({
     approver_name: "",
     destination_location_name: undefined,
     schedulled_at: "",
+    return_status: ReturnStatus.NONE,
   });
 
   const [loading, setLoading] = useState(false);
