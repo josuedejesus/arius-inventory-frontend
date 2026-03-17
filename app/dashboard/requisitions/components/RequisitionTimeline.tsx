@@ -23,10 +23,7 @@ export default function RequisitionTimeline({
     { label: "Recibido", date: received_at },
   ];
 
-  const currentStep = steps.reduce(
-    (acc, step, i) => (step.date ? i : acc),
-    0
-  );
+  const currentStep = steps.reduce((acc, step, i) => (step.date ? i : acc), 0);
 
   return (
     <div className="flex items-center w-full mt-6">
@@ -38,17 +35,16 @@ export default function RequisitionTimeline({
           <div key={idx} className="flex-1 flex items-center">
             {/* Circle */}
             <div className="flex flex-col items-center flex-1">
-
               <div
                 className={`
                 w-9 h-9 flex items-center justify-center
                 rounded-full text-sm font-semibold transition
                 ${
                   isCompleted
-                    ? "bg-green-500 text-white"
+                    ? "bg-green-400 text-white"
                     : isActive
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-500"
+                      ? "bg-blue-400 text-white"
+                      : "bg-gray-200 text-gray-500"
                 }
               `}
               >
@@ -62,8 +58,8 @@ export default function RequisitionTimeline({
                   isCompleted
                     ? "text-green-600"
                     : isActive
-                    ? "text-blue-600"
-                    : "text-gray-400"
+                      ? "text-blue-400"
+                      : "text-gray-400"
                 }
               `}
               >
@@ -75,7 +71,6 @@ export default function RequisitionTimeline({
                   {formatDate(step.date)}
                 </span>
               )}
-
             </div>
 
             {/* Line */}
@@ -83,7 +78,7 @@ export default function RequisitionTimeline({
               <div
                 className={`
                 flex-1 h-[2px] mx-2 transition
-                ${idx < currentStep ? "bg-green-500" : "bg-gray-200"}
+                ${idx < currentStep ? "bg-green-400" : "bg-gray-200"}
               `}
               />
             )}

@@ -6,10 +6,10 @@ interface PrimaryBadgeProps {
 }
 
 const variantStyles = {
-  success: "bg-green-50 text-green-600 border border-green-100",
-  warning: "bg-orange-50 text-orange-600 border border-orange-100",
-  info: "bg-blue-50 text-blue-600 border border-blue-100",
-  danger: "bg-red-50 text-red-600 border border-red-100",
+  success: "bg-green-100 text-green-600 border border-green-200",
+  warning: "bg-yellow-100 text-yellow-600 border border-yellow-200",
+  info: "bg-blue-100 text-blue-600 border border-blue-200",
+  danger: "bg-red-100 text-red-600 border border-red-200",
   neutral: "bg-gray-100 text-gray-600 border border-gray-200",
 };
 

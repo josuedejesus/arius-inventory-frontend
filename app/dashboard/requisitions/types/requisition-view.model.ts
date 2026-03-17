@@ -1,5 +1,6 @@
 import { RequisitionStatus } from "./requisition-status.enum";
 import { RequisitionType } from "./requisition-type.enum";
+import { ReturnStatus } from "./return-status.enum";
 
 export interface RequisitionViewModel {
   id: string;
@@ -20,4 +21,5 @@ export interface RequisitionViewModel {
   requestor_name: string;
   approver_name: string;
   destination_location_name: any;
+  return_status: ReturnStatus;
 }

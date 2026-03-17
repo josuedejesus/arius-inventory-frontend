@@ -113,7 +113,7 @@ export default function RequisitionCard({
           }
         `}
             />
-            {REQUISITION_STATUS_LABELS[requisition.status] ??
+            {REQUISITION_STATUS_LABELS[requisition.status]?.label ??
               requisition.status}
           </span>
         </div>

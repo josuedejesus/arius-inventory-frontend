@@ -1,9 +1,6 @@
 "use client";
 
 import Modal from "@/app/components/Modal";
-import SearchBar from "@/app/components/SearchBar";
-import RequisitionCard from "@/app/components/cards/RequisitionCard";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import NewRequisitionForm from "@/app/dashboard/requisitions/components/NewRequisitionForm";
@@ -14,13 +11,14 @@ import RequisitionView from "@/app/dashboard/requisitions/components/Requisition
 import UpdateRequisitionForm from "./components/UpdateRequisitionForm";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import LoadingScreen from "@/app/components/LoadingScreen";
-
-const columns: ColumnDef<any>[] = [
-  { key: "requisition", title: "Requisition" },
-  { key: "movements", title: "Movimiento" },
-  { key: "status", title: "Estado" },
-  { key: "returned", title: "Retornado" },
-];
+import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
+import { RequisitionViewModel } from "./types/requisition-view.model";
+import { PrimaryBadge } from "@/app/components/PrimaryBadge";
+import { RETURN_STATUS_LABELS } from "@/constants/ReturnStatus";
+import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
+import { REQUISITION_STATUS_LABELS } from "@/constants/RequisitionStatus";
+import { MdArchive, MdDescription, MdEdit, MdVisibility } from "react-icons/md";
+import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
 
 enum modes {
   VIEW,
@@ -29,12 +27,6 @@ enum modes {
   EXECUTE,
   RECEIVE,
 }
-
-const ACTIONS_BY_ROLE = {
-  OPERATOR: ["EDIT", "CREATE", "EXECUTE"],
-  MANAGER: ["APPROVE"],
-  ADMIN: ["ALL", "APPROVE"],
-};
 
 const VIEW_MODE_BY_ROLE_STATUS: Record<string, Record<string, modes>> = {
   WAREHOUSE_MANAGER: {
@@ -62,13 +54,15 @@ const VIEW_MODE_BY_ROLE_STATUS: Record<string, Record<string, modes>> = {
 };
 
 export default function Requisitions() {
-  //API
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
   //User
   const { user } = useAuth();
 
-  const [mode, setMode] = useState<modes>(modes.VIEW);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  const [total, setTotal] = useState(0);
+
+  const [sorting, setSorting] = useState("");
 
   //Requisitions
   const [requisitions, setRequisitions] = useState<any>([]);
@@ -90,53 +84,53 @@ export default function Requisitions() {
   const [showUpdateRequisition, setShowUpdateRequisition] =
     useState<boolean>(false);
 
-  //Requisition Accessories
-  const [requisitionAccessories, setRequisitionAccessories] = useState<any[]>(
-    [],
-  );
-
   const { getAll: getRequisitions, loading } = useRequisitions();
 
-  //Requisitions
+  const handleGetRequisitions = async ({
+    skip,
+    take,
+  }: {
+    skip: number;
+    take: number;
+  }) => {
+    const newPage = skip / take + 1;
+    setPage(newPage);
 
-  const handleGetRequisitions = async () => {
-    const { data } = await getRequisitions();
-    setRequisitions(data);
+    const { data } = await getRequisitions({
+      skipCount: skip,
+      maxResultCount: take,
+    });
+    setRequisitions(data.items);
+    setTotal(data.total);
   };
-
-  useEffect(() => {
-    handleGetRequisitions();
-  }, []);
 
   useSSE({
     "requisition.created": () => {
-      handleGetRequisitions();
+      handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });
       toast.info("Nueva requisición creada");
     },
     "requisition.approved": () => {
-      handleGetRequisitions();
+      handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });
       toast.info("Una requisición fue aprovada");
     },
     "requisition.executed": () => {
-      handleGetRequisitions();
+      handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });
       toast.info("Una requisición fue ejecutada");
     },
     "requisition.received": () => {
-      handleGetRequisitions();
+      handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });
       toast.info("Una requisición fue recibida");
     },
   });
 
   const handleViewRequisition = (requisition: any) => {
-    const role = user?.user_role;
-    const status = requisition?.status;
-
-    const nextMode = VIEW_MODE_BY_ROLE_STATUS[role!]?.[status] ?? modes.VIEW;
-
     setSelectedRequisition(requisition);
-    setMode(nextMode);
     setShowRequisition(true);
   };
+
+  useEffect(() => {
+    handleGetRequisitions({ skip: 0, take: pageSize });
+  }, []);
 
   if (loading) {
     return <LoadingScreen />;
@@ -159,26 +153,101 @@ export default function Requisitions() {
           </button>
         </div>
 
-        <DataGrid<any>
-          columns={columns}
-          rows={filteredRequisitions}
-          gridTemplate="3fr 4fr 2fr 2fr" // ← mismo que tu card
-          searchKeys={[
-            "type",
-            "status",
-            "location",
-            "requestor",
-            "source_location_name",
-            "detination_location_name",
-          ]}
-          renderCard={(row) => (
-            <RequisitionCard
-              onClick={handleViewRequisition}
-              key={row.id}
-              requisition={row}
-            />
-          )}
-        />
+        <PagedDataGrid
+          data={requisitions}
+          total={total}
+          page={page}
+          pageSize={pageSize}
+          onLoadData={handleGetRequisitions}
+        >
+          <PagedDataGrid.Column field="id" title="ID">
+            {(row: RequisitionViewModel) => (
+              <span className="text-gray-600">
+                {row.id}
+              </span>
+            )}
+          </PagedDataGrid.Column>
+
+          <PagedDataGrid.Column field="type" title="Tipo">
+            {(row: RequisitionViewModel) => (
+              <span className="text-gray-600">
+                {REQUISITION_TYPE_LABELS[row.type]}
+              </span>
+            )}
+          </PagedDataGrid.Column>
+
+          <PagedDataGrid.Column field="requestor_name" title="Solicitante">
+            {(row: RequisitionViewModel) => (
+              <span className="text-gray-600">{row.requestor_name}</span>
+            )}
+          </PagedDataGrid.Column>
+
+          <PagedDataGrid.Column
+            field="destination_location_name"
+            title="Destino"
+          >
+            {(row: RequisitionViewModel) => (
+              <span className="font-medium truncate max-w-[40%] md:max-w-none">
+                {row.destination_location_name}
+              </span>
+            )}
+          </PagedDataGrid.Column>
+
+          <PagedDataGrid.Column field="status" title="Estado">
+            {(row: RequisitionViewModel) => (
+              <PrimaryBadge
+                label={REQUISITION_STATUS_LABELS[row.status].label}
+                variant={`${REQUISITION_STATUS_LABELS[row.status].className}`}
+              />
+            )}
+          </PagedDataGrid.Column>
+
+          <PagedDataGrid.Column field="returned" title="Retornado">
+            {(row: RequisitionViewModel) => (
+              <PrimaryBadge
+                label={RETURN_STATUS_CONFIG[row?.return_status]?.label}
+                variant={`${RETURN_STATUS_CONFIG[row?.return_status]?.className}`}
+              />
+            )}
+          </PagedDataGrid.Column>
+          <PagedDataGrid.Column field="actions" title="Acciones">
+            {(row: RequisitionViewModel) => (
+              <div className="flex items-center gap-1">
+                {/* VIEW */}
+                <button
+                  title="Ver requisición"
+                  onClick={() => handleViewRequisition(row)}
+                  className="p-2 rounded-md text-blue-400 hover:bg-blue-50 hover:text-blue-500 transition"
+                >
+                  <MdDescription size={18} />
+                </button>
+
+                {/* EDIT */}
+                <button
+                  title="Editar"
+                  onClick={() => {
+                    setSelectedRequisition(row);
+                    setShowUpdateRequisition(true);
+                  }}
+                  className="p-2 rounded-md text-yellow-400 hover:bg-yellow-50 hover:text-yellow-500 transition"
+                >
+                  <MdEdit size={18} />
+                </button>
+
+                {/* ARCHIVE */}
+                <button
+                  title="Archivar"
+                  onClick={() => {
+                    console.log("Archivar requisición", row.id);
+                  }}
+                  className="p-2 rounded-md text-red-400 hover:bg-red-50 hover:text-red-500 transition"
+                >
+                  <MdArchive size={18} />
+                </button>
+              </div>
+            )}
+          </PagedDataGrid.Column>
+        </PagedDataGrid>
       </div>
 
       {/*NEW REQUISITION*/}
@@ -190,7 +259,7 @@ export default function Requisitions() {
         <NewRequisitionForm
           onSuccess={() => {
             setShowNewRequisition(false);
-            handleGetRequisitions();
+            handleGetRequisitions({ skip: 0, take: pageSize });
           }}
         />
       </Modal>
@@ -210,7 +279,7 @@ export default function Requisitions() {
           }}
           onSuccess={() => {
             setShowRequisition(false);
-            handleGetRequisitions();
+            handleGetRequisitions({ skip: 0, take: pageSize });
           }}
         />
       </Modal>
@@ -225,7 +294,7 @@ export default function Requisitions() {
           requisitionId={selectedRequisition?.id}
           onSuccess={() => {
             setShowUpdateRequisition(false);
-            handleGetRequisitions();
+            handleGetRequisitions({ skip: 0, take: pageSize });
           }}
         />
       </Modal>

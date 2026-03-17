@@ -2,6 +2,7 @@ import { RequisitionLinesService } from "@/app/services/requisition-lines.servic
 import { RequisitionsService } from "@/app/services/requisitions.service";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PagingDto } from "@/common/PagingDto";
 
 export function useRequisitions() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -19,7 +20,7 @@ export function useRequisitions() {
     }
   };
 
-  const getAll = () => withLoading(() => RequisitionsService.getAll());
+  const getAll = (paging?: PagingDto) => withLoading(() => RequisitionsService.getAll(paging));
 
   const getById = (id: number) =>
     withLoading(() => RequisitionsService.getById(id));

@@ -16,7 +16,7 @@ import { RequisitionViewModel } from "../types/requisition-view.model";
 import { VIEW_MODE_BY_ROLE_STATUS } from "@/permissions/requisition.permissions";
 import { ReturnStatus } from "../types/return-status.enum";
 import ActionButton from "@/app/components/ActionButton";
-import { MdEdit } from "react-icons/md";
+import { MdEdit, MdPrint } from "react-icons/md";
 import { is, se } from "date-fns/locale";
 import { FaSpinner } from "react-icons/fa";
 import LoadingScreen from "@/app/components/LoadingScreen";
@@ -266,12 +266,6 @@ export default function RequisitionView({
         )}
 
         <div className={actionLoading ? "pointer-events-none opacity-60" : ""}>
-          <div>
-            {requisition?.status === RequisitionStatus.DRAFT && (
-              <ActionButton icon={<MdEdit />} label="Editar" onClick={onEdit} />
-            )}
-          </div>
-
           <RequisitionHeader requisition={form} />
 
           <ReadOnlyView />

@@ -28,6 +28,7 @@ import { useRequisitions } from "@/hooks/useRequisitions";
 import { UpdateRequisitionDto } from "../dto/update-requisition.dto";
 import { RequisitionLineDto } from "../types/requisition-line.dto";
 import { CreateRequisitionLineDto } from "../dto/create-requisition-line.dto";
+import { ReturnStatus } from "../types/return-status.enum";
 
 const REQUISITION_TYPE_OPTIONS = [
   /*{
@@ -166,6 +167,7 @@ export default function UpdateRequisitionForm({
     approver_name: "",
     destination_location_name: undefined,
     schedulled_at: "",
+    return_status: ReturnStatus.NULL,
   });
 
   const [loading, setLoading] = useState(false);

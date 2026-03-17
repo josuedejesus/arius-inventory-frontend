@@ -1,4 +1,5 @@
 // services/requisitions.service.ts
+import { PagingDto } from "@/common/PagingDto";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -9,9 +10,10 @@ const authHeaders = () => ({
 });
 
 export const RequisitionsService = {
-  getAll: async () => {
+  getAll: async (paging?: PagingDto) => {
     const response = await axios.get(`${apiUrl}/requisitions`, {
       headers: authHeaders(),
+      params: paging,
     });
     return response.data;
   },
@@ -26,7 +28,7 @@ export const RequisitionsService = {
   create: async (dto: any) => {
     const response = await axios.post(`${apiUrl}/requisitions`, dto, {
       headers: authHeaders(),
-    })
+    });
   },
 
   update: async (id: Number, dto: any) => {
