@@ -11,8 +11,8 @@ import FormSelectSearch from "../../../components/form/FormSelectSearch";
 import FormText from "../../../components/form/FormText";
 import RequisitionHeader from "./RequisitionHeader";
 import FormDate from "../../../components/form/FormDate";
-import AddItemsForm from "../../../components/AddItemsForm";
-import AddAccessoriesForm from "../../../components/AddItemForm";
+import AddItemsForm from "../../items/components/AddItemsForm";
+import AddAccessoriesForm from "../../items/components/AddItemForm";
 import AddLinesForm from "../../../components/AddLinesForm";
 import { RequisitionType } from "../types/requisition-type.enum";
 import RequisitionLineCard from "./RequisitionLineCard";
@@ -165,7 +165,8 @@ export default function UpdateRequisitionForm({
     //extra
     requestor_name: user?.name || "",
     approver_name: "",
-    destination_location_name: undefined,
+    destination_location_name: "",
+    destination_address: "",
     schedulled_at: "",
     return_status: ReturnStatus.NULL,
   });

@@ -26,15 +26,15 @@ type Location = {
   is_active: boolean;
 };
 
-type UpdateLocationFormProps = {
+type Props = {
   locationId: number;
   onSuccess: () => void;
 };
 
-export default function UpdateLocationForm({
+export default function LocationForm({
   locationId,
   onSuccess,
-}: UpdateLocationFormProps) {
+}: Props) {
   const [form, setForm] = useState<LocationViewModel>({
     id: undefined,
     name: "",

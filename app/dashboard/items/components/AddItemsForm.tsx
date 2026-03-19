@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import SearchBar from "./SearchBar";
-import FormTabs from "./form/FormTabs";
-import FormTabPanel from "./form/FormTabPanel";
-import FormSection from "./form/FormSection";
+import SearchBar from "../../../components/SearchBar";
+import FormTabs from "../../../components/form/FormTabs";
+import FormTabPanel from "../../../components/form/FormTabPanel";
+import FormSection from "../../../components/form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "./cards/ItemUnitCard";
-import SupplyCard from "./cards/SupplyCard";
-import { RequisitionType } from "../dashboard/requisitions/types/requisition-type.enum";
+import ItemUnitCard from "../../../components/cards/ItemUnitCard";
+import SupplyCard from "../../../components/cards/SupplyCard";
+import { RequisitionType } from "../../requisitions/types/requisition-type.enum";
 
 type AddItemsFormProps = {
   itemUnits: any[];

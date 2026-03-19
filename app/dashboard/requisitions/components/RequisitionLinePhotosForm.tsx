@@ -3,6 +3,12 @@
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
+import {
+  MdArrowRightAlt,
+  MdInventory,
+  MdNoPhotography,
+  MdPhotoCamera,
+} from "react-icons/md";
 import { toast } from "sonner";
 
 const PHOTO_UPLOAD_ROLES = ["WAREHOUSE_MANAGER", "ADMIN", "OPERATION_MANAGER"];
@@ -30,12 +36,16 @@ export default function RequisitionLinePhotosForm({
 }: RequisitionLinePhotosFormProps) {
   const user = useAuth();
 
+  console.log("line in form", line);
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [photos, setPhotos] = useState<any[]>([]);
+
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   const canUploadPhotos = useMemo(() => {
     if (!user.user) return false;
@@ -57,7 +67,6 @@ export default function RequisitionLinePhotosForm({
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
-
 
   const handleGetPhotos = async () => {
     axios
@@ -110,41 +119,81 @@ export default function RequisitionLinePhotosForm({
     <div className="space-y-6">
       {/* HEADER */}
       <div>
-        <h3 className="text-base font-semibold text-gray-800">
-          Evidencia del estado de salida
-        </h3>
-        <p className="text-sm text-gray-500 mt-1">
-          {line.item_name}
-          {line.internal_code && ` · ${line.internal_code}`}
-        </p>
+        {/* ITEM CARD */}
+        <div className="flex items-start gap-3 bg-gray-50 border rounded-lg p-3">
+          {/* ICON */}
+          <div className="w-10 h-10 bg-white border rounded flex items-center justify-center">
+            <MdInventory className="text-gray-400 text-xl" />
+          </div>
+
+          {/* INFO */}
+          <div className="flex flex-col flex-1 text-sm">
+            {/* NAME */}
+            <span className="font-semibold text-gray-800">
+              {line.item_name}
+            </span>
+
+            {/* BRAND + MODEL */}
+            <span className="text-xs text-gray-500">
+              {line.item_brand} · {line.item_model}
+            </span>
+
+            {/* CODE */}
+            <span className="text-xs text-gray-400">
+              Código: {line.internal_code}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* FOTOS EXISTENTES */}
-      <section>
-        <p className="text-xs font-medium text-gray-400 mb-2 uppercase">
-          Fotos registradas
-        </p>
+      <section className="space-y-3">
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Fotos registradas
+          </p>
+
+          <span className="text-xs text-gray-400">
+            {photos.length} {photos.length === 1 ? "imagen" : "imágenes"}
+          </span>
+        </div>
 
         {photos.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {photos.map((photo) => (
               <div
                 key={photo.id}
-                className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition"
+                onClick={() =>
+                  setSelectedPhoto(`${apiUrl}/uploads/${photo.image_path}`)
+                }
+                className="group relative border rounded-xl overflow-hidden bg-gray-100 hover:shadow-md transition"
               >
                 <img
                   src={`${apiUrl}/uploads/${photo.image_path}`}
                   alt="foto"
-                  className="w-full h-28 object-contain bg-gray-100"
+                  className="w-full h-28 object-contain transition-transform duration-200 group-hover:scale-105"
                 />
+
+                {/* OVERLAY HOVER */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                  <span className="text-white text-xs">Ver</span>
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-            <p className="text-sm text-gray-600">No hay fotos registradas</p>
-            <p className="text-xs text-gray-400 mt-1">
-              Agrega al menos una imagen como evidencia
+          <div className="flex flex-col items-center justify-center border border-dashed border-gray-300 bg-gray-50 rounded-xl p-8 text-center space-y-2">
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <MdNoPhotography className="text-gray-400 text-lg" />
+            </div>
+
+            <p className="text-sm text-gray-600 font-medium">
+              No hay fotos registradas
+            </p>
+
+            <p className="text-xs text-gray-400">
+              Agrega imágenes como evidencia del estado del ítem
             </p>
           </div>
         )}
@@ -236,6 +285,29 @@ export default function RequisitionLinePhotosForm({
           >
             {loading ? "Guardando..." : "Guardar fotos"}
           </button>
+        </div>
+      )}
+
+      {selectedPhoto && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setSelectedPhoto(null)}
+        >
+          <div className="relative max-w-4xl w-full px-4">
+            <img
+              src={selectedPhoto}
+              alt="preview"
+              className="w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+            />
+
+            {/* BOTÓN CERRAR */}
+            <button
+              onClick={() => setSelectedPhoto(null)}
+              className="absolute top-2 right-2 text-gray-800 bg-white/90 rounded-full px-2 py-1 text-sm hover:bg-white"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
     </div>

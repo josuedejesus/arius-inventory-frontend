@@ -1,16 +1,13 @@
 "use client";
 
 import Modal from "@/app/components/Modal";
-import SearchBar from "@/app/components/SearchBar";
-import WarehouseCard from "@/app/dashboard/locations/components/LocationCard";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import UpdateLocationForm from "@/app/dashboard/locations/components/UpdateLocationForm";
-import NewLocationForm from "@/app/components/create-forms/NewLocationForm";
 import LocationCard from "@/app/dashboard/locations/components/LocationCard";
 import { toast } from "sonner";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import LoadingScreen from "@/app/components/LoadingScreen";
+import LocationForm from "@/app/dashboard/locations/components/LocationForm";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -104,7 +101,7 @@ export default function Warehouses() {
           setSelectedWarehouse(undefined);
         }}
       >
-        <UpdateLocationForm
+        <LocationForm
           locationId={selectedWarehouse?.id}
           onSuccess={() => {
             setSelectedWarehouse(undefined);

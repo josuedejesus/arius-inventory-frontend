@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import SearchBar from "./SearchBar";
-import FormTabs from "./form/FormTabs";
-import FormTabPanel from "./form/FormTabPanel";
-import FormSection from "./form/FormSection";
+import SearchBar from "../../../components/SearchBar";
+import FormTabs from "../../../components/form/FormTabs";
+import FormTabPanel from "../../../components/form/FormTabPanel";
+import FormSection from "../../../components/form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "./cards/ItemUnitCard";
-import NumberSelector from "./NumberSelector";
+import ItemUnitCard from "../../../components/cards/ItemUnitCard";
+import NumberSelector from "../../../components/NumberSelector";
 
-type AddAccessoriesFormProps = {
+type Props = {
   itemUnit: any;
   addedAccessories: any[];
   onAdd: (item: any) => void;
 };
 
-export default function AddAccessoriesForm({
+export default function AddItemForm({
   itemUnit,
   addedAccessories,
   onAdd,
-}: AddAccessoriesFormProps) {
+}: Props) {
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 

@@ -58,7 +58,7 @@ export default function Requisitions() {
   const { user } = useAuth();
 
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(18);
 
   const [total, setTotal] = useState(0);
 
@@ -139,7 +139,7 @@ export default function Requisitions() {
   return (
     <>
       <div className="">
-        <div className="flex requisitions-start justify-between space-x-2 pb-4">
+        <div className="flex requisitions-start justify-between space-x-2">
           <h1 className="text-2xl font-semibold text-gray-800 mb-6">
             Requisiciones
           </h1>
@@ -159,6 +159,7 @@ export default function Requisitions() {
           page={page}
           pageSize={pageSize}
           onLoadData={handleGetRequisitions}
+          onRowClick={(row) => handleViewRequisition(row)}
         >
           <PagedDataGrid.Column field="id" title="ID">
             {(row: RequisitionViewModel) => (
@@ -210,43 +211,7 @@ export default function Requisitions() {
               />
             )}
           </PagedDataGrid.Column>
-          <PagedDataGrid.Column field="actions" title="Acciones">
-            {(row: RequisitionViewModel) => (
-              <div className="flex items-center gap-1">
-                {/* VIEW */}
-                <button
-                  title="Ver requisición"
-                  onClick={() => handleViewRequisition(row)}
-                  className="p-2 rounded-md text-blue-400 hover:bg-blue-50 hover:text-blue-500 transition"
-                >
-                  <MdDescription size={18} />
-                </button>
-
-                {/* EDIT */}
-                <button
-                  title="Editar"
-                  onClick={() => {
-                    setSelectedRequisition(row);
-                    setShowUpdateRequisition(true);
-                  }}
-                  className="p-2 rounded-md text-yellow-400 hover:bg-yellow-50 hover:text-yellow-500 transition"
-                >
-                  <MdEdit size={18} />
-                </button>
-
-                {/* ARCHIVE */}
-                <button
-                  title="Archivar"
-                  onClick={() => {
-                    console.log("Archivar requisición", row.id);
-                  }}
-                  className="p-2 rounded-md text-red-400 hover:bg-red-50 hover:text-red-500 transition"
-                >
-                  <MdArchive size={18} />
-                </button>
-              </div>
-            )}
-          </PagedDataGrid.Column>
+          
         </PagedDataGrid>
       </div>
 

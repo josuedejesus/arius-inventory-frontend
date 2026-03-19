@@ -20,6 +20,7 @@ export interface RequisitionViewModel {
   //extra
   requestor_name: string;
   approver_name: string;
-  destination_location_name: any;
+  destination_location_name: string;
+  destination_address: string;
   return_status: ReturnStatus;
 }

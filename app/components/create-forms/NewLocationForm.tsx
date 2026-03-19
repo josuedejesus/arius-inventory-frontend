@@ -2,10 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaSearch } from "react-icons/fa";
 import { toast } from "sonner";
-import Autocomplete from "../Autocomplete";
-import AddedItemsContainer from "../AddedItemsContainer";
 import { FormLayout } from "../form/FormLayout";
 import FormTabs from "../form/FormTabs";
 import FormTabPanel from "../form/FormTabPanel";

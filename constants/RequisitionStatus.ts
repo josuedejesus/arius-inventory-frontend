@@ -1,10 +1,5 @@
-enum variant {
-  success = "success",
-  warning = "warning",
-  info = "info",
-  danger = "danger",
-  neutral = "neutral",
-}
+import { variant } from "./VarianEnum";
+
 
 export const REQUISITION_STATUS_LABELS: Record<
   string,

@@ -26,6 +26,7 @@ import { useSSE } from "@/hooks/userSSE";
 import LoadingScreen from "../components/LoadingScreen";
 import UserStatCard from "../components/cards/UserStatsCard";
 import ItemUnitUsageCard from "../components/cards/ItemUnitUsageCard";
+import ItemUnitView from "./items/components/ItemUnitView";
 
 const columns: ColumnDef<any>[] = [
   { key: "item", title: "Artículo" },
@@ -42,16 +43,15 @@ export default function Dashboard() {
   const [locations, setLocations] = useState<any[]>([]);
   const [userStats, setUserStats] = useState<any>(undefined);
   const [stockLevels, setStockLevels] = useState<any[]>([]);
-
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [modalItems, setModalItems] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingItems, setLoadingItems] = useState(false);
-
   const [itemUnits, setItemUnits] = useState<any[]>([]);
-
   const [usageLogs, setUsageLogs] = useState<any>(undefined);
   const [unitsForStats, setUnitsForStats] = useState<any[]>([]);
+  const [showItemModal, setShowItemModal] = useState<boolean>(false);
+  const [selectedItemUnit, setSelectedItemUnit] = useState<any>(null);
 
   const handleGetItemUnitsStats = async () => {
     try {
@@ -139,7 +139,7 @@ export default function Dashboard() {
         `${apiUrl}/item-units/${id}/usage-logs`,
         {},
       );
-      console.log('logs', response.data);
+      console.log("logs", response.data);
       setUsageLogs(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -403,16 +403,7 @@ export default function Dashboard() {
         </StatCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <StatCard title="Uso de equipos" count={unitsForStats?.length} icon={<MdInventory />}>
-          <div className="space-y-4 text-sm">
-            {/* Equipo */}
-            {unitsForStats?.map((unit: any) => (
-              <ItemUnitUsageCard key={unit.id} itemUnit={unit} />
-            ))}
-          </div>
-        </StatCard>
-      </div>
+     
 
       <Modal
         open={showItemsModal}
@@ -438,13 +429,22 @@ export default function Dashboard() {
             renderCard={(row: any) => (
               <ItemUnitCard
                 itemUnit={row}
-                onClick={() => 
-                  handleGetItemUnitsUsage(row.id)
-                }
+                onClick={() => {
+                  setSelectedItemUnit(row);
+                  setShowItemModal(true);
+                }}
               />
             )}
           />
         )}
+      </Modal>
+
+      <Modal
+        open={showItemModal}
+        title="Artículos"
+        onClose={() => setShowItemModal(false)}
+      >
+        <ItemUnitView itemUnidId={selectedItemUnit?.id}/>
       </Modal>
     </div>
   );

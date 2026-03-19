@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Modal from "../../../components/Modal";
 import FormSection from "../../../components/form/FormSection";
@@ -16,7 +16,16 @@ import { RequisitionViewModel } from "../types/requisition-view.model";
 import { VIEW_MODE_BY_ROLE_STATUS } from "@/permissions/requisition.permissions";
 import { ReturnStatus } from "../types/return-status.enum";
 import ActionButton from "@/app/components/ActionButton";
-import { MdEdit, MdPrint } from "react-icons/md";
+import {
+  MdArchive,
+  MdArrowRightAlt,
+  MdCheckCircle,
+  MdEdit,
+  MdNoPhotography,
+  MdPendingActions,
+  MdPrint,
+  MdWarning,
+} from "react-icons/md";
 import { is, se } from "date-fns/locale";
 import { FaSpinner } from "react-icons/fa";
 import LoadingScreen from "@/app/components/LoadingScreen";
@@ -25,6 +34,11 @@ import { RequisitionStatus } from "../types/requisition-status.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { useRequisitionLines } from "@/hooks/useRequisitionLines";
 import { on } from "events";
+import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
+import { RequisitionType } from "../types/requisition-type.enum";
+import { IoMdCamera } from "react-icons/io";
+import BooleanBadge from "@/app/components/BooleanBadge";
+import RequisitionTimeline from "./RequisitionTimeline";
 
 const columns = [
   { key: "item", title: "Ítem" },
@@ -64,6 +78,8 @@ export default function RequisitionView({
     ReturnStatus.NONE,
   );
   const [requisitionLines, setRequisitionLiness] = useState<any[]>([]);
+  const [containerHeight, setContainerHeight] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const {
     getById: getRequisition,
@@ -72,6 +88,12 @@ export default function RequisitionView({
     receive: receiveRequisition,
   } = useRequisitions();
   const { getByRequisitionId: getRequisitionLines } = useRequisitionLines();
+
+  useEffect(() => {
+    if (!loading && containerRef.current) {
+      setContainerHeight(containerRef.current.offsetHeight);
+    }
+  }, [loading]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -110,48 +132,37 @@ export default function RequisitionView({
   const isExecute = mode === modes.EXECUTE;
   const isReceive = mode === modes.RECEIVE;
 
-  //calculate return statysus based on lines if returned lines > 0 partital, 0 none, returned lines = total lines full, you need to validate lines.has_returned = true to consider returned
-  const calculateReturnStatus = (lines: any[]) => {
-    const totalLines = lines.length;
-    const returnedLines = lines.filter((line) => line.has_return).length;
-    if (returnedLines === 0) setReturnStatus(ReturnStatus.NONE);
-    if (returnedLines < totalLines && returnedLines > 0)
-      setReturnStatus(ReturnStatus.PARTIAL);
-    if (returnedLines === totalLines) setReturnStatus(ReturnStatus.FULL);
-  };
-
-  const handleUploadPhotos = async (files: any[]) => {
-    const formData = new FormData();
-
-    formData.append("requisition_line_id", selectedItem.id);
-    files.forEach((f) => {
-      formData.append("images", f);
-    });
-
-    await axios
-      .post(`${apiUrl}/requisition-line-photos`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  const handleGeneratePDF = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${apiUrl}/pdf/${requisition?.id}/requisition`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          responseType: "blob",
         },
-      })
-      .then((response) => {
-        toast.success(response.data.message);
-        handleGetLines();
-      })
-      .catch((error) => {
-        if (error.response) {
-          toast.error(error.response.data.message);
-        } else {
-        }
-        throw error;
-      })
-      .finally(() => {});
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `requisition-${requisition?.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error: any) {
+      toast.error(error.message || "Error generando el PDF");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGetRequisition = async () => {
     const { success, data } = await getRequisition(Number(requisition?.id));
     if (success) {
+      console.log(data);
       setForm(data);
     }
   };
@@ -185,38 +196,6 @@ export default function RequisitionView({
       toast.success("Requisición recibida exitosamente");
     }
   };
-
-  const ReadOnlyView = () => (
-    <FormSection title="" description="">
-      <DataGrid>
-        <DataGridRow className="grid px-4 py-3 text-[11px] tracking-wide text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-          {columns.map((col) => (
-            <DataGridCell key={col.key} className="font-bold">
-              {col.title}
-            </DataGridCell>
-          ))}
-        </DataGridRow>
-        {requisitionLines.map((line) => (
-          <RequisitionLineCard
-            key={line?.id}
-            requisition={requisition}
-            line={line}
-            onClick={(line) => {
-              console.log("row click", line);
-            }}
-            onPhotos={(line) => {
-              console.log("photos", line);
-              setSelectedItem(line);
-              setShowAddPhotos(true);
-            }}
-            onRemove={(line) => {
-              console.log("removing", line);
-            }}
-          />
-        ))}
-      </DataGrid>
-    </FormSection>
-  );
 
   const ActionBar = () => (
     <div className="flex justify-end gap-3 mt-6">
@@ -252,29 +231,205 @@ export default function RequisitionView({
     </div>
   );
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  const RequisitionSkeleton = () => {
+    return (
+      <div className="space-y-4 animate-pulse">
+        {/* ACTIONS */}
+        <div className="flex gap-2">
+          <div className="h-8 w-24 bg-gray-200 rounded" />
+          <div className="h-8 w-24 bg-gray-200 rounded" />
+          <div className="h-8 w-32 bg-gray-200 rounded" />
+        </div>
+
+        {/* HEADER */}
+        <div className="bg-white border rounded-xl p-4 space-y-3">
+          <div className="h-5 w-1/3 bg-gray-200 rounded" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="h-4 bg-gray-200 rounded" />
+            <div className="h-4 bg-gray-200 rounded" />
+            <div className="h-4 bg-gray-200 rounded" />
+            <div className="h-4 bg-gray-200 rounded" />
+          </div>
+        </div>
+
+        {/* TABLE */}
+        <div className="bg-white border rounded-xl overflow-hidden">
+          {/* header */}
+          <div className="grid grid-cols-4 gap-2 bg-gray-100 p-3">
+            <div className="h-4 bg-gray-300 rounded w-20" />
+            <div className="h-4 bg-gray-300 rounded w-16" />
+            <div className="h-4 bg-gray-300 rounded w-20" />
+            <div className="h-4 bg-gray-300 rounded w-16" />
+          </div>
+
+          {/* rows */}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="grid grid-cols-4 gap-2 p-3 border-t">
+              <div className="space-y-2">
+                <div className="h-3 w-16 bg-gray-200 rounded" />
+                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="h-3 w-24 bg-gray-200 rounded" />
+              </div>
+
+              <div className="h-4 w-16 bg-gray-200 rounded self-center" />
+
+              <div className="h-4 w-32 bg-gray-200 rounded self-center" />
+
+              <div className="h-6 w-10 bg-gray-200 rounded self-center" />
+            </div>
+          ))}
+        </div>
+
+        {/* ACTION BAR */}
+        <div className="flex justify-end gap-2">
+          <div className="h-10 w-40 bg-gray-200 rounded" />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
-      <div className="relative">
-        {actionLoading && (
-          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-            <MoonLoader color="#2563eb" />{" "}
+      <div className="relative  min-h-[500px]">
+        {/* 🔥 LOADING GLOBAL */}
+        {loading && (
+          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-40">
+            {" "}
+            <LoadingScreen />
           </div>
         )}
 
-        <div className={actionLoading ? "pointer-events-none opacity-60" : ""}>
+        {/* 🔥 ACTION LOADING (ya lo tenías) */}
+        {actionLoading && (
+          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-40">
+            <LoadingScreen />
+          </div>
+        )}
+
+        <div
+          className={
+            actionLoading
+              ? "flex items-center justify-center pointer-events-none opacity-60 space-y-2"
+              : ""
+          }
+        >
+          {/*ACTIONS*/}
+          <div className="flex items-center gap-2 flex-wrap pb-2">
+            <ActionButton
+              label="Editar"
+              icon={<MdEdit />}
+              color="bg-blue-50 text-blue-500 hover:bg-blue-200"
+              onClick={() => onEdit()}
+            />
+            <ActionButton
+              label="Archivar"
+              icon={<MdArchive />}
+              color="bg-red-50 text-red-500 hover:bg-red-200"
+              onClick={() => console.log("Archivar requisición")}
+            />
+            <ActionButton
+              label="Generar PDF"
+              icon={<MdPrint />}
+              color="bg-gray-50 text-gray-500 hover:bg-gray-200"
+              onClick={() => handleGeneratePDF()}
+            />
+          </div>
+
           <RequisitionHeader requisition={form} />
 
-          <ReadOnlyView />
+          {/* 🟣 TIMELINE (FULL WIDTH) */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              Linea de Tiempo
+            </h3>
+
+            <RequisitionTimeline
+              created_at={requisition?.created_at}
+              approved_at={requisition?.approved_at}
+              executed_at={requisition?.executed_at}
+              received_at={requisition?.received_at}
+            />
+          </div>
+
+          <PagedDataGrid
+            data={requisitionLines}
+            total={requisitionLines.length}
+            page={1}
+            pageSize={DataGrid.length}
+            onLoadData={() => {}}
+            pagination={false}
+          >
+            <PagedDataGrid.Column field="item" title="Artículo">
+              {(row) => (
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500">
+                    {row.internal_code}
+                  </span>
+                  <span className="text-gray-800 font-semibold">
+                    {row.item_name}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {row.item_brand} · {row.item_model}
+                  </span>
+                </div>
+              )}
+            </PagedDataGrid.Column>
+
+            <PagedDataGrid.Column field="quantity" title="Cantidad">
+              {(row) => (
+                <span className="text-xs text-gray-500">
+                  {row.quantity} {row.unit_code}
+                </span>
+              )}
+            </PagedDataGrid.Column>
+            <PagedDataGrid.Column field="location" title="Ubicación">
+              {(row) => (
+                <span className="flex items-center justify-center text-xs text-gray-500">
+                  {row.source_location_name}
+                </span>
+              )}
+            </PagedDataGrid.Column>
+
+            <PagedDataGrid.Column field="photos" title="Fotos">
+              {(row) => (
+                <BooleanBadge
+                  value={row.photos_count > 0}
+                  trueLabel={row.photos_count.toString()}
+                  falseLabel="0"
+                  trueIcon={<IoMdCamera />}
+                  falseIcon={<MdNoPhotography />}
+                  onClick={() => {
+                    setSelectedItem(row);
+                    setShowAddPhotos(true);
+                  }}
+                />
+              )}
+            </PagedDataGrid.Column>
+
+            {requisition.type === RequisitionType.RENT ||
+            requisition.type === RequisitionType.TRANSFER ? (
+              <PagedDataGrid.Column field="return" title="Retorno">
+                {(row) => (
+                  <BooleanBadge
+                    value={row.has_return}
+                    trueIcon={<MdCheckCircle />}
+                    falseIcon={<MdWarning />}
+                  />
+                )}
+              </PagedDataGrid.Column>
+            ) : null}
+          </PagedDataGrid>
 
           <ActionBar />
         </div>
       </div>
 
-      <Modal open={showAddPhotos} onClose={() => setShowAddPhotos(false)}>
+      <Modal
+        open={showAddPhotos}
+        title="          Evidencia del estado de salida
+"
+        onClose={() => setShowAddPhotos(false)}
+      >
         <RequisitionLinePhotosForm
           mode={mode}
           line={selectedItem}

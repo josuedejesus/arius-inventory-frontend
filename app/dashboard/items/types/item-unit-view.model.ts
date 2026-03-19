@@ -20,5 +20,6 @@ export interface ItemUnitViewModel {
   serial_number: string;
   status: ItemUnitStatus;
   updated_at: string;
-  type: ItemUnitType
+  type: ItemUnitType;
+  location_name: string;
 }

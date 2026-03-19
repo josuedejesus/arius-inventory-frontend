@@ -9,6 +9,15 @@ import {
   MdPerson,
   MdEdit,
   MdPrint,
+  MdArchive,
+  MdInventory,
+  MdWarehouse,
+  MdEvent,
+  MdCategory,
+  MdSignalWifiStatusbar1Bar,
+  MdInfo,
+  MdNote,
+  MdOutlineEditNote,
 } from "react-icons/md";
 import { formatDate, timeAgo } from "../../../utils/formatters";
 import { RequisitionViewModel } from "../types/requisition-view.model";
@@ -17,6 +26,11 @@ import RequisitionTimeline from "./RequisitionTimeline";
 import { PrimaryBadge } from "@/app/components/PrimaryBadge";
 import InfoCard from "@/app/components/InforCard";
 import ActionButton from "@/app/components/ActionButton";
+import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
+import { IoMdReturnLeft } from "react-icons/io";
+import InforBadge from "@/app/components/InfoBadge";
+import InfoBadge from "@/app/components/InfoBadge";
+import { RequisitionType } from "../types/requisition-type.enum";
 
 type Props = {
   requisition: RequisitionViewModel;
@@ -24,7 +38,7 @@ type Props = {
 
 export default function RequisitionHeader({ requisition }: Props) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {/* 🔷 HEADER */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div className="space-y-2">
@@ -32,29 +46,7 @@ export default function RequisitionHeader({ requisition }: Props) {
             #{requisition?.id}
           </h2>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <PrimaryBadge
-              label={REQUISITION_TYPE_LABELS[requisition?.type]}
-              className="bg-gray-100 text-gray-700"
-            />
-
-            <PrimaryBadge
-              label={REQUISITION_STATUS_LABELS[requisition?.status]?.label}
-              variant={`${REQUISITION_STATUS_LABELS[requisition?.status]?.className}`}
-            />
-
-            <ActionButton
-              label="Editar"
-              icon={<MdEdit />}
-              onClick={() => console.log("Editar requisición")}
-            />
-            <ActionButton
-              label="Imprimir como PDF"
-              icon={<MdPrint />}
-              color="bg-gray-100 text-gray-700 hover:bg-gray-200"
-              onClick={() => console.log("Imprimir requisición")}
-            />
-          </div>
+          
         </div>
 
         {requisition?.updated_at && (
@@ -65,102 +57,90 @@ export default function RequisitionHeader({ requisition }: Props) {
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 🟢 INFORMACIÓN GENERAL */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-            Información General
+            Resumen de Requisición
           </h3>
-
-          <div className="space-y-3">
-            <InfoCard
-              icon={<MdPerson className="text-sky-500" />}
-              label="Solicitado por"
-              value={requisition?.requestor_name ?? "—"}
-            />
-
-            {requisition?.approved_by && (
-              <InfoCard
-                icon={<MdPerson className="text-sky-500" />}
-                label="Aprobado por"
-                value={requisition?.approver_name ?? "—"}
-              />
-            )}
-
-            <InfoCard
-              icon={<MdLocationOn className="text-orange-400" />}
-              label="Destino"
-              value={requisition?.destination_location_name ?? "—"}
-            />
-            <InfoCard
-              icon={<MdSchedule className="text-green-500" />}
-              label="Programado para"
-              value={formatDate(requisition?.schedulled_at)}
-            />
-          </div>
         </div>
 
-        {/* 🔵 ESTADO */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-            Estado
-          </h3>
+        {/* GRID COMPACTO */}
+        <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-3 text-sm">
+          <InfoBadge
+            label="Destino"
+            icon={<MdWarehouse className="text-blue-400" />}
+            value={requisition?.destination_location_name}
+          />
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Estado</span>
-              <PrimaryBadge
-                label={REQUISITION_STATUS_LABELS[requisition?.status]?.label}
-                variant={`${REQUISITION_STATUS_LABELS[requisition?.status]?.className}`}
-              />
-            </div>
+          <InfoBadge
+            label="Dirección"
+            icon={<MdLocationOn className="text-orange-400" />}
+            value={requisition?.destination_address}
+          />
 
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Tipo</span>
-              <PrimaryBadge
-                label={REQUISITION_TYPE_LABELS[requisition?.type]}
-                className="bg-gray-100 text-gray-700"
-              />
-            </div>
+          <InfoBadge
+            label="Tipo de requisición"
+            icon={<MdCategory className="text-purple-400" />}
+            value={REQUISITION_TYPE_LABELS[requisition?.type]}
+          />
 
-            {requisition?.updated_at && (
-              <div className="text-xs text-gray-400 pt-2 border-t">
-                Última actualización: {formatDate(requisition?.updated_at)}
-              </div>
-            )}
-          </div>
-        </div>
+          <InfoBadge
+            label="Solicitado por"
+            icon={<MdPerson className="text-blue-400" />}
+            value={requisition?.requestor_name}
+          />
 
-        {/* 🟡 NOTAS */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-            Notas
-          </h3>
+          <InfoBadge
+            label="Aprobado por"
+            icon={<MdPerson className="text-orange-400" />}
+            value={requisition?.approver_name}
+          />
 
-          {requisition?.notes ? (
-            <p className="text-sm text-gray-600 leading-relaxed">
-              {requisition?.notes}
-            </p>
-          ) : (
-            <div className="text-sm text-gray-400 text-center py-6">
-              No hay notas disponibles
-            </div>
+          <InfoBadge
+            label="Fecha programada"
+            icon={<MdEvent className="text-gray-500" />}
+            value={
+              requisition?.schedulled_at
+                ? formatDate(requisition?.schedulled_at)
+                : "No programada"
+            }
+          />
+
+          <InfoBadge
+            label="Estado"
+            icon={<MdInfo className="text-yellow-500" />}
+            badgeValue={REQUISITION_STATUS_LABELS[requisition?.status]?.label}
+            variant={REQUISITION_STATUS_LABELS[requisition?.status]?.className}
+          />
+
+          {(requisition?.type === RequisitionType.RENT ||
+            requisition?.type === RequisitionType.TRANSFER) && (
+            <InfoBadge
+              label="Estado de devolución"
+              icon={<IoMdReturnLeft className="text-orange-400" />}
+              badgeValue={
+                RETURN_STATUS_CONFIG[requisition?.return_status]?.label
+              }
+              variant={
+                RETURN_STATUS_CONFIG[requisition?.return_status]?.className
+              }
+            />
           )}
+
+          <InfoBadge
+            label="Notas"
+            icon={<MdOutlineEditNote className="text-orange-400" />}
+            value={requisition?.notes}
+          />
         </div>
-      </div>
 
-      {/* 🟣 TIMELINE (FULL WIDTH) */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-          Linea de Tiempo
-        </h3>
-
-        <RequisitionTimeline
-          created_at={requisition?.created_at}
-          approved_at={requisition?.approved_at}
-          executed_at={requisition?.executed_at}
-          received_at={requisition?.received_at}
-        />
+        {/* FOOTER */}
+        {requisition?.updated_at && (
+          <div className="text-xs text-gray-400 pt-2 flex justify-end">
+            Última actualización: {formatDate(requisition?.updated_at)}
+          </div>
+        )}
       </div>
     </div>
   );

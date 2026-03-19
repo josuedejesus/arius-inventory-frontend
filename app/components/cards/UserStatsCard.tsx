@@ -103,56 +103,60 @@ export default function UserStatCard({ userStat }: Props) {
           {loading ? (
             <LoadingScreen />
           ) : (
-            locations.map((location: any) => (
-              <div key={location.id} className="bg-white rounded-lg p-3 border">
-                {/* Location */}
-                <div className="flex items-center justify-between mb-2">
-                  {/* Location */}
-                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <MdLocationOn className="text-blue-500" />
-                    {location.name}
-                  </div>
+            locations.map((location: any) => {
+              const unitsByLocation = itemUnits.filter(
+                (unit: any) => unit.location_id === location.id,
+              );
 
-                  {/* Units count */}
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                    <MdInventory className="text-emerald-500" />
-                    <span className="font-medium text-gray-700">
-                      {itemUnits.length}
-                    </span>
-                    <span>equipos</span>
-                  </div>
-                </div>
-
-                {/* Items */}
-                <div className="pl-6 space-y-1">
-                  {itemUnits.map((unit: any) => (
-                    <div
-                      key={unit.id}
-                      className="flex items-start gap-2 text-sm text-gray-600"
-                    >
-                      <MdInventory className="text-emerald-500 mt-0.5" />
-
-                      <div className="flex flex-col">
-                        {/* Item name */}
-                        <span className="font-medium text-gray-800">
-                          {unit.name}
-                        </span>
-
-                        {/* Brand + model */}
-                        <span className="text-gray-600">
-                          {unit.brand} {unit.model}
-                        </span>
-
-                        {/* Internal code */}
-                        <span className="text-xs text-gray-400 font-mono">
-                          {unit.internal_code}
-                        </span>
-                      </div>
+              return (
+                <div
+                  key={location.id}
+                  className="bg-white rounded-lg p-3 border"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <MdLocationOn className="text-blue-500" />
+                      {location.name}
                     </div>
-                  ))}
+
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <MdInventory className="text-emerald-500" />
+                      <span className="font-medium text-gray-700">
+                        {unitsByLocation.length}
+                      </span>
+                      <span>equipos</span>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className="pl-6 space-y-1">
+                    {unitsByLocation.map((unit: any) => (
+                      <div
+                        key={unit.id}
+                        className="flex items-start gap-2 text-sm text-gray-600"
+                      >
+                        <MdInventory className="text-emerald-500 mt-0.5" />
+
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-800">
+                            {unit.name}
+                          </span>
+
+                          <span className="text-gray-600">
+                            {unit.brand} {unit.model}
+                          </span>
+
+                          <span className="text-xs text-gray-400 font-mono">
+                            {unit.internal_code}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
