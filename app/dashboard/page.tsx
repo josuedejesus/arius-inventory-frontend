@@ -5,7 +5,7 @@ import axios from "axios";
 import { ItemUnitStatus } from "../components/item-units/types/item-units-status.enum";
 import Modal from "../components/Modal";
 import DataGrid, { ColumnDef } from "../components/DataGrid";
-import ItemUnitCard from "../components/cards/ItemUnitCard";
+import ItemUnitCard from "./items/cards/ItemUnitCard";
 import { toast } from "sonner";
 import { LOCATION_TYPE_LABELS } from "@/constants/LocationTypes";
 import { stat } from "fs";
@@ -27,6 +27,10 @@ import LoadingScreen from "../components/LoadingScreen";
 import UserStatCard from "../components/cards/UserStatsCard";
 import ItemUnitUsageCard from "../components/cards/ItemUnitUsageCard";
 import ItemUnitView from "./items/components/ItemUnitView";
+import PagedDataGrid from "../components/paged-datagrid/PagedDatagrid";
+import MinimalItemUnitCard from "./items/cards/MinimalItemUnitCard";
+import { ItemUnitViewModel } from "./items/types/item-unit-view.model";
+import LocationDashboard from "../components/LocationDashboard";
 
 const columns: ColumnDef<any>[] = [
   { key: "item", title: "Artículo" },
@@ -37,14 +41,12 @@ export default function Dashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const [itemUnitsStats, setItemUnitsStats] = useState<any>(undefined);
-  const [locationsStats, setLocationsStats] = useState<any[]>([]);
   const [supplesStats, setSuppliesStats] = useState<any>(undefined);
   const [activeLocations, setActiveLocations] = useState<number>(0);
   const [locations, setLocations] = useState<any[]>([]);
   const [userStats, setUserStats] = useState<any>(undefined);
   const [stockLevels, setStockLevels] = useState<any[]>([]);
   const [showItemsModal, setShowItemsModal] = useState(false);
-  const [modalItems, setModalItems] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemUnits, setItemUnits] = useState<any[]>([]);
@@ -52,7 +54,9 @@ export default function Dashboard() {
   const [unitsForStats, setUnitsForStats] = useState<any[]>([]);
   const [showItemModal, setShowItemModal] = useState<boolean>(false);
   const [selectedItemUnit, setSelectedItemUnit] = useState<any>(null);
-
+  const [showLocationItems, setShowLocationItems] = useState<boolean>(false);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [items, setItems] = useState<any[]>([]);
   const handleGetItemUnitsStats = async () => {
     try {
       const response = await axios.get(`${apiUrl}/item-units/get-stats`);
@@ -106,13 +110,14 @@ export default function Dashboard() {
   };
 
   const handleGetItemUnits = async (filters?: any) => {
+    console.log("fetching item units with filters", filters);
     try {
       setLoadingItems(true);
       const response = await axios.get(`${apiUrl}/item-units`, {
         params: filters,
       });
+      console.log("item units", response.data);
       setItemUnits(response.data.data);
-      setShowItemsModal(true);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -132,23 +137,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleGetItemUnitsUsage = async (id: any) => {
-    try {
-      setLoadingItems(true);
-      const response = await axios.get(
-        `${apiUrl}/item-units/${id}/usage-logs`,
-        {},
-      );
-      console.log("logs", response.data);
-      setUsageLogs(response.data);
-    } catch (error: any) {
-      const message = error?.response?.data?.message ?? "";
-      toast.error(message);
-    } finally {
-      setLoadingItems(false);
-    }
-  };
-
   const refreshAll = useCallback(async () => {
     try {
       await Promise.all([
@@ -157,7 +145,6 @@ export default function Dashboard() {
         handleGetSuppliesStats(),
         handleGetUsersStats(),
         handleGetStockLevels(),
-        handleGetItemUnitForStats(),
       ]);
     } catch (error: any) {
       toast.error(error.message);
@@ -208,7 +195,6 @@ export default function Dashboard() {
               onClick={() =>
                 handleGetItemUnits({
                   status: "AVAILABLE",
-                  requireLocation: true,
                 })
               }
               className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
@@ -220,7 +206,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-green-600">
+                <span className="font-semibold text-blue-400">
                   {itemUnitsStats?.available_units}
                 </span>
               </div>
@@ -229,8 +215,7 @@ export default function Dashboard() {
             <button
               onClick={() =>
                 handleGetItemUnits({
-                  status: "RESERVED",
-                  requireLocation: true,
+                  status: ItemUnitStatus.RESERVED,
                 })
               }
               className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
@@ -242,14 +227,16 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-orange-400">
+                <span className="font-semibold text-blue-400">
                   {itemUnitsStats?.reserved_units}
                 </span>
               </div>
             </button>
 
             <button
-              onClick={() => handleGetItemUnits({ withoutLocation: true })}
+              onClick={() =>
+                handleGetItemUnits({ status: ItemUnitStatus.CREATED })
+              }
               className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
     text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
             >
@@ -259,7 +246,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-red-400">
+                <span className="font-semibold text-blue-400">
                   {itemUnitsStats?.without_location}
                 </span>
               </div>
@@ -276,7 +263,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-500">
+                <span className="font-semibold text-blue-400">
                   {itemUnitsStats?.rented_units}
                 </span>
               </div>
@@ -293,7 +280,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-yellow-400">
+                <span className="font-semibold text-blue-400">
                   {itemUnitsStats?.in_transit_units}
                 </span>
               </div>
@@ -313,14 +300,30 @@ export default function Dashboard() {
                 <LocationStatcard
                   key={stat?.id}
                   stat={stat}
-                  onClick={(e: any) =>
-                    handleGetItemUnits({ locationId: e?.id })
-                  }
+                  onClick={(e: any) => {
+                    setSelectedLocation(stat);
+                    handleGetItemUnits({
+                      locationId: stat?.id,
+                    });
+                    setShowLocationItems(true);
+                  }}
                 />
               ))
             ) : (
               <p className="text-xs text-gray-400">Sin datos</p>
             )}
+          </div>
+        </StatCard>
+
+        <StatCard
+          title="Usuarios activos"
+          count={userStats?.length}
+          icon={<MdPerson />}
+        >
+          <div className="space-y-2 text-sm">
+            {userStats?.map((user: any) => (
+              <UserStatCard key={user.id} stat={user} onClick={() => {}} />
+            ))}
           </div>
         </StatCard>
 
@@ -390,20 +393,8 @@ export default function Dashboard() {
             )}
           </div>
         </StatCard>
-        <StatCard
-          title="Usuarios activos"
-          count={userStats?.length}
-          icon={<MdPerson />}
-        >
-          <div className="space-y-1 text-sm">
-            {userStats?.map((user: any) => (
-              <UserStatCard key={user.id} userStat={user} />
-            ))}
-          </div>
-        </StatCard>
+        
       </div>
-
-     
 
       <Modal
         open={showItemsModal}
@@ -444,7 +435,15 @@ export default function Dashboard() {
         title="Artículos"
         onClose={() => setShowItemModal(false)}
       >
-        <ItemUnitView itemUnidId={selectedItemUnit?.id}/>
+        <ItemUnitView itemUnidId={selectedItemUnit?.id} />
+      </Modal>
+
+      <Modal
+        open={showLocationItems}
+        title={"Por ubicación"}
+        onClose={() => setShowLocationItems(false)}
+      >
+        <LocationDashboard locationId={selectedLocation?.id} />
       </Modal>
     </div>
   );

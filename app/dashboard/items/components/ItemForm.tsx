@@ -1,5 +1,4 @@
 "use client";
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -12,31 +11,19 @@ import FormSelectSearch from "../../../components/form/FormSelectSearch";
 import FormImageUpload from "../../../components/form/FormImageUpload";
 import { FormLayout } from "../../../components/form/FormLayout";
 import FormTabs from "../../../components/form/FormTabs";
-import { CreateItemDto } from "../types/create-item.dto";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import FormTabPanel from "@/app/components/form/FormTabPanel";
-import ItemUnitCard from "@/app/components/cards/ItemUnitCard";
+import ItemUnitCard from "@/app/dashboard/items/cards/ItemUnitCard";
 import { ItemViewModel } from "../types/item-view.model";
 import { ItemType } from "../types/item-type.enum";
 import SearchBar from "@/app/components/SearchBar";
 import Modal from "@/app/components/Modal";
 import ItemUnitForm from "./ItemUnitForm";
 import { UpdateItemDto } from "../types/update-item.dto";
-import ItemCard from "./ItemCard";
-import { MdInventory } from "react-icons/md";
-import ItemHeader from "./ItemHeader";
-
-type Item = {
-  name: string;
-  brand: string;
-  model: string;
-  type: string;
-  tracking: string;
-  unit: any;
-  is_active: boolean;
-  minimum_stock: number;
-  image_path: string;
-};
+import SavingScreen from "@/app/components/SavingScreen";
+import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
+import { ItemUnitViewModel } from "../types/item-unit-view.model";
+import ItemCard from "../cards/ItemCard";
 
 type ItemFormProps = {
   itemId?: () => void;
@@ -51,7 +38,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
     type: ItemType.TOOL,
     tracking: "",
     unit_id: 0,
-    is_active: false,
+    is_active: true,
     created_at: new Date(),
     updated_at: new Date(),
     image_path: "",
@@ -66,35 +53,23 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
 
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
   const [selectedTab, setSelectedTab] = useState<string>("general");
-
-  //Modals
-  const [showUnits, setShowUnits] = useState<boolean>(false);
-
   const [searchValue, setSearchValue] = useState<string>("");
-
-  //Units
   const [units, setUnits] = useState<any[]>([]);
-
   const [itemUnits, setItemUnits] = useState<any[]>([]);
+  const [accessories, setAcccessories] = useState<any[]>([]);
+  const [itemAccessories, setItemAccessories] = useState<any[]>([]);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [selectedItemUnit, setSelectedItemUnit] = useState<any>(undefined);
+  const [showItemUnitForm, setShowItemUnitForm] = useState<boolean>(false);
+  const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
 
   const filteredUnits = itemUnits.filter((u: any) =>
     `${u.internal_code}`.toLowerCase().includes(searchValue.toLowerCase()),
   );
-
-  //Accessories
-  const [accessories, setAcccessories] = useState<any[]>([]);
-
-  //Item Accessories
-  const [itemAccessories, setItemAccessories] = useState<any[]>([]);
-
-  const [isEdit, setIsEdit] = useState<boolean>(false);
-
-  const [selectedItemUnit, setSelectedItemUnit] = useState<any>(undefined);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -102,13 +77,34 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const [showItemUnitForm, setShowItemUnitForm] = useState<boolean>(false);
+  useEffect(() => {
+    if (itemId) {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          setIsEdit(true);
 
-  const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
+          await Promise.all([
+            handleGetItem(),
+            handleGetItemAccessories(),
+            handleGetItemUnits(),
+          ]);
+        } catch (error) {
+          setError("Error obteniendo datos del artículo");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    } else {
+    }
+    handleGetUnits();
+    handleGetAccessories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError(null);
 
     if (isEdit) {
@@ -124,27 +120,19 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
     setItemUnits((prev) => {
       const existsIndex = prev.findIndex((u) => u.tempId === unit.tempId);
 
-      // 🔹 EDIT
       if (existsIndex >= 0) {
         toast.success("Artículo actualizado exitosamente");
 
-        if (image_file) {
-          setImageFiles((files: any[]) => {
-            const updated = [...files];
-            updated[existsIndex] = image_file;
-            return updated;
-          });
-        }
-
-        return prev.map((u) => (u.tempId === unit.tempId ? unitData : u));
+        return prev.map((u, i) =>
+          i === existsIndex
+            ? { ...unitData, image_file: image_file ?? u.image_file }
+            : u,
+        );
       }
 
-      // 🔹 CREATE
       toast.success("Artículo creado exitosamente");
 
-      setImageFiles((files: any[]) => [...files, image_file ?? null]);
-
-      return [...prev, unitData];
+      return [...prev, { ...unitData, image_file }];
     });
   };
 
@@ -157,15 +145,17 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       formData.append("model", form.model);
       formData.append("type", form.type);
       formData.append("tracking", form.type ? "SERIAL" : "NONE");
-      formData.append("unit_id", String(unit?.id) || "");
+      formData.append("unit_id", String(form.unit_id) || "");
       formData.append("is_active", String(form.is_active));
       formData.append("minimum_stock", String(form.minimum_stock));
       formData.append("usage_hours", String(form.usage_hours));
       formData.append("accessories", JSON.stringify(itemAccessories));
       formData.append("item_units", JSON.stringify(itemUnits));
 
-      imageFiles.forEach((file) => {
-        if (file) formData.append("images", file);
+      itemUnits.forEach((unit) => {
+        if (unit.image_file) {
+          formData.append("images", unit.image_file);
+        }
       });
 
       const respose = await axios.post(`${apiUrl}/items`, formData, {
@@ -182,7 +172,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
         "El servidor no está disponible en este momento. Intente más tarde.";
       toast.error(message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -202,7 +192,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
         item_units: itemUnits,
       };
 
-
       const response = await axios.put(`${apiUrl}/items/${itemId}`, payload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -216,10 +205,9 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
         "El servidor no está disponible en este momento. Intente más tarde.";
       toast.error(message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
-
   const handleGetItem = () => {
     axios
       .get(`${apiUrl}/items/${itemId}`)
@@ -283,7 +271,12 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       .then((response) => {
         setUnits(response.data.data);
       })
-      .catch((error) => {})
+      .catch((error) => {
+        const message =
+          error?.response?.data?.message ??
+          "El servidor no está disponible en este momento. Intente más tarde.";
+        toast.error(message);
+      })
       .finally(() => {});
   };
 
@@ -292,16 +285,11 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
       const response = await axios.get(`${apiUrl}/item-units/item/${itemId}`);
       setItemUnits(response.data.data);
     } catch (error: any) {
+      const message =
+        error?.response?.data?.message ??
+        "El servidor no está disponible en este momento. Intente más tarde.";
+      toast.error(message);
     }
-  };
-
-  const selectUnit = (unit: any) => {
-    setForm((prev: any) => ({
-      ...prev,
-      unit: unit,
-    }));
-
-    setShowUnits(false);
   };
 
   const removeAccessory = (id: number) => {
@@ -309,7 +297,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
   };
 
   const handleCreateAccessory = (accessory: any) => {
-    setLoading(true);
+    setSaving(true);
     setError(null);
 
     const payload = {
@@ -338,7 +326,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
         }
       })
       .finally(() => {
-        setLoading(false);
+        setSaving(false);
       });
   };
 
@@ -358,23 +346,28 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
     });
   };
 
-  useEffect(() => {
-    if (itemId) {
-      setIsEdit(true);
-      handleGetItem();
-      handleGetItemAccessories();
-      handleGetItemUnits();
-    } else {
-    }
-    handleGetUnits();
-    handleGetAccessories();
-  }, []);
+  const skeleton = (
+    <div className="p-4 w-full">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-1/3 h-6 bg-gray-300 rounded" />
+        <div className="w-1/4 h-6 bg-gray-300 rounded" />
+      </div>
+      <div className="space-y-4">
+        <div className="w-full h-4 bg-gray-300 rounded" />
+        <div className="w-full h-4 bg-gray-300 rounded" />
+        <div className="w-1/2 h-4 bg-gray-300 rounded" />
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return skeleton;
+  }
 
   return (
     <>
-      {loading ? (
-        <LoadingScreen size={24} />
-      ) : (
+      <div className="relative">
+        {saving && <SavingScreen />}
         <FormLayout title="" description="" onSubmit={handleSubmit}>
           {/* Tabs / Sections */}
           <FormTabs
@@ -432,19 +425,17 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 />
               </div>
 
-              <FormSwitch
-                label="Activo"
-                name="is_active"
-                value={form?.is_active}
-                onChange={handleChange}
-              />
-
               <FormSelectSearch
                 label="Unidad"
-                value={unit}
+                value={{
+                  id: String(form?.unit_id),
+                  name: form?.unit_name,
+                }}
                 placeholder=""
                 options={units}
-                onSelect={setUnit}
+                onSelect={(unit) =>
+                  setForm({ ...form, unit_id: unit.id, unit_name: unit.name })
+                }
               />
 
               <FormField
@@ -464,6 +455,13 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 placeholder=""
                 onChange={handleChange}
               />
+
+              <FormSwitch
+                label="Activo"
+                name="is_active"
+                value={form?.is_active}
+                onChange={handleChange}
+              />
             </FormSection>
           </FormTabPanel>
 
@@ -473,7 +471,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 title="Accesorios"
                 description="Accesorios relacionados al articulo"
               >
-                <ItemHeader item={form} />
+                <ItemCard item={form} />
 
                 <Autocomplete
                   items={accessories}
@@ -519,7 +517,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 title="Unidades"
                 description="Creacion y edicion de unidades del articulo"
               >
-                <ItemHeader item={form} />
+                <ItemCard item={form} />
 
                 <div className="flex requisitions-center justify-between space-x-2">
                   <SearchBar
@@ -541,32 +539,48 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {filteredUnits.length === 0 ? (
                     <p className="text-sm text-gray-400 mt-2">
-                      No se han agregado unidades
+                      No se han agregado unidades o no coinciden con la búsqueda
                     </p>
                   ) : (
-                    filteredUnits.map((u: any) => (
-                      <ItemUnitCard
-                        key={u.id || u.tempId}
-                        itemUnit={u}
-                        item={form}
-                        onClick={() => {
-                          setSelectedItemUnit(u);
+                    <div className="w-full">
+                      <PagedDataGrid
+                        data={filteredUnits}
+                        page={1}
+                        pageSize={1}
+                        total={filteredUnits?.length}
+                        pagination={false}
+                        onLoadData={handleGetItemUnits}
+                        onRowClick={(row: ItemUnitViewModel) => {
+                          setSelectedItemUnit(row);
                           setShowItemUnitForm(true);
                         }}
-                      />
-                    ))
+                      >
+                        <PagedDataGrid.Column
+                          field="item_unit"
+                          title="Unidades de artículo"
+                        >
+                          {(row: any) => (
+                            <ItemUnitCard
+                              key={row.id || row.tempId}
+                              itemUnit={row}
+                              item={form}
+                            />
+                          )}
+                        </PagedDataGrid.Column>
+                      </PagedDataGrid>
+                    </div>
                   )}
                 </div>
               </FormSection>
             </FormTabPanel>
           )}
         </FormLayout>
-      )}
+      </div>
 
-      {/*Modify Unit*/}
+      {/*ITEM UNIT FORM*/}
       {showItemUnitForm && (
         <Modal
-          title="Modificar Unidad"
+          title="Unidad de artículo"
           open={showItemUnitForm}
           onClose={() => {
             setSelectedItemUnit(undefined);

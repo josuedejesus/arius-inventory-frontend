@@ -25,6 +25,7 @@ import { RequisitionStatus } from "../types/requisition-status.enum";
 import { ItemType } from "../../items/types/item-type.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { ReturnStatus } from "../types/return-status.enum";
+import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
 
 const REQUISITION_TYPE_OPTIONS = [
   /*{
@@ -34,38 +35,38 @@ const REQUISITION_TYPE_OPTIONS = [
   },*/
   {
     value: RequisitionType.ADJUSTMENT,
-    label: "Ajuste",
+    label: REQUISITION_TYPE_LABELS[RequisitionType.ADJUSTMENT].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER"],
   },
   {
     value: RequisitionType.PURCHASE_RECEIPT,
-    label: "Compra",
+    label: REQUISITION_TYPE_LABELS[RequisitionType.PURCHASE_RECEIPT].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER"],
   },
 
   {
     value: RequisitionType.RENT,
-    label: "Renta",
+    label: REQUISITION_TYPE_LABELS[RequisitionType.RENT].label,
     roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.RETURN,
-    label: "Devolución",
+    label: REQUISITION_TYPE_LABELS[RequisitionType.RETURN].label,
     roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.CONSUMPTION,
-    label: "Consumo",
+    label: REQUISITION_TYPE_LABELS[RequisitionType.CONSUMPTION].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.TRANSFER,
-    label: "Tranferencia",
+    label: REQUISITION_TYPE_LABELS[RequisitionType.TRANSFER].label,
     roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.SALE,
-    label: "Venta",
+    label: REQUISITION_TYPE_LABELS[RequisitionType.SALE].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER"],
   },
 ];
@@ -509,6 +510,10 @@ export default function NewRequisitionForm({
                 });
               }}
             />
+
+            <div>
+              <span className="text-sm text-gray-500">{REQUISITION_TYPE_LABELS[form.type as RequisitionType]?.description}</span>
+            </div>
 
             {typeConfig?.showDestination && (
               <FormSelectSearch

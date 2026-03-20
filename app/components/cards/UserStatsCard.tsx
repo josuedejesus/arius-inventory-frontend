@@ -1,165 +1,58 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { MdLocationOn, MdInventory } from "react-icons/md";
-import { toast } from "sonner";
-import LoadingScreen from "../LoadingScreen";
-import { time } from "console";
+import { LocationType } from "@/app/dashboard/locations/types/location-type.enum";
+import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
+import { PERSON_ROLE_LABELS } from "@/constants/PersonRoles";
+import { MdInventory, MdLocationOn } from "react-icons/md";
 
-type Props = {
-  userStat: any;
+
+
+type UserStat = {
+  id: number;
+  person_name: string;
+  total_locations: number;
+  total_units: number;
 };
 
-export default function UserStatCard({ userStat }: Props) {
-  const [open, setOpen] = useState(false);
+type Props = {
+  stat: UserStat;
+  onClick: (stat: any) => void;
+};
+export default function UserStatcard({
+  stat,
+  onClick,
+}: Props) {
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  const [locations, setLocations] = useState<any[]>([]);
-  const [itemUnits, setItemUnits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const handleFetchData = async () => {
-    setOpen((prev) => !prev);
-
-    setLoading(true);
-
-    try {
-      await Promise.all([handleGetLocations(), handleGetItemUnits()]);
-    } catch (error: any) {
-      toast.error(error.message || "Error obteniendo los datos del usuario");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGetLocations = async () => {
-    try {
-      const response = await axios.get(
-        `${apiUrl}/persons/${userStat?.person_id}/locations`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-      console.log(response.data);
-      setLocations(response.data);
-    } catch (error: any) {
-      toast.error("Error obteniendo las ubicaciones del usuario");
-    }
-  };
-
-  const handleGetItemUnits = async () => {
-    try {
-      const response = await axios.get(
-        `${apiUrl}/persons/${userStat?.person_id}/item-units`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-      console.log(response.data);
-      setItemUnits(response.data);
-    } catch (error: any) {
-      toast.error("Error obteniendo las unidades de artículo del usuario");
-    }
-  };
-
+  console.log("stat", stat);
   return (
-    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-      {/* HEADER */}
-      <div
-        onClick={handleFetchData}
-        className="cursor-pointer px-4 py-3 hover:bg-gray-50 transition"
-      >
-        <div className="flex justify-between items-center my-1">
-          <h3 className="text-sm text-gray-800">{userStat.person_name}</h3>
-        </div>
-        {!open && (
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <MdLocationOn className="text-blue-500 text-base" />
-              <span className="font-medium text-gray-700">
-                {userStat.total_locations}
-              </span>
-              <span className="text-xs text-gray-400">ubicaciones</span>
-            </div>
+    <button
+  onClick={() => onClick(stat)}
+  key={stat?.id}
+  className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
+  text-gray-600 bg-gray-100 hover:bg-gray-50 hover:text-gray-900
+  transition-all duration-150 cursor-pointer"
+>
+  {/* 🔷 IZQUIERDA */}
+  <div className="flex items-center gap-2 min-w-0">
+    <span className="font-medium truncate">
+      {stat?.person_name}
+    </span>
+  </div>
 
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <MdInventory className="text-emerald-500 text-base" />
-              <span className="font-medium text-gray-700">
-                {userStat.total_units}
-              </span>
-              <span className="text-xs text-gray-400">equipos</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* COLLAPSABLE */}
-      {open && (
-        <div className="border-t bg-gray-50 px-4 py-3 space-y-3">
-          {loading ? (
-            <LoadingScreen />
-          ) : (
-            locations.map((location: any) => {
-              const unitsByLocation = itemUnits.filter(
-                (unit: any) => unit.location_id === location.id,
-              );
-
-              return (
-                <div
-                  key={location.id}
-                  className="bg-white rounded-lg p-3 border"
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <MdLocationOn className="text-blue-500" />
-                      {location.name}
-                    </div>
-
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <MdInventory className="text-emerald-500" />
-                      <span className="font-medium text-gray-700">
-                        {unitsByLocation.length}
-                      </span>
-                      <span>equipos</span>
-                    </div>
-                  </div>
-
-                  {/* Items */}
-                  <div className="pl-6 space-y-1">
-                    {unitsByLocation.map((unit: any) => (
-                      <div
-                        key={unit.id}
-                        className="flex items-start gap-2 text-sm text-gray-600"
-                      >
-                        <MdInventory className="text-emerald-500 mt-0.5" />
-
-                        <div className="flex flex-col">
-                          <span className="font-medium text-gray-800">
-                            {unit.name}
-                          </span>
-
-                          <span className="text-gray-600">
-                            {unit.brand} {unit.model}
-                          </span>
-
-                          <span className="text-xs text-gray-400 font-mono">
-                            {unit.internal_code}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+  {/* 🔷 DERECHA */}
+  <div className="flex items-center gap-6 flex-shrink-0">
+    <div className="flex items-center gap-1.5 text-gray-500 whitespace-nowrap">
+      <MdLocationOn className="text-blue-500 text-base" />
+      <span className="font-medium text-gray-700">
+        {stat.total_locations}
+      </span>
     </div>
+
+    <div className="flex items-center gap-1.5 text-gray-500 whitespace-nowrap">
+      <MdInventory className="text-emerald-500 text-base" />
+      <span className="font-medium text-gray-700">
+        {stat.total_units}
+      </span>
+    </div>
+  </div>
+</button>
   );
 }

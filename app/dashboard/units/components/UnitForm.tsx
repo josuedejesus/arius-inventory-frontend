@@ -10,6 +10,8 @@ import { CreateUnitDto } from "../types/create-unit.dto";
 import { UpdateUnitDto } from "../types/update-units.dto";
 import { UpdateItemDto } from "../../items/types/update-item.dto";
 import { UnitViewModel } from "../types/unit-view.model";
+import LoadingScreen from "@/app/components/LoadingScreen";
+import SavingScreen from "@/app/components/SavingScreen";
 
 type UnitFormProps = {
   unitId: number;
@@ -29,10 +31,9 @@ export default function UnitForm({ unitId, onSuccess }: UnitFormProps) {
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  console.log(form);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -57,7 +58,7 @@ export default function UnitForm({ unitId, onSuccess }: UnitFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError(null);
 
     const payload: UpdateUnitDto | CreateUnitDto = {
@@ -86,7 +87,7 @@ export default function UnitForm({ unitId, onSuccess }: UnitFormProps) {
 
       toast.error(message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -102,36 +103,51 @@ export default function UnitForm({ unitId, onSuccess }: UnitFormProps) {
 
       toast.error(message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   useEffect(() => {
     if (unitId) {
+      setLoading(true);
       setIsEdit(true);
       handleGetUnit();
     }
   }, []);
 
+  const skeleton = (
+    <div className="animate-pulse">
+      <div className="h-6 bg-gray-300 rounded w-full mb-4"></div>
+      <div className="h-6 bg-gray-300 rounded w-full mb-2"></div>
+    </div>
+  );
+
+  if (loading) {
+    return skeleton;
+  }
+
   return (
-    <FormLayout title="" description="" onSubmit={handleSubmit}>
-      {/* Datos personales */}
-      <FormSection title="Informacion general" description="">
-        <FormField
-          label="Nombre"
-          placeholder=""
-          name="name"
-          value={form?.name}
-          onChange={handleChange}
-        />
-        <FormField
-          label="Codigo"
-          placeholder=""
-          name="code"
-          value={form?.code}
-          onChange={handleChange}
-        />
-      </FormSection>
-    </FormLayout>
+    <div className="relative">
+      {saving && <SavingScreen />}
+      <FormLayout title="" description="" onSubmit={handleSubmit}>
+        {/* Datos personales */}
+        <FormSection title="Informacion general" description="">
+          <FormField
+            label="Nombre"
+            placeholder=""
+            name="name"
+            value={form?.name}
+            onChange={handleChange}
+          />
+          <FormField
+            label="Codigo"
+            placeholder=""
+            name="code"
+            value={form?.code}
+            onChange={handleChange}
+          />
+        </FormSection>
+      </FormLayout>
+    </div>
   );
 }

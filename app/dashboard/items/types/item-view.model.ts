@@ -7,7 +7,7 @@ export interface ItemViewModel {
   model: string;
   type: ItemType;
   tracking: string;
-  unit_id?: number;
+  unit_id: number;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;

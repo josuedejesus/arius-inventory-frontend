@@ -37,8 +37,9 @@ import { on } from "events";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
 import { RequisitionType } from "../types/requisition-type.enum";
 import { IoMdCamera } from "react-icons/io";
-import BooleanBadge from "@/app/components/BooleanBadge";
+import BooleanBadge from "@/app/components/badges/BooleanBadge";
 import RequisitionTimeline from "./RequisitionTimeline";
+import SavingScreen from "@/app/components/SavingScreen";
 
 const columns = [
   { key: "item", title: "Ítem" },
@@ -78,8 +79,6 @@ export default function RequisitionView({
     ReturnStatus.NONE,
   );
   const [requisitionLines, setRequisitionLiness] = useState<any[]>([]);
-  const [containerHeight, setContainerHeight] = useState<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const {
     getById: getRequisition,
@@ -89,11 +88,7 @@ export default function RequisitionView({
   } = useRequisitions();
   const { getByRequisitionId: getRequisitionLines } = useRequisitionLines();
 
-  useEffect(() => {
-    if (!loading && containerRef.current) {
-      setContainerHeight(containerRef.current.offsetHeight);
-    }
-  }, [loading]);
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -134,7 +129,7 @@ export default function RequisitionView({
 
   const handleGeneratePDF = async () => {
     try {
-      setLoading(true);
+      setActionLoading(true);
       const response = await axios.get(
         `${apiUrl}/pdf/${requisition?.id}/requisition`,
         {
@@ -155,7 +150,7 @@ export default function RequisitionView({
     } catch (error: any) {
       toast.error(error.message || "Error generando el PDF");
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -244,7 +239,11 @@ export default function RequisitionView({
         {/* HEADER */}
         <div className="bg-white border rounded-xl p-4 space-y-3">
           <div className="h-5 w-1/3 bg-gray-200 rounded" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
+            <div className="h-4 bg-gray-200 rounded" />
+            <div className="h-4 bg-gray-200 rounded" />
+            <div className="h-4 bg-gray-200 rounded" />
+            <div className="h-4 bg-gray-200 rounded" />
             <div className="h-4 bg-gray-200 rounded" />
             <div className="h-4 bg-gray-200 rounded" />
             <div className="h-4 bg-gray-200 rounded" />
@@ -288,30 +287,19 @@ export default function RequisitionView({
     );
   };
 
+  if (loading) {
+    return <RequisitionSkeleton />;
+  }
+
   return (
     <>
-      <div className="relative  min-h-[500px]">
-        {/* 🔥 LOADING GLOBAL */}
-        {loading && (
-          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-40">
-            {" "}
-            <LoadingScreen />
-          </div>
-        )}
-
-        {/* 🔥 ACTION LOADING (ya lo tenías) */}
+      <div className="relative">
         {actionLoading && (
-          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-40">
-            <LoadingScreen />
-          </div>
+          <SavingScreen/>
         )}
 
         <div
-          className={
-            actionLoading
-              ? "flex items-center justify-center pointer-events-none opacity-60 space-y-2"
-              : ""
-          }
+          className=""
         >
           {/*ACTIONS*/}
           <div className="flex items-center gap-2 flex-wrap pb-2">

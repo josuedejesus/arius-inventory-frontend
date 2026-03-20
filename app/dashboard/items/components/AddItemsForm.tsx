@@ -5,7 +5,7 @@ import FormTabs from "../../../components/form/FormTabs";
 import FormTabPanel from "../../../components/form/FormTabPanel";
 import FormSection from "../../../components/form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "../../../components/cards/ItemUnitCard";
+import ItemUnitCard from "../cards/ItemUnitCard";
 import SupplyCard from "../../../components/cards/SupplyCard";
 import { RequisitionType } from "../../requisitions/types/requisition-type.enum";
 

@@ -5,7 +5,7 @@ import FormTabs from "./form/FormTabs";
 import FormTabPanel from "./form/FormTabPanel";
 import FormSection from "./form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "./cards/ItemUnitCard";
+import ItemUnitCard from "../dashboard/items/cards/ItemUnitCard";
 import LocationLineCard from "./cards/LocationLineCard";
 
 type AddItemsFormProps = {

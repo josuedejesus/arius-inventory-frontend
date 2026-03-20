@@ -10,4 +10,6 @@ export interface PersonViewModel {
     updated_at?: Date;
     address: string;
     rtn: string;
+    //user
+    username: string;
 }

@@ -1,29 +1,21 @@
 "use client";
 
 import Modal from "@/app/components/Modal";
-import SearchBar from "@/app/components/SearchBar";
-import ItemCard from "@/app/dashboard/items/components/ItemCard";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import ItemForm from "@/app/dashboard/items/components/ItemForm";
 import LoadingScreen from "@/app/components/LoadingScreen";
-
-const columns: ColumnDef<any>[] = [
-  { key: "name", title: "Articulo" },
-  { key: "model", title: "Modelo" },
-  { key: "brand", title: "Marca" },
-  { key: "status", title: "Estado" },
-];
+import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
+import { ItemViewModel } from "./types/item-view.model";
+import { ItemType } from "./types/item-type.enum";
+import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
+import { ItemUnitViewModel } from "./types/item-unit-view.model";
 
 export default function Items() {
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const [item, setItem] = useState<any>(undefined);
   const [showItemForm, setShowItemForm] = useState<boolean>(false);
-  //Items
   const [items, setItems] = useState<any>([]);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -66,22 +58,39 @@ export default function Items() {
         </button>
       </div>
 
-      <DataGrid<any>
-        columns={columns}
-        rows={items}
-        gridTemplate="15fr 10fr 10fr 2fr" // ← mismo que tu card
-        searchKeys={["name", "model", "brand", "status"]}
-        renderCard={(row) => (
-          <ItemCard
-            onClick={(item: any) => {
-              setSelectedItem(item);
-              setShowItemForm(true);
-            }}
-            key={row.id}
-            item={row}
-          />
-        )}
-      />
+
+      <PagedDataGrid
+        data={items}
+        page={1}
+        pageSize={1}
+        total={items?.length}
+        pagination={false}
+        onLoadData={handleGetItems}
+        onRowClick={(row: ItemUnitViewModel) => {
+          setSelectedItem(row);
+          setShowItemForm(true);
+        }}
+      >
+        <PagedDataGrid.Column field="name" title="Articulo">
+          {(row: ItemViewModel) => <span>{row?.name}</span>}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="brand" title="Marca">
+          {(row: ItemViewModel) => <span>{row?.brand}</span>}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="model" title="Modelo">
+          {(row: ItemViewModel) => <span>{row?.model}</span>}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="type" title="Tipo">
+          {(row: ItemViewModel) => {
+            const typeConfig = ITEM_TYPE_LABELS[row?.type as ItemType];
+            return (
+              <span className="flex items-center gap-2">
+                <typeConfig.icon /> {typeConfig.label}
+              </span>
+            );
+          }}
+        </PagedDataGrid.Column>
+      </PagedDataGrid>
 
       <Modal
         open={showItemForm}

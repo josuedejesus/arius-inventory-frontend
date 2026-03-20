@@ -1,9 +1,8 @@
-export const formatDate = (date: string) =>
-  new Date(date).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+export function formatDate(date: string | Date) {
+  const d = typeof date === "string" ? new Date(date) : date;
+
+  return d.toLocaleDateString();
+}
 
 export const toDateInputValue = (date: string) =>
   date ? date.split("T")[0] : "";

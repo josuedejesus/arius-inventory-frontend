@@ -17,14 +17,7 @@ import { LocationViewModel } from "../types/location-view-model";
 import { LocationType } from "../types/location-type.enum";
 import { UpdateLocationDto } from "../types/update-location.dto";
 import { CreateLocationDto } from "../types/create-location.dto";
-
-type Location = {
-  id: number;
-  name: string;
-  type: string;
-  location: string;
-  is_active: boolean;
-};
+import SavingScreen from "@/app/components/SavingScreen";
 
 type Props = {
   locationId: number;
@@ -46,15 +39,12 @@ export default function LocationForm({
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  //TAB
   const [selectedTab, setSelectedTab] = useState<string>("general");
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const [users, setUsers] = useState<any[]>([]);
-
-  const [locationStaff, setLocationStaff] = useState<any[]>([]);
 
   const [locationMembers, setLocationMembers] = useState<any[]>([]);
 
@@ -65,10 +55,8 @@ export default function LocationForm({
       try {
         setLoading(true);
         if (locationId) {
-          console.log("is edit");
-          handleGetUsers();
           setIsEdit(true);
-          await Promise.all([handleGetLocation(), handlGetMembers()]);
+          await Promise.all([handleGetLocation(), handlGetMembers(), handleGetUsers()]);
           return;
         }
 
@@ -93,7 +81,7 @@ export default function LocationForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError(null);
 
     console.log("is edit?", isEdit);
@@ -190,7 +178,6 @@ export default function LocationForm({
   };
 
   const handleGetLocation = async () => {
-    console.log("fetching location data for id", locationId);
     try {
       const response = await axios.get(`${apiUrl}/locations/${locationId}`, {
         headers: {
@@ -198,7 +185,7 @@ export default function LocationForm({
         },
       });
       const locationData = response.data.data;
-      console.log(locationData);
+      console.log('DATOS DE UBICACION', locationData);
       setForm(locationData);
     } catch (error: any) {
       const message =
@@ -228,8 +215,25 @@ export default function LocationForm({
     setLocationMembers((prev) => prev.filter((a) => a.id !== id));
   };
 
+  const skeleton = (
+    <div className="p-4">
+      <div className="h-6 w-1/3 bg-gray-300 rounded mb-4" />
+      <div className="h-4 w-full bg-gray-300 rounded mb-2" />
+      <div className="h-4 w-full bg-gray-300 rounded mb-2" />
+      <div className="h-4 w-1/2 bg-gray-300 rounded mb-2" />
+    </div>
+  );
+
+  if (loading) {
+    return skeleton;
+  }
+
   return (
-    <FormLayout title="Crear Ubicacion" onSubmit={handleSubmit}>
+    <div className="relative">
+      {saving && (
+        <SavingScreen />
+      )}
+<FormLayout title="Crear Ubicacion" onSubmit={handleSubmit}>
       <FormTabs
         tabs={[
           { key: "general", label: "General" },
@@ -306,5 +310,7 @@ export default function LocationForm({
         </FormSection>
       </FormTabPanel>
     </FormLayout>
+    </div>
+    
   );
 }

@@ -1,5 +1,4 @@
 "use client";
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -7,7 +6,6 @@ import { FormLayout } from "../../../components/form/FormLayout";
 import FormSection from "../../../components/form/FormSection";
 import FormField from "../../../components/form/FormField";
 import FormText from "../../../components/form/FormText";
-import FormSelectSearch from "../../../components/form/FormSelectSearch";
 import FormRadioGroup from "../../../components/form/FormRadioGroup";
 import { PersonRole } from "../types/person-role.enums";
 import FormTabs from "@/app/components/form/FormTabs";
@@ -17,7 +15,8 @@ import { PersonViewModel } from "../types/person-view-model";
 import { UserViewModel } from "../types/user-view-model";
 import { UserRole } from "../types/user-role.enum";
 import { CreatePersonDto } from "../types/create-person.dto";
-import { CreateUserDto } from "../types/create-user.dto";
+import { set } from "date-fns";
+import SavingScreen from "@/app/components/SavingScreen";
 
 type Person = {
   id: number;
@@ -53,6 +52,8 @@ export default function PersonsForm({
     role: PersonRole.EMPLOYEE,
     address: "",
     rtn: "",
+    //user
+    username: "",
   });
 
   const [userForm, setUserForm] = useState<UserViewModel>({
@@ -67,17 +68,30 @@ export default function PersonsForm({
   //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const [person, setPerson] = useState<Person>();
-
-  //Modals
-  const [showUsers, setShowUsers] = useState<boolean>(false);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<string>("general");
-
   const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (personId) {
+      setIsEditing(true);
+      setLoading(true);
+      const fetchData = async () => {
+        try {
+          await Promise.all([handleGetPerson(), handleGetUser()]);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          toast.error(
+            "El servidor no está disponible en este momento. Intente más tarde.",
+          );
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -97,8 +111,6 @@ export default function PersonsForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
 
     if (isEditing) {
       handleEdit();
@@ -124,16 +136,12 @@ export default function PersonsForm({
         },
       };
 
-      const response = await axios.post(
-        `${apiUrl}/persons`,
-        personPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
+      const response = await axios.post(`${apiUrl}/persons`, personPayload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
-      );
-      toast.success('Usuario creado exitosamente');
+      });
+      toast.success("Usuario creado exitosamente");
       onSuccess();
     } catch (error: any) {
       const message =
@@ -145,6 +153,7 @@ export default function PersonsForm({
 
   const handleEdit = async () => {
     try {
+      setSaving(true);
       const payload = {
         name: form?.name,
         phone: form?.phone,
@@ -153,8 +162,6 @@ export default function PersonsForm({
         address: form?.address || "",
         rtn: form?.rtn || "",
       };
-
-      console.log("person id", person?.id);
 
       const response = await axios.put(
         `${apiUrl}/persons/${form?.id}`,
@@ -173,6 +180,8 @@ export default function PersonsForm({
         error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
       toast.error(message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -180,19 +189,19 @@ export default function PersonsForm({
     try {
       const response = await axios.get(`${apiUrl}/persons/${personId}`);
       setForm(response.data.data);
-      console.log("persona: ", response.data.data);
     } catch (error: any) {
       const message =
         error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGetUser = async () => {
     try {
       const response = await axios.get(`${apiUrl}/users/${personId}/person`);
-      console.log("user", response.data);
       setUserForm(response.data);
     } catch (error: any) {
       const message =
@@ -202,141 +211,154 @@ export default function PersonsForm({
     }
   };
 
-  useEffect(() => {
-    if (personId) {
-      setIsEditing(true);
-      Promise.all([handleGetPerson(), handleGetUser()]);
-    }
-  }, []);
+  const skeleton = (
+    <div className="animate-pulse space-y-6">
+      <div className="h-8 bg-gray-300 rounded w-1/3" />
+      <div className="h-6 bg-gray-300 rounded w-full" />
+      <div className="h-6 bg-gray-300 rounded w-full" />
+      <div className="h-6 bg-gray-300 rounded w-full" />
+      <div className="h-6 bg-gray-300 rounded w-full" />
+      <div className="h-6 bg-gray-300 rounded w-full" />
+    </div>
+  );
+
+  if (loading) {
+    return skeleton;
+  }
 
   return (
     <>
-      <FormLayout
-        title=""
-        description="Actualice la información de la persona y guarde los cambios realizados."
-        onSubmit={handleSubmit}
-      >
-        <FormTabs
-          tabs={[
-            { key: "general", label: "General" },
-            { key: "user", label: "Usuario" },
-          ]}
-          value={selectedTab}
-          onChange={setSelectedTab}
-        />
-        <FormTabPanel when="general" value={selectedTab}>
-          <FormSection
-            title="Información de la persona"
-            description="Datos generales y de contacto"
-          >
-            <FormField
-              label="Nombre"
-              placeholder=""
-              name="name"
-              value={form?.name}
-              onChange={handleChange}
-            />
+      <div className="relative">
+        {saving && (
+          <SavingScreen/>
+        )}
+        <FormLayout
+          title=""
+          description="Actualice la información de la persona y guarde los cambios realizados."
+          onSubmit={handleSubmit}
+        >
+          <FormTabs
+            tabs={[
+              { key: "general", label: "General" },
+              { key: "user", label: "Usuario" },
+            ]}
+            value={selectedTab}
+            onChange={setSelectedTab}
+          />
+          <FormTabPanel when="general" value={selectedTab}>
+            <FormSection
+              title="Información de la persona"
+              description="Datos generales y de contacto"
+            >
+              <FormField
+                label="Nombre"
+                placeholder=""
+                name="name"
+                value={form?.name}
+                onChange={handleChange}
+              />
 
-            <FormText
-              label="Direccion"
-              placeholder=""
-              name="address"
-              value={form?.address}
-              onChange={handleChange}
-            />
+              <FormText
+                label="Direccion"
+                placeholder=""
+                name="address"
+                value={form?.address}
+                onChange={handleChange}
+              />
 
-            <FormField
-              label="RTN"
-              placeholder=""
-              name="rtn"
-              value={form?.rtn}
-              onChange={handleChange}
-            />
+              <FormField
+                label="RTN"
+                placeholder=""
+                name="rtn"
+                value={form?.rtn}
+                onChange={handleChange}
+              />
 
-            <FormRadioGroup
-              label="Rol"
-              name="role"
-              options={[
-                { value: "EMPLOYEE", label: "Empleado" },
-                { value: "CLIENT", label: "Externo" },
-              ]}
-              value={form?.role}
-              onChange={handleChange}
-            />
-          </FormSection>
+              <FormRadioGroup
+                label="Rol"
+                name="role"
+                options={[
+                  { value: "EMPLOYEE", label: "Empleado" },
+                  { value: "CLIENT", label: "Externo" },
+                ]}
+                value={form?.role}
+                onChange={handleChange}
+              />
+            </FormSection>
 
-          <FormSection title="Contacto" description="Datos de contacto">
-            <FormField
-              label="Correo"
-              placeholder=""
-              name="email"
-              value={form?.email}
-              onChange={handleChange}
-            />
+            <FormSection title="Contacto" description="Datos de contacto">
+              <FormField
+                label="Correo"
+                placeholder=""
+                name="email"
+                value={form?.email}
+                onChange={handleChange}
+              />
 
-            <FormField
-              label="Teléfono "
-              placeholder=""
-              name="phone"
-              value={form?.phone}
-              onChange={handleChange}
-            />
-          </FormSection>
-        </FormTabPanel>
+              <FormField
+                label="Teléfono "
+                placeholder=""
+                name="phone"
+                value={form?.phone}
+                onChange={handleChange}
+              />
+            </FormSection>
+          </FormTabPanel>
 
-        <FormTabPanel when="user" value={selectedTab}>
-          <FormSection
-            title="Información del usuario"
-            description="Datos básicos para el acceso al sistema"
-          >
-            <FormField
-              label="Usuario"
-              placeholder=""
-              name="username"
-              value={userForm?.username}
-              onChange={handleChangeUser}
-            />
+          <FormTabPanel when="user" value={selectedTab}>
+            <FormSection
+              title="Información del usuario"
+              description="Datos básicos para el acceso al sistema"
+            >
+              <FormField
+                label="Usuario"
+                placeholder=""
+                name="username"
+                value={userForm?.username}
+                onChange={handleChangeUser}
+              />
 
-            <FormField
-              label="Password"
-              type="password"
-              placeholder=""
-              name="password"
-              value={userForm.password || ""}
-              onChange={handleChangeUser}
-            />
-          </FormSection>
+              <FormField
+                label="Contraseña"
+                type="password"
+                placeholder=""
+                name="password"
+                value={userForm.password || ""}
+                onChange={handleChangeUser}
+              />
+            </FormSection>
 
-          <FormSection
-            title="Permisos y rol"
-            description="Define el nivel de acceso del usuario"
-          >
-            <FormRadioGroup
-              label="Tipo de usuario"
-              options={[
-                { value: "ADMIN", label: "Administrador del sistema" },
-                {
-                  value: "ADMINISTRATIVE_MANAGER",
-                  label: "Administrador operativo",
-                },
-                { value: "WAREHOUSE_MANAGER", label: "Encargado de bodega" },
-                { value: "CONTRACTOR", label: "Contratista" },
-                { value: "CLIENT", label: "Cliente" },
-              ]}
-              name="role"
-              value={userForm?.role}
-              onChange={handleChangeUser}
-            />
+            <FormSection
+              title="Permisos y rol"
+              description="Define el nivel de acceso del usuario"
+            >
+              <FormRadioGroup
+                label="Tipo de usuario"
+                options={[
+                  { value: "ADMIN", label: "Administrador del sistema" },
+                  {
+                    value: "ADMINISTRATIVE_MANAGER",
+                    label: "Administrador operativo",
+                  },
+                  { value: "WAREHOUSE_MANAGER", label: "Encargado de bodega" },
+                  { value: "CONTRACTOR", label: "Contratista" },
+                  { value: "CLIENT", label: "Cliente" },
+                ]}
+                name="role"
+                value={userForm?.role}
+                onChange={handleChangeUser}
+              />
 
-            <FormSwitch
-              label="Activo"
-              name="is_active"
-              value={userForm?.is_active}
-              onChange={handleChangeUser}
-            />
-          </FormSection>
-        </FormTabPanel>
-      </FormLayout>
+              <FormSwitch
+                label="Activo"
+                name="is_active"
+                value={userForm?.is_active}
+                onChange={handleChangeUser}
+              />
+            </FormSection>
+          </FormTabPanel>
+        </FormLayout>
+      </div>
     </>
   );
 }

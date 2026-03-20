@@ -5,7 +5,7 @@ import FormTabPanel from "../form/FormTabPanel";
 import FormTabs from "../form/FormTabs";
 import StockMoveCard from "../cards/StockMoveCard";
 import FormSection from "../form/FormSection";
-import ItemUnitCard from "../cards/ItemUnitCard";
+import ItemUnitCard from "../../dashboard/items/cards/ItemUnitCard";
 import Meta from "../Meta";
 import { UnitUsageCard } from "../cards/UnitUsageCard";
 

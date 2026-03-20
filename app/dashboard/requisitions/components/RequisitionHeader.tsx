@@ -23,13 +23,12 @@ import { formatDate, timeAgo } from "../../../utils/formatters";
 import { RequisitionViewModel } from "../types/requisition-view.model";
 
 import RequisitionTimeline from "./RequisitionTimeline";
-import { PrimaryBadge } from "@/app/components/PrimaryBadge";
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
 import InfoCard from "@/app/components/InforCard";
 import ActionButton from "@/app/components/ActionButton";
 import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
 import { IoMdReturnLeft } from "react-icons/io";
-import InforBadge from "@/app/components/InfoBadge";
-import InfoBadge from "@/app/components/InfoBadge";
+import InfoBadge from "@/app/components/badges/InfoBadge";
 import { RequisitionType } from "../types/requisition-type.enum";
 
 type Props = {
@@ -82,7 +81,7 @@ export default function RequisitionHeader({ requisition }: Props) {
           <InfoBadge
             label="Tipo de requisición"
             icon={<MdCategory className="text-purple-400" />}
-            value={REQUISITION_TYPE_LABELS[requisition?.type]}
+            value={REQUISITION_TYPE_LABELS[requisition?.type]?.label}
           />
 
           <InfoBadge

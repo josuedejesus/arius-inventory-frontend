@@ -1,4 +1,4 @@
-import { PrimaryBadge } from "./PrimaryBadge";
+import { PrimaryBadge } from "./badges/PrimaryBadge";
 
 type MovementRowProps = {
   movement: any;

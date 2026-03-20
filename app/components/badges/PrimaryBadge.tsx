@@ -28,6 +28,7 @@ export function PrimaryBadge({
         rounded-md
         whitespace-nowrap
         transition-colors
+        uppercase
         ${variantStyles[variant]}
         ${className}
       `}

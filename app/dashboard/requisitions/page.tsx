@@ -13,7 +13,7 @@ import { useRequisitions } from "@/hooks/useRequisitions";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
 import { RequisitionViewModel } from "./types/requisition-view.model";
-import { PrimaryBadge } from "@/app/components/PrimaryBadge";
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
 import { RETURN_STATUS_LABELS } from "@/constants/ReturnStatus";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
 import { REQUISITION_STATUS_LABELS } from "@/constants/RequisitionStatus";
@@ -172,7 +172,7 @@ export default function Requisitions() {
           <PagedDataGrid.Column field="type" title="Tipo">
             {(row: RequisitionViewModel) => (
               <span className="text-gray-600">
-                {REQUISITION_TYPE_LABELS[row.type]}
+                {REQUISITION_TYPE_LABELS[row.type].label}
               </span>
             )}
           </PagedDataGrid.Column>

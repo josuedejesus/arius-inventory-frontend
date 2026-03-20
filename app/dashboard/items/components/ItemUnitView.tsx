@@ -12,9 +12,9 @@ import ItemUnitUsageCard from "@/app/components/cards/ItemUnitUsageCard";
 import { toast } from "sonner";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
-import { PrimaryBadge } from "@/app/components/PrimaryBadge";
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
 import { ITEM_STATUS_CONFIG } from "@/constants/ItemStatus";
-import { ITEM_TYPE_LABELS } from "@/constants/ItemTypes";
+import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
 
 type Props = {
   itemUnidId: number;
@@ -113,18 +113,16 @@ export default function ItemUnitView({ itemUnidId }: Props) {
 
               <div className="flex items-center gap-2">
                 <MdBuild className="text-yellow-500" />
-                <span>{ITEM_CONDITION_CONFIG[itemUnit?.condition ?? ""]?.label}</span>
+                <span>
+                  {ITEM_CONDITION_CONFIG[itemUnit?.condition ?? ""]?.label}
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <MdQrCode className="text-purple-500" />
                 <span>{itemUnit?.internal_code}</span>
               </div>
-
-              <div>
-                <span className="font-medium">Tipo:</span>{" "}
-                {ITEM_TYPE_LABELS[itemUnit?.type || ""] || itemUnit?.type}
-              </div>
+              
             </div>
 
             {/* DESCRIPTION */}

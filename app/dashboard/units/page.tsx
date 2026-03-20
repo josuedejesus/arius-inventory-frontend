@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import { set } from "date-fns";
 import LoadingScreen from "@/app/components/LoadingScreen";
+import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
+import { UnitViewModel } from "./types/unit-view.model";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -59,22 +61,27 @@ export default function Units() {
         </button>
       </div>
 
-      <DataGrid<any>
-        columns={columns}
-        rows={units}
-        gridTemplate="2fr 2fr" // ← mismo que tu card
-        searchKeys={["name", "code"]}
-        renderCard={(row) => (
-          <UnitCard
-            onClick={(unit: any) => {
-              setSelectedUnit(unit);
-              setShowUnitForm(true);
-            }}
-            key={row.id}
-            unit={row}
-          />
-        )}
-      />
+      <PagedDataGrid
+        data={units}
+        page={1}
+        pageSize={1}
+        total={units?.length}
+        onLoadData={handleGetUnits}
+        onRowClick={(row: UnitViewModel) => {
+          setSelectedUnit(row);
+          setShowUnitForm(true);
+        }}
+        pagination={false}
+      >
+        <PagedDataGrid.Column field="name" title="Nombre">
+          {(row: UnitViewModel) => <span>{row?.name}</span>}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="code" title="Código">
+          {(row: UnitViewModel) => <span>{row?.code}</span>}
+        </PagedDataGrid.Column>
+      </PagedDataGrid>
+
+      {/*UNIT FORM*/}
       <Modal
         open={showUnitForm}
         title="Unidad"

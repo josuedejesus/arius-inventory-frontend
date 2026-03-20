@@ -65,7 +65,7 @@ const PagedDataGrid = (({
 
   // 🔥 TEMPLATE DINÁMICO
   const gridTemplate = columns
-    .map((col) => col.props.width || "minmax(120px, 1fr)")
+    .map((col) => col.props.width || "max-content")
     .join(" ");
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -109,39 +109,46 @@ const PagedDataGrid = (({
 
   return (
     <GridContext.Provider value={{ data }}>
-      <div className="border rounded-lg overflow-hidden bg-white">
-        {/* HEADER */}
-        <div
-          className="grid text-sm text-gray-500 border-b border-gray-200 bg-gray-50"
-          style={{ gridTemplateColumns: gridTemplate }}
-        >
-          {columns.map((col) => (
-            <div key={col.props.field} className="p-2 font-semibold">
-              {col.props.title}
-            </div>
-          ))}
-        </div>
+      <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white overflow-x-auto">
+          <table className="w-full text-sm">
+            {/* HEADER */}
+            <thead className="bg-gray-50 text-gray-500">
+              <tr>
+                {columns.map((col) => (
+                  <th
+                    key={col.props.field}
+                    className="text-left p-2 font-semibold whitespace-nowrap"
+                  >
+                    {col.props.title}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-        {/* ROWS */}
-        {data.map((row) => (
-          <div
-            key={row.id}
-            className="grid border-b text-sm text-gray-600 last:border-0 border-gray-200 hover:bg-gray-50 cursor-pointer"
-            style={{ gridTemplateColumns: gridTemplate }}
-            onClick={() => onRowClick?.(row)}
-          >
-            {columns.map((col) => (
-              <div
-                key={col.props.field}
-                className="flex items-center p-2 truncate"
-              >
-                {col.props.children
-                  ? col.props.children(row)
-                  : row[col.props.field]}
-              </div>
-            ))}
-          </div>
-        ))}
+            {/* BODY */}
+            <tbody>
+              {data.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-b hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.props.field}
+                      className="p-2 whitespace-nowrap text-gray-600"
+                    >
+                      {col.props.children
+                        ? col.props.children(row)
+                        : row[col.props.field]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* PAGINATION */}
         {pagination && (

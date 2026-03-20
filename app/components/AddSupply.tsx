@@ -5,11 +5,11 @@ import FormTabs from "./form/FormTabs";
 import FormTabPanel from "./form/FormTabPanel";
 import FormSection from "./form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "./cards/ItemUnitCard";
+import ItemUnitCard from "../dashboard/items/cards/ItemUnitCard";
 import NumberSelector from "./NumberSelector";
 import SupplyCard from "./cards/SupplyCard";
 import { RequisitionType } from "../dashboard/requisitions/types/requisition-type.enum";
-import { PrimaryBadge } from "./PrimaryBadge";
+import { PrimaryBadge } from "./badges/PrimaryBadge";
 
 type AddSupplyFormProps = {
   itemId: number;

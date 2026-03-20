@@ -1,5 +1,5 @@
 import Badge from "../Badge";
-import { PrimaryBadge } from "../PrimaryBadge";
+import { PrimaryBadge } from "../badges/PrimaryBadge";
 
 type UnitUsage = {
   id: string;

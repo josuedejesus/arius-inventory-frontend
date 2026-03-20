@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import LocationForm from "@/app/dashboard/locations/components/LocationForm";
+import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
+import { LocationViewModel } from "./types/location-view-model";
+import BooleanBadge from "@/app/components/badges/BooleanBadge";
+import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
+import SearchBar from "@/app/components/SearchBar";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -31,6 +36,12 @@ export default function Warehouses() {
   const [loading, setLoading] = useState<boolean>(false);
 
   const [showLocationForm, setShowLocationForm] = useState<boolean>(false);
+
+  const filteredWarehouses = warehouses.filter((u: any) =>
+    `${u.name} ${u.lastname} ${u.personname} ${u.username} ${u.email} ${u.phone}`
+      .toLowerCase()
+      .includes(searchValue.toLowerCase()),
+  );
 
   const handleGetLocations = async () => {
     try {
@@ -61,41 +72,73 @@ export default function Warehouses() {
 
   return (
     <div className="">
-      <div className="flex items-start justify-between space-x-2 pb-4">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-6">
+      <div className="flex items-start justify-between">
+        <h1 className="text-2xl font-semibold text-gray-800 mb-2">
           Ubicaciones
         </h1>
+      </div>
 
+      <div className="flex justify-between items-center mb-4">
+        <SearchBar
+          placeholder="Buscar ubicación..."
+          value={searchValue}
+          onChange={(e: any) => setSearchValue(e)}
+        />
         <button
           onClick={() => setShowLocationForm(true)}
           className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
-                     hover:bg-blue-500 transition text-sm font-medium"
+                           hover:bg-blue-500 transition text-sm font-medium"
         >
           <span className="text-lg">＋</span>
         </button>
       </div>
 
-      <DataGrid<any>
-        columns={columns}
-        rows={warehouses}
-        gridTemplate="3fr 2fr 4fr 2fr" // ← mismo que tu card
-        searchKeys={["name", "type", "location", "status"]}
-        renderCard={(row) => (
-          <LocationCard
-            onClick={(location: any) => {
-              console.log(location);
-              setSelectedWarehouse(location);
-              setShowLocationForm(true);
-            }}
-            key={row.id}
-            location={row}
-          />
-        )}
-      />
+      <PagedDataGrid
+        data={warehouses}
+        page={1}
+        pageSize={1}
+        total={warehouses?.length}
+        onLoadData={handleGetLocations}
+        pagination={false}
+        onRowClick={(row: LocationViewModel) => {
+          setSelectedWarehouse(row);
+          setShowLocationForm(true);
+        }}
+      >
+        <PagedDataGrid.Column field="name" title="Nombre">
+          {(row: LocationViewModel) => <span>{row?.name}</span>}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="type" title="Tipo">
+          {(row: LocationViewModel) => {
+            const typeConfig = LOCATION_TYPE_CONFIG[row?.type];
+            return (
+              <span className="flex items-center justify-start gap-2">
+                {<typeConfig.icon color={typeConfig.className} />}{" "}
+                {typeConfig.label}
+              </span>
+            );
+          }}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="address" title="Dirección">
+          {(row: LocationViewModel) => <span>{row?.location}</span>}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="is_active" title="Estado">
+          {(row: LocationViewModel) => (
+            <span>
+              <BooleanBadge
+                value={row?.is_active}
+                trueLabel="Activo"
+                falseLabel="Inactivo"
+              />
+            </span>
+          )}
+        </PagedDataGrid.Column>
+      </PagedDataGrid>
 
+      {/*LOCATION FORM*/}
       <Modal
         open={showLocationForm}
-        title="Actualizar Ubicacion"
+        title="Ubicación"
         onClose={() => {
           setShowLocationForm(false);
           setSelectedWarehouse(undefined);

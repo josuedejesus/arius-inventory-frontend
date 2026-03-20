@@ -1,16 +1,16 @@
 import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
 import { ITEM_STATUS_CONFIG } from "@/constants/ItemStatus";
 import { useState } from "react";
-import { MdLocationOff, MdLocationOn } from "react-icons/md";
-import { PrimaryBadge } from "../PrimaryBadge";
+import { MdLocationOff, MdLocationOn, MdNoPhotography } from "react-icons/md";
+import { PrimaryBadge } from "../../../components/badges/PrimaryBadge";
 import { ItemViewModel } from "@/app/dashboard/items/types/item-view.model";
 import { ItemUnitViewModel } from "@/app/dashboard/items/types/item-unit-view.model";
-import { ITEM_TYPE_LABELS } from "@/constants/ItemTypes";
+import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
 
 type ItemUnitCardProps = {
   itemUnit: ItemUnitViewModel;
   item?: any;
-  onClick: (item: any) => void;
+  onClick?: (item: any) => void;
 };
 
 export default function ItemUnitCard({
@@ -28,35 +28,67 @@ export default function ItemUnitCard({
   return (
     <button
       type="button"
-      onClick={() => onClick(itemUnit)}
+      onClick={() => onClick && onClick(itemUnit)}
       className="group w-full flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-3 py-3 hover:border-gray-300 hover:shadow-sm transition-all duration-150 text-left"
     >
       {/* Image */}
       <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-        <img
-          src={
-            !error && itemUnit?.image_path
-              ? `${apiUrl}/uploads/${itemUnit?.image_path}`
-              : "/placeholder-unit.png"
-          }
-          onError={() => setError(true)}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-        />
+        {!error && itemUnit?.image_path ? (
+          <img
+            src={itemUnit.image_path}
+            onError={() => setError(true)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+            <MdNoPhotography className="text-3xl" />
+          </div>
+        )}
       </div>
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {/* Row 1: code + type */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono font-semibold text-gray-400 tracking-widest uppercase">
+          <span className="text-[12px] font-mono font-semibold text-gray-400 tracking-widest uppercase">
             {itemUnit?.internal_code}
           </span>
 
-          {itemUnit?.type && (
-            <span className="text-[10px] text-gray-400 uppercase">
-              {ITEM_TYPE_LABELS[itemUnit.type]}
-            </span>
-          )}
+          {itemUnit?.type &&
+            (() => {
+              const typeConfig = ITEM_TYPE_LABELS[itemUnit.type];
+              return (
+                <span className="text-[10px] text-gray-400 uppercase">
+                  <PrimaryBadge label={typeConfig?.label} />
+                </span>
+              );
+            })()}
+
+          {itemUnit?.condition &&
+            (() => {
+              const conditionConfig = ITEM_CONDITION_CONFIG[itemUnit.condition];
+              return (
+                <span className="text-[10px] text-gray-400 uppercase">
+                  <PrimaryBadge
+                    label={conditionConfig?.label}
+                    variant={conditionConfig?.className}
+                  />
+                </span>
+              );
+            })()}
+
+          {itemUnit?.status &&
+            (() => {
+              const statusConfig = ITEM_STATUS_CONFIG[itemUnit.status];
+              return (
+                <span className="text-[10px] text-gray-400 uppercase">
+                  <PrimaryBadge
+                    label={statusConfig?.label}
+                    variant={statusConfig?.className}
+                  />
+                </span>
+              );
+            })()}
         </div>
 
         {/* Row 2: name */}
@@ -95,23 +127,6 @@ export default function ItemUnitCard({
           <p className="text-[11px] text-gray-400 truncate mt-1">
             {itemUnit.observations}
           </p>
-        )}
-      </div>
-
-      {/* Right column: status + condition */}
-      <div className="flex flex-col items-end gap-1.5">
-        {statusConfig && (
-          <PrimaryBadge
-            label={ITEM_STATUS_CONFIG[itemUnit?.status].label}
-            variant={ITEM_STATUS_CONFIG[itemUnit?.status].className}
-          />
-        )}
-
-        {itemUnit?.condition && ITEM_CONDITION_CONFIG[itemUnit.condition] && (
-          <PrimaryBadge
-            label={ITEM_CONDITION_CONFIG[itemUnit.condition]?.label}
-            variant={ITEM_CONDITION_CONFIG[itemUnit.condition]?.className}
-          />
         )}
       </div>
     </button>

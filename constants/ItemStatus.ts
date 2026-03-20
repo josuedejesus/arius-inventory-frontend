@@ -14,6 +14,10 @@ export const ITEM_STATUS_CONFIG: Record<
     className: variant;
   }
 > = {
+  CREATED: {
+    label: "Creado",
+    className: variant.neutral,
+  },
   AVAILABLE: {
     label: "Disponible",
     className: variant.success,
@@ -24,10 +28,10 @@ export const ITEM_STATUS_CONFIG: Record<
   },
   RENTED: {
     label: "Rentado",
-    className: variant.warning,
+    className: variant.danger,
   },
   IN_TRANSIT: {
     label: "En Transito",
-    className: variant.neutral,
+    className: variant.warning,
   },
 };

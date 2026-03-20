@@ -2,9 +2,9 @@ import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
 import { ITEM_STATUS_CONFIG } from "@/constants/ItemStatus";
 import { useState } from "react";
 import { MdLocationOff, MdLocationOn } from "react-icons/md";
-import { PrimaryBadge } from "../PrimaryBadge";
+import { PrimaryBadge } from "../badges/PrimaryBadge";
 import { ItemViewModel } from "@/app/dashboard/items/types/item-view.model";
-import { ITEM_TYPE_LABELS } from "@/constants/ItemTypes";
+import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
 
 type itemCardProps = {
   item?: ItemViewModel;
@@ -44,7 +44,7 @@ export default function itemCard({ item, onClick }: itemCardProps) {
 
           {item?.type && (
             <span className="text-[10px] text-gray-400 uppercase">
-              {ITEM_TYPE_LABELS[item.type]}
+              {ITEM_TYPE_LABELS[item.type]?.label}
             </span>
           )}
         </div>
