@@ -10,10 +10,12 @@ import {
   MdLocationOn,
   MdPeople,
   MdPerson,
+  MdSwapHoriz,
 } from "react-icons/md";
 import { toast } from "sonner";
 import { PrimaryBadge } from "./badges/PrimaryBadge";
 import MinimalItemCard from "../dashboard/items/cards/MinimalItemCard";
+import StockMoveCard from "./cards/StockMoveCard";
 
 type Props = {
   locationId: number;
@@ -24,6 +26,7 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
   const [items, setItems] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [itemUnits, setItemUnits] = useState<any[]>([]);
+  const [movements, setMovements] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -36,6 +39,7 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
         handleGetStockByLocation(locationId),
         handleGetMembersByLocation(locationId),
         handleGetItemUnits({ locationId: locationId }),
+        handleGetMovements({ locationId: locationId }),
       ]);
     };
     fetchData();
@@ -49,7 +53,6 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("location", response.data);
       setLocation(response.data.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -68,7 +71,6 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("miembtos por item", response.data);
       setStaff(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -89,7 +91,6 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           },
         },
       );
-      console.log("stock por item", response.data);
       setItems(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -101,7 +102,6 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
 
   const handleGetItemUnits = async (filters: { locationId: number }) => {
     try {
-      console.log("fetching item units with filters", filters);
       setLoading(true);
       const response = await axios.get(`${apiUrl}/item-units`, {
         params: filters,
@@ -109,8 +109,29 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("item units por ubicación", response.data);
       setItemUnits(response.data.data);
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGetMovements = async (filters: { locationId: number }) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${apiUrl}/stock-moves/${locationId}/location`,
+        {
+          params: filters,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      );
+      console.log("movements por ubicación", response.data);
+      setMovements(response.data.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -175,7 +196,7 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid sm:grid-cols-1 gap-6">
         {/* 👥 STAFF */}
         <div className="bg-white rounded-2xl shadow p-4">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">
@@ -225,6 +246,24 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
               .map((s) => <MinimalItemCard key={s.id} item={s} />)
           ) : (
             <p className="text-sm text-gray-400">Sin inventario disponible</p>
+          )}
+        </div>
+      </div>
+
+      {/* 🔷 MOVEMENTS */}
+      <div className="bg-white rounded-2xl shadow p-4">
+        <h2 className="flex items-center font-semibold text-gray-600 mb-3">
+          <MdSwapHoriz className="inline-block mr-2" />
+          Movimientos recientes
+        </h2>
+
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {movements?.length ? (
+            movements.map((m) => (
+              <StockMoveCard key={m.id} movement={m} locationId={locationId} />
+            ))
+          ) : (
+            <p className="text-sm text-gray-400">Sin movimientos recientes</p>
           )}
         </div>
       </div>

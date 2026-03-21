@@ -111,7 +111,7 @@ export default function Requisitions() {
     },
     "requisition.approved": () => {
       handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });
-      toast.info("Una requisición fue aprovada");
+      toast.info("Una requisición fue aprobada");
     },
     "requisition.executed": () => {
       handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });

@@ -331,8 +331,9 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
   };
 
   const handleAddAccessory = (accessory: any) => {
+
     setItemAccessories((prev) => {
-      if (prev.some((a) => a.id === accessory.id)) {
+      if (prev.some((a) => Number(a.id) === Number(accessory.id))) {
         return prev;
       }
 

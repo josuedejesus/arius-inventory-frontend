@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import Modal from "../../../components/Modal";
 import { useAuth } from "@/context/AuthContext";
@@ -26,6 +26,10 @@ import { ItemType } from "../../items/types/item-type.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { ReturnStatus } from "../types/return-status.enum";
 import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
+import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
+import BooleanBadge from "@/app/components/badges/BooleanBadge";
+import { MdCheck, MdClose, MdDelete } from "react-icons/md";
+import ActionButton from "@/app/components/ActionButton";
 
 const REQUISITION_TYPE_OPTIONS = [
   /*{
@@ -381,8 +385,6 @@ export default function NewRequisitionForm({
       destination_location_name: form?.destination_location_name,
     };
 
-    console.log("nuevo item", newItem);
-
     setRequisitionItems((prev) => {
       const exists = prev.some((a) => a.temp_id === item.temp_id);
 
@@ -429,22 +431,19 @@ export default function NewRequisitionForm({
 
   return (
     <>
-      <form onSubmit={handleCreate} className="space-y-6 text-gray-800">
+      <form onSubmit={handleCreate} className="space-y-2">
         {/* STEPPER */}
-        <div className="w-full flex items-center mb-8">
+        <div className="relative w-full flex items-start mb-8">
           {[1, 2, 3].map((s, idx) => {
             const isActive = step === s;
             const isCompleted = step > s;
 
             return (
-              <div key={s} className="flex-1 flex items-center">
-                {/* Círculo + Label */}
-                <div className="flex flex-col items-center flex-1">
+              <React.Fragment key={s}>
+                {/* Columna del paso */}
+                <div className="relative z-10 flex flex-col items-center flex-1">
                   <div
-                    className={`
-              w-9 h-9 flex items-center justify-center
-              rounded-full text-sm font-semibold
-              transition
+                    className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition
               ${
                 isCompleted
                   ? "bg-green-500 text-white"
@@ -454,20 +453,18 @@ export default function NewRequisitionForm({
               }
             `}
                   >
-                    {s}
+                    {isCompleted ? <MdCheck size={16} /> : s}
                   </div>
-
                   <span
-                    className={`
-              mt-2 text-xs font-medium
-              ${
-                isCompleted
-                  ? "text-green-600"
-                  : isActive
-                    ? "text-blue-600"
-                    : "text-gray-400"
-              }
-            `}
+                    className={`mt-2 text-xs font-medium
+            ${
+              isCompleted
+                ? "text-green-600"
+                : isActive
+                  ? "text-blue-600"
+                  : "text-gray-400"
+            }
+          `}
                   >
                     {s === 1 && "General"}
                     {s === 2 && "Artículos"}
@@ -475,16 +472,22 @@ export default function NewRequisitionForm({
                   </span>
                 </div>
 
-                {/* Línea */}
+                {/* Línea entre pasos */}
                 {idx < 2 && (
                   <div
-                    className={`
-              flex-1 h-[2px] mx-2 transition
-              ${step > s ? "bg-green-500" : "bg-gray-200"}
-            `}
-                  />
+                    className="flex-1 flex items-center"
+                    style={{ marginTop: "18px" }}
+                  >
+                    <div className="relative w-full h-[2px] bg-gray-200">
+                      <div
+                        className={`absolute inset-y-0 left-0 transition-all duration-500
+                  ${step > s ? "bg-green-500 w-full" : "w-0"}
+                `}
+                      />
+                    </div>
+                  </div>
                 )}
-              </div>
+              </React.Fragment>
             );
           })}
         </div>
@@ -512,7 +515,12 @@ export default function NewRequisitionForm({
             />
 
             <div>
-              <span className="text-sm text-gray-500">{REQUISITION_TYPE_LABELS[form.type as RequisitionType]?.description}</span>
+              <span className="text-sm text-gray-500">
+                {
+                  REQUISITION_TYPE_LABELS[form.type as RequisitionType]
+                    ?.description
+                }
+              </span>
             </div>
 
             {typeConfig?.showDestination && (
@@ -581,23 +589,69 @@ export default function NewRequisitionForm({
               </button>
             </div>
 
-            <DataGrid>
-              <DataGridRow className="grid px-4 py-3 text-[11px] tracking-wide text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-                {columns.map((col) => (
-                  <DataGridCell key={col.key} className="font-bold">
-                    {col.title}
-                  </DataGridCell>
-                ))}
-              </DataGridRow>
-              {requisitionItems?.map((line) => (
-                <RequisitionLineCard
-                  key={line.id}
-                  requisition={form}
-                  line={line}
-                  onRemove={removeItem}
-                />
-              ))}
-            </DataGrid>
+            <PagedDataGrid
+              data={requisitionItems}
+              total={requisitionItems.length}
+              page={1}
+              pageSize={DataGrid.length}
+              onLoadData={() => {}}
+              pagination={false}
+            >
+              <div></div>
+              <PagedDataGrid.Column field="item" title="Artículo">
+                {(row) => (
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500">
+                      {row.internal_code}
+                    </span>
+                    <span className="text-gray-800 font-semibold">
+                      {row.item_name}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {row.item_brand} · {row.item_model}
+                    </span>
+                  </div>
+                )}
+              </PagedDataGrid.Column>
+
+              <PagedDataGrid.Column field="quantity" title="Cantidad">
+                {(row) => (
+                  <span className="text-xs text-gray-500">
+                    {row.quantity} {row.unit_code}
+                  </span>
+                )}
+              </PagedDataGrid.Column>
+              <PagedDataGrid.Column field="location" title="Ubicación">
+                {(row) => (
+                  <span className="flex items-center justify-start text-xs text-gray-500">
+                    {row.source_location_name
+                      ? row.source_location_name
+                      : "Sin ubicación"}{" "}
+                  </span>
+                )}
+              </PagedDataGrid.Column>
+              <PagedDataGrid.Column field="accessories" title="Accesorios">
+                {(row) => (
+                  <span className="flex items-center justify-start text-xs text-gray-500">
+                    {row.accessories && row.accessories.length > 0
+                      ? row.accessories
+                          .map((a: any) => `${a.quantity}x ${a.name}`)
+                          .join(", ")
+                      : "N/A"}{" "}
+                  </span>
+                )}
+              </PagedDataGrid.Column>
+              <PagedDataGrid.Column field="actions" title="Acciones">
+                {(row) => (
+                  <ActionButton
+                    icon={<MdClose />}
+                    label=""
+                    onClick={() => removeItem(row)}
+                    color="bg-red-50 hover:bg-red-100 text-red-400"
+                  />
+                )}
+              </PagedDataGrid.Column>
+            </PagedDataGrid>
 
             <div className="flex justify-between mt-6">
               <button
@@ -606,7 +660,7 @@ export default function NewRequisitionForm({
                   setStep(1);
                   setRequisitionItems([]);
                 }}
-                className="bg-gray-200 hover:bg-gray-100 px-6 py-2 rounded-lg"
+                className="bg-gray-200 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-lg"
               >
                 Anterior
               </button>
@@ -631,33 +685,76 @@ export default function NewRequisitionForm({
           <>
             <FormSection title="" description="">
               <RequisitionHeader requisition={form} />
-            </FormSection>
 
-            <FormSection title="" description="">
-              <DataGrid>
-                <DataGridRow className="grid px-4 py-3 text-[11px] tracking-wide text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-                  {columns.map((col) => (
-                    <DataGridCell key={col.key} className="font-bold">
-                      {col.title}
-                    </DataGridCell>
-                  ))}
-                </DataGridRow>
-                {requisitionItems?.map((line) => (
-                  <RequisitionLineCard
-                    key={line.id}
-                    requisition={form}
-                    line={line}
-                    onRemove={removeItem}
-                  />
-                ))}
-              </DataGrid>
+              <PagedDataGrid
+                data={requisitionItems}
+                total={requisitionItems.length}
+                page={1}
+                pageSize={DataGrid.length}
+                onLoadData={() => {}}
+                pagination={false}
+              >
+                <PagedDataGrid.Column field="item" title="Artículo">
+                  {(row) => (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">
+                        {row.internal_code}
+                      </span>
+                      <span className="text-gray-800 font-semibold">
+                        {row.item_name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {row.item_brand} · {row.item_model}
+                      </span>
+                    </div>
+                  )}
+                </PagedDataGrid.Column>
+
+                <PagedDataGrid.Column field="quantity" title="Cantidad">
+                  {(row) => (
+                    <span className="text-xs text-gray-500">
+                      {row.quantity} {row.unit_code}
+                    </span>
+                  )}
+                </PagedDataGrid.Column>
+                <PagedDataGrid.Column field="location" title="Ubicación">
+                  {(row) => (
+                    <span className="flex items-center justify-start text-xs text-gray-500">
+                      {row.source_location_name
+                        ? row.source_location_name
+                        : "Sin ubicación"}{" "}
+                    </span>
+                  )}
+                </PagedDataGrid.Column>
+                <PagedDataGrid.Column field="accessories" title="Accesorios">
+                  {(row) => (
+                    <span className="flex items-center justify-start text-xs text-gray-500">
+                      {row.accessories && row.accessories.length > 0
+                        ? row.accessories
+                            .map((a: any) => `${a.quantity}x ${a.name}`)
+                            .join(", ")
+                        : "N/A"}{" "}
+                    </span>
+                  )}
+                </PagedDataGrid.Column>
+                <PagedDataGrid.Column field="actions" title="Acciones">
+                  {(row) => (
+                    <ActionButton
+                      icon={<MdClose />}
+                      label=""
+                      onClick={() => removeItem(row)}
+                      color="bg-red-50 hover:bg-red-100 text-red-400"
+                    />
+                  )}
+                </PagedDataGrid.Column>
+              </PagedDataGrid>
             </FormSection>
 
             <div className="flex justify-between mt-6">
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="bg-gray-200 hover:bg-gray-100 px-6 py-2 rounded-lg"
+                className="bg-gray-200 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-lg"
               >
                 Anterior
               </button>

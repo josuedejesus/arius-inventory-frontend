@@ -26,7 +26,7 @@ export default function FormDate({
         min={min}
         onChange={onChange}
         className="
-          w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+          w-full rounded-lg border text-gray-800 border-gray-300 px-3 py-2 text-sm
           focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
         "
       />

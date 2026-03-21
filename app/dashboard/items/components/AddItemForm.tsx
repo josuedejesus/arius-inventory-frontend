@@ -33,8 +33,6 @@ export default function AddItemForm({
   //SearchBar
   const [searchValue, setSearchValue] = useState<string>("");
 
-  const [selectedTab, setSelectedTab] = useState<any>("items");
-
   const filteredItems = accessories.filter((u: any) =>
     `${u.name}`.toLowerCase().includes(searchValue.toLowerCase()),
   );
@@ -99,8 +97,6 @@ export default function AddItemForm({
         `${apiUrl}/item-accessories/${itemUnit?.item_id}/find-by-item`,
       );
 
-      console.log("accesorios", response.data.data);
-
       setAccessories(response.data.data);
     } catch (error: any) {
       if (error.response) {
@@ -135,7 +131,7 @@ export default function AddItemForm({
       unit_name: item?.unit_name,
       image_path: item?.image_path,
       return_of_id: item?.return_of_id || null,
-      accessories: accessories,
+      accessories: itemAccessories,
       location_id: item?.location_id,
       location_name: item?.location,
     };
@@ -228,7 +224,7 @@ export default function AddItemForm({
                   value={getQty(i?.id)}
                   onDecrease={() => decreaseQty(i)}
                   onIncrease={() => increaseQty(i)}
-                  min={2147483647}
+                  min={0}
                   max={2147483647}
                 />
               </div>

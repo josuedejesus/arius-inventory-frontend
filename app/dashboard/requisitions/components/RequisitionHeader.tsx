@@ -56,7 +56,7 @@ export default function RequisitionHeader({ requisition }: Props) {
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm space-y-4">
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
@@ -65,7 +65,7 @@ export default function RequisitionHeader({ requisition }: Props) {
         </div>
 
         {/* GRID COMPACTO */}
-        <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-3 text-sm">
           <InfoBadge
             label="Destino"
             icon={<MdWarehouse className="text-blue-400" />}
@@ -134,12 +134,7 @@ export default function RequisitionHeader({ requisition }: Props) {
           />
         </div>
 
-        {/* FOOTER */}
-        {requisition?.updated_at && (
-          <div className="text-xs text-gray-400 pt-2 flex justify-end">
-            Última actualización: {formatDate(requisition?.updated_at)}
-          </div>
-        )}
+       
       </div>
     </div>
   );

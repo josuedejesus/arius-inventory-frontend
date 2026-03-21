@@ -21,7 +21,7 @@ export function FormLayout({
     <form
       onSubmit={onSubmit}
       autoComplete=""
-      className="space-y-6 text-gray-800"
+      className="space-y-2"
     >
       <div>
         <h2 className="text-xl font-semibold">{title}</h2>

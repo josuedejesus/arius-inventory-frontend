@@ -21,7 +21,6 @@ export default function UserStatcard({
   onClick,
 }: Props) {
 
-  console.log("stat", stat);
   return (
     <button
   onClick={() => onClick(stat)}

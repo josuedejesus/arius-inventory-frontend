@@ -33,6 +33,7 @@ import { ItemUnitViewModel } from "./items/types/item-unit-view.model";
 import LocationDashboard from "../components/LocationDashboard";
 import UserDashboard from "../components/UserDashBoard";
 import ItemUnitsDonut from "../components/ItemUnitsDonut";
+import SidePanel from "../components/SidePanel";
 
 const columns: ColumnDef<any>[] = [
   { key: "item", title: "Artículo" },
@@ -59,6 +60,12 @@ export default function Dashboard() {
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showUserDetails, setShowUserDetails] = useState<boolean>(false);
+
+  useEffect(() => {
+    setLoading(true);
+    refreshAll();
+  }, []);
+
   const handleGetItemUnitsStats = async () => {
     try {
       const response = await axios.get(`${apiUrl}/item-units/get-stats`);
@@ -174,11 +181,6 @@ export default function Dashboard() {
       refreshAll();
     },
   });
-
-  useEffect(() => {
-    setLoading(true);
-    refreshAll();
-  }, []);
 
   if (loading) {
     return <LoadingScreen />;
@@ -311,40 +313,6 @@ export default function Dashboard() {
       </div>
 
       <Modal
-        open={showItemsModal}
-        title="Artículos"
-        onClose={() => setShowItemsModal(false)}
-      >
-        {loadingItems ? (
-          <p>Cargando...</p>
-        ) : (
-          <DataGrid
-            columns={columns}
-            rows={itemUnits}
-            gridTemplate=" 2fr 1fr"
-            searchKeys={[
-              "internal_code",
-              "name",
-              "brand",
-              "model",
-              "unit_code",
-              "status",
-              "location",
-            ]}
-            renderCard={(row: any) => (
-              <ItemUnitCard
-                itemUnit={row}
-                onClick={() => {
-                  setSelectedItemUnit(row);
-                  setShowItemModal(true);
-                }}
-              />
-            )}
-          />
-        )}
-      </Modal>
-
-      <Modal
         open={showItemModal}
         title="Detalles del artículo"
         onClose={() => setShowItemModal(false)}
@@ -352,24 +320,28 @@ export default function Dashboard() {
         <ItemUnitView itemUnidId={selectedItemUnit?.id} />
       </Modal>
 
-      <Modal
-        open={showLocationItems}
-        title={"Detalles de ubicación"}
-        onClose={() => setShowLocationItems(false)}
+      <SidePanel
+        isOpen={!!selectedLocation}
+        onClose={() => setSelectedLocation(null)}
+        title="Detalles de la ubicación"
       >
-        <LocationDashboard locationId={selectedLocation?.id} />
-      </Modal>
+        {selectedLocation && (
+          <LocationDashboard locationId={selectedLocation?.id} />
+        )}
+      </SidePanel>
 
-      <Modal
-        open={showUserDetails}
-        title="Detalles del usuario"
-        onClose={() => setShowUserDetails(false)}
+      <SidePanel
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        title={"Detalles del usuario"}
       >
-        <UserDashboard
-          personId={selectedUser?.person_id}
-          userId={selectedUser?.user_id}
-        />
-      </Modal>
+        {selectedUser && (
+          <UserDashboard
+            personId={selectedUser?.person_id}
+            userId={selectedUser?.user_id}
+          />
+        )}
+      </SidePanel>
     </div>
   );
 }

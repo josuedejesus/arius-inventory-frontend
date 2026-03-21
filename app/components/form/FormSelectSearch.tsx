@@ -37,7 +37,7 @@ export default function FormSelectSearch({
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full flex justify-between items-center
-        rounded-lg border px-3 py-2 text-sm bg-white
+        rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white
         hover:bg-gray-50"
       >
         <span className={value ? "text-gray-800" : "text-gray-400"}>
@@ -48,7 +48,7 @@ export default function FormSelectSearch({
 
       {open && (
         <div
-          className="absolute z-10 mt-1 w-full rounded-lg border bg-white shadow-lg"
+          className="absolute z-10 mt-1 w-full rounded-lg text-gray-500  border border-gray-300 bg-white shadow-lg"
         >
           <input
             type="text"

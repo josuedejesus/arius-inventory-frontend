@@ -88,8 +88,6 @@ export default function RequisitionView({
   } = useRequisitions();
   const { getByRequisitionId: getRequisitionLines } = useRequisitionLines();
 
-
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -294,31 +292,27 @@ export default function RequisitionView({
   return (
     <>
       <div className="relative">
-        {actionLoading && (
-          <SavingScreen/>
-        )}
+        {actionLoading && <SavingScreen />}
 
-        <div
-          className=""
-        >
+        <div className="flex flex-col w-full  gap-2  cursor-pointer">
           {/*ACTIONS*/}
           <div className="flex items-center gap-2 flex-wrap pb-2">
             <ActionButton
               label="Editar"
               icon={<MdEdit />}
-              color="bg-blue-50 text-blue-500 hover:bg-blue-200"
+              color="bg-blue-50 text-blue-500 hover:bg-blue-100"
               onClick={() => onEdit()}
             />
             <ActionButton
               label="Archivar"
               icon={<MdArchive />}
-              color="bg-red-50 text-red-500 hover:bg-red-200"
+              color="bg-orange-50 text-orange-500 hover:bg-orange-100"
               onClick={() => console.log("Archivar requisición")}
             />
             <ActionButton
               label="Generar PDF"
               icon={<MdPrint />}
-              color="bg-gray-50 text-gray-500 hover:bg-gray-200"
+              color="bg-gray-50 text-gray-500 hover:bg-gray-100"
               onClick={() => handleGeneratePDF()}
             />
           </div>
@@ -326,7 +320,7 @@ export default function RequisitionView({
           <RequisitionHeader requisition={form} />
 
           {/* 🟣 TIMELINE (FULL WIDTH) */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
               Linea de Tiempo
             </h3>
@@ -372,8 +366,20 @@ export default function RequisitionView({
             </PagedDataGrid.Column>
             <PagedDataGrid.Column field="location" title="Ubicación">
               {(row) => (
-                <span className="flex items-center justify-center text-xs text-gray-500">
+                <span className="flex items-center justify-start text-xs text-gray-500">
                   {row.source_location_name}
+                </span>
+              )}
+            </PagedDataGrid.Column>
+
+            <PagedDataGrid.Column field="accessories" title="Accesorios">
+              {(row) => (
+                <span className="flex items-center justify-start text-xs text-gray-500">
+                  {row.accessories && row.accessories.length > 0
+                    ? row.accessories
+                        .map((a: any) => `${a.quantity}x ${a.name}`)
+                        .join(", ")
+                    : "N/A"}{" "}
                 </span>
               )}
             </PagedDataGrid.Column>
@@ -414,8 +420,7 @@ export default function RequisitionView({
 
       <Modal
         open={showAddPhotos}
-        title="          Evidencia del estado de salida
-"
+        title="Evidencia del estado de salida"
         onClose={() => setShowAddPhotos(false)}
       >
         <RequisitionLinePhotosForm

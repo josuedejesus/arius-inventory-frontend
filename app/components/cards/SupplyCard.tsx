@@ -1,7 +1,7 @@
 import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
 import { ITEM_STATUS_CONFIG } from "@/constants/ItemStatus";
 import { useState } from "react";
-import { MdLocationOff, MdLocationOn } from "react-icons/md";
+import { MdLocationOff, MdLocationOn, MdNoPhotography } from "react-icons/md";
 import { PrimaryBadge } from "../badges/PrimaryBadge";
 import { ItemViewModel } from "@/app/dashboard/items/types/item-view.model";
 import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
@@ -21,18 +21,20 @@ export default function itemCard({ item, onClick }: itemCardProps) {
       onClick={() => onClick(item)}
       className="group w-full flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-3 py-3 hover:border-gray-300 hover:shadow-sm transition-all duration-150 text-left"
     >
-      {/* Image */}
-      <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-        <img
-          src={
-            !error && item?.image_path
-              ? `${apiUrl}/uploads/${item?.image_path}`
-              : "/placeholder-unit.png"
-          }
-          onError={() => setError(true)}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-        />
-      </div>
+     {/* Image */}
+           <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+             {!error && item?.image_path ? (
+               <img
+                 src={item.image_path}
+                 onError={() => setError(true)}
+                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+               />
+             ) : (
+               <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                 <MdNoPhotography className="text-3xl" />
+               </div>
+             )}
+           </div>
 
       {/* Main content */}
       <div className="flex-1 min-w-0">

@@ -45,7 +45,6 @@ export default function UserDashboard({ personId, userId }: Props) {
   }, [personId, userId]);
 
   const handleGetPerson = async () => {
-    console.log("fetching person details for personId:", personId);
     try {
       setLoading(true);
       const response = await axios.get(`${apiUrl}/persons/${personId}`, {
@@ -53,7 +52,6 @@ export default function UserDashboard({ personId, userId }: Props) {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("person", response.data);
       setPerson(response.data.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -70,7 +68,6 @@ export default function UserDashboard({ personId, userId }: Props) {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("locations", response.data);
       setLocations(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -89,7 +86,6 @@ export default function UserDashboard({ personId, userId }: Props) {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("item units", response.data);
       setItemUnits(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -162,7 +158,7 @@ export default function UserDashboard({ personId, userId }: Props) {
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid sm:grid-cols-1  gap-6">
         {/* 👥 STAFF */}
         <div className="bg-white rounded-2xl shadow p-4">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">

@@ -39,7 +39,7 @@ export default function Autocomplete<T extends { id: number; name: string }>({
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative w-full text-gray-300">
       <div className="flex items-center gap-2">
         <input
           type="text"
@@ -49,7 +49,7 @@ export default function Autocomplete<T extends { id: number; name: string }>({
             setQuery(e.target.value);
             setOpen(true);
           }}
-          className="w-full border rounded-lg px-3 py-1.5 text-sm
+          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-800
                      focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
@@ -61,7 +61,7 @@ export default function Autocomplete<T extends { id: number; name: string }>({
               setQuery("");
               setOpen(false);
             }}
-            className="px-2 py-1.5 border rounded-lg text-sm hover:bg-gray-100"
+            className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-100"
             title="Agregar"
           >
             +
@@ -71,7 +71,7 @@ export default function Autocomplete<T extends { id: number; name: string }>({
 
       {open && (
         <div className="absolute z-10 mt-1 w-full bg-white
-                        border rounded-lg shadow max-h-48 overflow-auto">
+                        border border-gray-300 rounded-lg shadow max-h-48 overflow-auto text-gray-800">
           {filtered.length > 0 ? (
             filtered.map(item => (
               <div

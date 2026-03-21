@@ -50,20 +50,24 @@ export default function ItemUnitCard({
       <div className="flex-1 min-w-0">
         {/* Row 1: code + type */}
         <div className="flex items-center gap-2">
-          <span className="text-[12px] font-mono font-semibold text-gray-400 tracking-widest uppercase">
-            {itemUnit?.internal_code}
-          </span>
+          <PrimaryBadge label={itemUnit?.internal_code}/>
+        </div>
 
-          {itemUnit?.type &&
-            (() => {
-              const typeConfig = ITEM_TYPE_LABELS[itemUnit.type];
-              return (
-                <span className="text-[10px] text-gray-400 uppercase">
-                  <PrimaryBadge label={typeConfig?.label} />
-                </span>
-              );
-            })()}
+        
 
+        {/* Row 2: name */}
+        <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
+          {itemUnit?.name ?? item?.name}
+        </p>
+
+        {/* Row 3: brand · model */}
+        {(itemUnit?.brand || itemUnit?.model) && (
+          <p className="text-xs text-gray-500 truncate">
+            {[itemUnit?.brand, itemUnit?.model].filter(Boolean).join(" · ")}
+          </p>
+        )}
+
+        <div className="flex items-center gap-2">
           {itemUnit?.condition &&
             (() => {
               const conditionConfig = ITEM_CONDITION_CONFIG[itemUnit.condition];
@@ -90,18 +94,6 @@ export default function ItemUnitCard({
               );
             })()}
         </div>
-
-        {/* Row 2: name */}
-        <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
-          {itemUnit?.name ?? item?.name}
-        </p>
-
-        {/* Row 3: brand · model */}
-        {(itemUnit?.brand || itemUnit?.model) && (
-          <p className="text-xs text-gray-400 truncate">
-            {[itemUnit?.brand, itemUnit?.model].filter(Boolean).join(" · ")}
-          </p>
-        )}
 
         {/* Row 4: location */}
         <div className="flex items-center gap-1.5 mt-1">
