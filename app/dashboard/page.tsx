@@ -31,6 +31,8 @@ import PagedDataGrid from "../components/paged-datagrid/PagedDatagrid";
 import MinimalItemUnitCard from "./items/cards/MinimalItemUnitCard";
 import { ItemUnitViewModel } from "./items/types/item-unit-view.model";
 import LocationDashboard from "../components/LocationDashboard";
+import UserDashboard from "../components/UserDashBoard";
+import ItemUnitsDonut from "../components/ItemUnitsDonut";
 
 const columns: ColumnDef<any>[] = [
   { key: "item", title: "Artículo" },
@@ -50,16 +52,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemUnits, setItemUnits] = useState<any[]>([]);
-  const [usageLogs, setUsageLogs] = useState<any>(undefined);
   const [unitsForStats, setUnitsForStats] = useState<any[]>([]);
   const [showItemModal, setShowItemModal] = useState<boolean>(false);
   const [selectedItemUnit, setSelectedItemUnit] = useState<any>(null);
   const [showLocationItems, setShowLocationItems] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showUserDetails, setShowUserDetails] = useState<boolean>(false);
   const handleGetItemUnitsStats = async () => {
     try {
       const response = await axios.get(`${apiUrl}/item-units/get-stats`);
+      console.log("item units stats", response.data);
       setItemUnitsStats(response.data.data);
     } catch (error: any) {}
   };
@@ -189,103 +192,7 @@ export default function Dashboard() {
           count={itemUnitsStats?.total_units}
           icon={<MdInventory />}
         >
-          {/* Stats rows */}
-          <div className="space-y-1 text-sm">
-            <button
-              onClick={() =>
-                handleGetItemUnits({
-                  status: "AVAILABLE",
-                })
-              }
-              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
-    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-green-500">●</span>
-                <span>Disponibles</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-400">
-                  {itemUnitsStats?.available_units}
-                </span>
-              </div>
-            </button>
-
-            <button
-              onClick={() =>
-                handleGetItemUnits({
-                  status: ItemUnitStatus.RESERVED,
-                })
-              }
-              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
-    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-orange-500">●</span>
-                <span>Reservados</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-400">
-                  {itemUnitsStats?.reserved_units}
-                </span>
-              </div>
-            </button>
-
-            <button
-              onClick={() =>
-                handleGetItemUnits({ status: ItemUnitStatus.CREATED })
-              }
-              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
-    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-red-500">●</span>
-                <span>Sin ubicación</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-400">
-                  {itemUnitsStats?.without_location}
-                </span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleGetItemUnits({ status: "RENTED" })}
-              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
-    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-blue-400">●</span>
-                <span>Rentados</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-400">
-                  {itemUnitsStats?.rented_units}
-                </span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleGetItemUnits({ status: "IN_TRANSIT" })}
-              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
-    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-500">●</span>
-                <span>En tránsito</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-400">
-                  {itemUnitsStats?.in_transit_units}
-                </span>
-              </div>
-            </button>
-          </div>
+          <ItemUnitsDonut stats={itemUnitsStats} />
         </StatCard>
 
         <StatCard
@@ -322,7 +229,15 @@ export default function Dashboard() {
         >
           <div className="space-y-2 text-sm">
             {userStats?.map((user: any) => (
-              <UserStatCard key={user.id} stat={user} onClick={() => {}} />
+              <UserStatCard
+                key={user.id}
+                stat={user}
+                onClick={() => {
+                  console.log("selected user", user);
+                  setSelectedUser(user);
+                  setShowUserDetails(true);
+                }}
+              />
             ))}
           </div>
         </StatCard>
@@ -393,7 +308,6 @@ export default function Dashboard() {
             )}
           </div>
         </StatCard>
-        
       </div>
 
       <Modal
@@ -432,7 +346,7 @@ export default function Dashboard() {
 
       <Modal
         open={showItemModal}
-        title="Artículos"
+        title="Detalles del artículo"
         onClose={() => setShowItemModal(false)}
       >
         <ItemUnitView itemUnidId={selectedItemUnit?.id} />
@@ -440,10 +354,21 @@ export default function Dashboard() {
 
       <Modal
         open={showLocationItems}
-        title={"Por ubicación"}
+        title={"Detalles de ubicación"}
         onClose={() => setShowLocationItems(false)}
       >
         <LocationDashboard locationId={selectedLocation?.id} />
+      </Modal>
+
+      <Modal
+        open={showUserDetails}
+        title="Detalles del usuario"
+        onClose={() => setShowUserDetails(false)}
+      >
+        <UserDashboard
+          personId={selectedUser?.person_id}
+          userId={selectedUser?.user_id}
+        />
       </Modal>
     </div>
   );

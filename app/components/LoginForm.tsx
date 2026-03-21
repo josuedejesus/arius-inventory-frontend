@@ -26,8 +26,6 @@ export default function LoginForm() {
     setError("");
     setLoading(true);
 
-    
-
     try {
       const response = await axios.post(`${apiUrl}/auth/login`, {
         username: username,
@@ -40,8 +38,9 @@ export default function LoginForm() {
       await reloadUser();
       router.push("/dashboard");
     } catch (error: any) {
-      const message = error?.response?.message ?? 
-      "El servidor no está disponible en este momento. Intente más tarde.";
+      const message =
+        error?.response?.message ??
+        "El servidor no está disponible en este momento. Intente más tarde.";
       setError(message);
     } finally {
       setLoading(false);
@@ -52,7 +51,17 @@ export default function LoginForm() {
     <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
       {/* Logo / Branding */}
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Arius</h1>
+        {/* 🔷 LOGO con fondo */}
+        <div className="flex justify-center mb-4">
+          <div className="bg-gray-100 p-3 rounded-2xl shadow-sm">
+            <img
+              src="/logo.png"
+              alt="Arius Logo"
+              className="w-24 h-24 object-contain"
+            />
+          </div>
+        </div>
+
         <p className="text-sm text-gray-500 mt-1">
           Sistema de gestión de inventario
         </p>

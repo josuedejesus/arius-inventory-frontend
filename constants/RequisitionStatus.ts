@@ -1,4 +1,4 @@
-import { variant } from "./VarianEnum";
+import { variant } from "./VariantEnum";
 
 
 export const REQUISITION_STATUS_LABELS: Record<

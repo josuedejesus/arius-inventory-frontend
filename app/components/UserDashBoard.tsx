@@ -8,21 +8,25 @@ import {
   MdCategory,
   MdInventory,
   MdLocationOn,
+  MdMail,
   MdPeople,
   MdPerson,
+  MdPhone,
 } from "react-icons/md";
 import { toast } from "sonner";
 import { PrimaryBadge } from "./badges/PrimaryBadge";
-import MinimalItemCard from "../dashboard/items/cards/MinimalItemCard";
+import { PersonViewModel } from "../dashboard/persons/types/person-view-model";
+import { PERSON_ROLE_LABELS } from "@/constants/PersonRoles";
+import MinimalLocationCard from "../dashboard/locations/cards/MinimalLocationCard";
 
 type Props = {
-  locationId: number;
+  personId: number;
+  userId: number;
 };
 
-const LocationDashboard: React.FC<Props> = ({ locationId }) => {
-  const [location, setLocation] = useState<LocationViewModel>();
-  const [items, setItems] = useState<any[]>([]);
-  const [staff, setStaff] = useState<any[]>([]);
+export default function UserDashboard({ personId, userId }: Props) {
+  const [person, setPerson] = useState<PersonViewModel>();
+  const [locations, setLocations] = useState<any[]>([]);
   const [itemUnits, setItemUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -32,25 +36,42 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
     setLoading(true);
     const fetchData = async () => {
       await Promise.all([
-        handleGetLocation(),
-        handleGetStockByLocation(locationId),
-        handleGetMembersByLocation(locationId),
-        handleGetItemUnits({ locationId: locationId }),
+        handleGetPerson(),
+        handleGetLocations(),
+        handleGetItemUnits(),
       ]);
     };
     fetchData();
-  }, [locationId]);
+  }, [personId, userId]);
 
-  const handleGetLocation = async () => {
+  const handleGetPerson = async () => {
+    console.log("fetching person details for personId:", personId);
     try {
       setLoading(true);
-      const response = await axios.get(`${apiUrl}/locations/${locationId}`, {
+      const response = await axios.get(`${apiUrl}/persons/${personId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("location", response.data);
-      setLocation(response.data.data);
+      console.log("person", response.data);
+      setPerson(response.data.data);
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleGetLocations = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${apiUrl}/locations/${userId}/user`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      console.log("locations", response.data);
+      setLocations(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -59,58 +80,17 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
     }
   };
 
-  const handleGetMembersByLocation = async (locationId: number) => {
+  const handleGetItemUnits = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${apiUrl}/persons`, {
-        params: { locationId },
+      const response = await axios.get(`${apiUrl}/item-units/${userId}/user`, {
+        params: { userId },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("miembtos por item", response.data);
-      setStaff(response.data);
-    } catch (error: any) {
-      const message = error?.response?.data?.message ?? "";
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGetStockByLocation = async (locationId: number) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${apiUrl}/items/${locationId}/get-stock`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-      console.log("stock por item", response.data);
-      setItems(response.data);
-    } catch (error: any) {
-      const message = error?.response?.data?.message ?? "";
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGetItemUnits = async (filters: { locationId: number }) => {
-    try {
-      console.log("fetching item units with filters", filters);
-      setLoading(true);
-      const response = await axios.get(`${apiUrl}/item-units`, {
-        params: filters,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      console.log("item units por ubicación", response.data);
-      setItemUnits(response.data.data);
+      console.log("item units", response.data);
+      setItemUnits(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -138,40 +118,47 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
       {/* 🔷 HEADER */}
       <div className="bg-white rounded-2xl shadow p-6 flex justify-between items-center">
         <div className="space-y-1">
-          {/* 🔷 Nombre + tipo */}
+          {/* 🔷 Nombre + rol */}
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-semibold text-gray-800">
-              {location?.name}
+              {person?.name}
             </h1>
 
-            {location?.type &&
-              (() => {
-                const typeConfig = LOCATION_TYPE_CONFIG[location.type];
-                const Icon = typeConfig?.icon;
+            {person?.role && (
+              <PrimaryBadge
+                label={PERSON_ROLE_LABELS[person.role]}
+                className="default"
+              />
+            )}
+          </div>
 
-                return (
-                  <PrimaryBadge
-                    icon={Icon ? <Icon /> : null}
-                    label={typeConfig?.label || ""}
-                    className={typeConfig?.className}
-                  />
-                );
-              })()}
+          {/* 📧 Contacto */}
+          <div className="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
+            {person?.email && (
+              <span className="flex items-center gap-1">
+                <MdMail /> {person.email}
+              </span>
+            )}
+
+            {person?.phone && (
+              <span className="flex items-center gap-1">
+                <MdPhone /> {person.phone}
+              </span>
+            )}
           </div>
 
           {/* 📍 Dirección */}
           <p className="text-sm text-gray-500 flex items-center gap-1">
-            <MdLocationOn className="text-blue-400" />{" "}
-            {location?.location || "Sin ubicación"}
+            <MdLocationOn className="text-blue-400" />
+            {person?.address || "Sin dirección"}
           </p>
         </div>
       </div>
 
       {/* 🔷 KPIs */}
       <div className="grid grid-cols-3 gap-4">
-        <KpiCard title="Personal" value={staff?.length || 0} />
+        <KpiCard title="Ubicaciones" value={locations?.length || 0} />
         <KpiCard title="Equipos" value={itemUnits?.length || 0} />
-        <KpiCard title="Suministros" value={items?.length || 0} />
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
@@ -179,15 +166,15 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
         {/* 👥 STAFF */}
         <div className="bg-white rounded-2xl shadow p-4">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">
-            <MdPeople className="inline-block mr-2" />
-            Personal asignado
+            <MdLocationOn className="inline-block mr-2" />
+            Ubicaciones asignadas
           </h2>
 
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {staff?.length ? (
-              staff.map((s) => <MinimalPersonCard key={s.id} person={s} />)
+            {locations?.length ? (
+              locations.map((l) => <MinimalLocationCard key={l.id} location={l} />)
             ) : (
-              <p className="text-sm text-gray-400">Sin personal asignado</p>
+              <p className="text-sm text-gray-400">Sin ubicaciones asignadas</p>
             )}
           </div>
         </div>
@@ -210,27 +197,9 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           </div>
         </div>
       </div>
-
-      {/* 🔷 SUPPLIES */}
-      <div className="bg-white rounded-2xl shadow p-4">
-        <h2 className="flex items-center font-semibold text-gray-600 mb-3">
-          <MdInventory className="inline-block mr-2" />
-          Inventario de suministros
-        </h2>
-
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {items?.length ? (
-            items
-              .sort((a, b) => a.stock - b.stock) // 🔥 menor stock primero
-              .map((s) => <MinimalItemCard key={s.id} item={s} />)
-          ) : (
-            <p className="text-sm text-gray-400">Sin inventario disponible</p>
-          )}
-        </div>
-      </div>
     </div>
   );
-};
+}
 
 const KpiCard = ({ title, value }: { title: string; value: number }) => (
   <div className="bg-white p-4 rounded-2xl shadow">
@@ -238,5 +207,3 @@ const KpiCard = ({ title, value }: { title: string; value: number }) => (
     <p className="text-xl font-semibold text-gray-800">{value}</p>
   </div>
 );
-
-export default LocationDashboard;

@@ -1,4 +1,4 @@
-import { variant } from "@/constants/VarianEnum";
+import { variant } from "@/constants/VariantEnum";
 import { PrimaryBadge } from "./PrimaryBadge";
 
 type Props = {
