@@ -1,7 +1,7 @@
 import { variant } from "./VariantEnum";
 
 
-export const REQUISITION_STATUS_LABELS: Record<
+export const REQUISITION_STATUS_CONFIG: Record<
   string,
   {
     label: string;

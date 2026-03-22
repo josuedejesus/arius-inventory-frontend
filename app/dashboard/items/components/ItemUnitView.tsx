@@ -13,8 +13,7 @@ import { toast } from "sonner";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
 import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
-import { ITEM_STATUS_CONFIG } from "@/constants/ItemStatus";
-import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
+import { ITEM_UNIT_STATUS_CONFIG } from "@/constants/ItemUnitStatus";
 
 type Props = {
   itemUnidId: number;
@@ -99,8 +98,8 @@ export default function ItemUnitView({ itemUnidId }: Props) {
               </div>
 
               <PrimaryBadge
-                label={ITEM_STATUS_CONFIG[itemUnit?.status ?? ""]?.label}
-                variant={ITEM_STATUS_CONFIG[itemUnit?.status ?? ""]?.className}
+                label={ITEM_UNIT_STATUS_CONFIG[itemUnit?.status ?? ""]?.label}
+                className={ITEM_UNIT_STATUS_CONFIG[itemUnit?.status ?? ""]?.className}
               />
             </div>
 

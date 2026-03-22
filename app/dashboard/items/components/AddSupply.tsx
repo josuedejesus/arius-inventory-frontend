@@ -1,49 +1,41 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import SearchBar from "./SearchBar";
-import FormTabs from "./form/FormTabs";
-import FormTabPanel from "./form/FormTabPanel";
-import FormSection from "./form/FormSection";
+import SearchBar from "../../../components/SearchBar";
+import FormTabs from "../../../components/form/FormTabs";
+import FormTabPanel from "../../../components/form/FormTabPanel";
+import FormSection from "../../../components/form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "../dashboard/items/cards/ItemUnitCard";
-import NumberSelector from "./NumberSelector";
-import SupplyCard from "./cards/SupplyCard";
-import { RequisitionType } from "../dashboard/requisitions/types/requisition-type.enum";
-import { PrimaryBadge } from "./badges/PrimaryBadge";
+import ItemUnitCard from "../cards/ItemUnitCard";
+import NumberSelector from "../../../components/NumberSelector";
+import SupplyCard from "../../../components/cards/SupplyCard";
+import { RequisitionType } from "../../requisitions/types/requisition-type.enum";
+import { PrimaryBadge } from "../../../components/badges/PrimaryBadge";
 
 type AddSupplyFormProps = {
-  itemId: number;
+  item: any;
   requisitionType: RequisitionType | "";
   onAdd: (item: any) => void;
   onClose: () => void;
 };
 
 export default function AddSupplyForm({
-  itemId,
+  item,
   requisitionType,
   onAdd,
-  onClose
+  onClose,
 }: AddSupplyFormProps) {
-  //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
   const [accessories, setAccessories] = useState<any[]>([]);
-  const [existingAccessories, setExistingAccessories] = useState<any[]>([]);
-
-  const [item, setItem] = useState<any>(undefined);
   const [error, setError] = useState(false);
+  const [quantity, setQuantity] = useState<number>(0.0);
   const isLimited =
     requisitionType !== RequisitionType.ADJUSTMENT &&
     requisitionType !== RequisitionType.PURCHASE_RECEIPT;
-
-  //SearchBar
   const [searchValue, setSearchValue] = useState<string>("");
 
   const filteredItems = accessories.filter((u: any) =>
     `${u.name}`.toLowerCase().includes(searchValue.toLowerCase()),
   );
-
-  const [quantity, setQuantity] = useState<number>(0.0);
 
   const increaseQty = () => {
     setQuantity(quantity + 1);
@@ -51,19 +43,6 @@ export default function AddSupplyForm({
 
   const decreaseQty = () => {
     setQuantity(quantity - 1);
-  };
-
-  const handleGetItem = async () => {
-    try {
-      const response = await axios(`${apiUrl}/items/${itemId}/supply`);
-      console.log("supply", response.data.data);
-      setItem(response.data.data);
-    } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.data.message);
-      } else {
-      }
-    }
   };
 
   const handleAdd = (item: any) => {
@@ -78,14 +57,12 @@ export default function AddSupplyForm({
       quantity: quantity,
       unit_code: item.unit_code,
       unit_name: item.unit_name,
+      location_id: item.location_id,
+      location_name: item.location_name,
     };
 
     onAdd(payload);
   };
-
-  useEffect(() => {
-    handleGetItem();
-  }, []);
 
   return (
     <div className="space-y-4">
@@ -157,7 +134,7 @@ export default function AddSupplyForm({
 
       <div className="flex justify-end space-x-2 ">
         <button
-        onClick={onClose}
+          onClick={onClose}
           className="px-4 py-3 rounded-xl 
         text-black 
         disabled:opacity-50 cursor-pointer"

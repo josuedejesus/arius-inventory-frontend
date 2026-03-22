@@ -19,20 +19,14 @@ export default function AddItemForm({
   addedAccessories,
   onAdd,
 }: Props) {
-  //API
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
   const [item, setItem] = useState<any>(undefined);
-
   const [accessories, setAccessories] = useState<any[]>([]);
   const [existingAccessories, setExistingAccessories] = useState<any[]>([]);
-
   const [itemAccessories, setItemAccessories] =
     useState<any[]>(addedAccessories);
-
-  //SearchBar
   const [searchValue, setSearchValue] = useState<string>("");
-
+  
   const filteredItems = accessories.filter((u: any) =>
     `${u.name}`.toLowerCase().includes(searchValue.toLowerCase()),
   );

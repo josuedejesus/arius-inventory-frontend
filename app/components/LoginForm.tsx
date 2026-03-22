@@ -38,8 +38,9 @@ export default function LoginForm() {
       await reloadUser();
       router.push("/dashboard");
     } catch (error: any) {
+      console.log("Login error", error);
       const message =
-        error?.response?.message ??
+        error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
       setError(message);
     } finally {

@@ -161,6 +161,12 @@ export default function PersonsForm({
         role: form?.role,
         address: form?.address || "",
         rtn: form?.rtn || "",
+        user: {
+          username: userForm?.username,
+          password: userForm?.password || "",
+          role: userForm?.role,
+          is_active: userForm?.is_active,
+        },
       };
 
       const response = await axios.put(
@@ -229,9 +235,7 @@ export default function PersonsForm({
   return (
     <>
       <div className="relative">
-        {saving && (
-          <SavingScreen/>
-        )}
+        {saving && <SavingScreen />}
         <FormLayout
           title=""
           description="Actualice la información de la persona y guarde los cambios realizados."

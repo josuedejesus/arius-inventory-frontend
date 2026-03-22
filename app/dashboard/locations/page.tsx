@@ -113,8 +113,8 @@ export default function Warehouses() {
             const typeConfig = LOCATION_TYPE_CONFIG[row?.type];
             return (
               <span className="flex items-center justify-start gap-2">
-                {<typeConfig.icon color={typeConfig.className} />}{" "}
-                {typeConfig.label}
+                {typeConfig?.icon && <typeConfig.icon color={typeConfig.className} />}{" "}
+                {typeConfig?.label}
               </span>
             );
           }}

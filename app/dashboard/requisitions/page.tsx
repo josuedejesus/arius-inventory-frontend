@@ -3,22 +3,20 @@
 import Modal from "@/app/components/Modal";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import NewRequisitionForm from "@/app/dashboard/requisitions/components/NewRequisitionForm";
 import { useAuth } from "@/context/AuthContext";
 import { useSSE } from "@/hooks/userSSE";
-import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import RequisitionView from "@/app/dashboard/requisitions/components/RequisitionView";
-import UpdateRequisitionForm from "./components/UpdateRequisitionForm";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import LoadingScreen from "@/app/components/LoadingScreen";
-import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
 import { RequisitionViewModel } from "./types/requisition-view.model";
 import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
-import { RETURN_STATUS_LABELS } from "@/constants/ReturnStatus";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
-import { REQUISITION_STATUS_LABELS } from "@/constants/RequisitionStatus";
-import { MdArchive, MdDescription, MdEdit, MdVisibility } from "react-icons/md";
 import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
+import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
+import { REQUISITION_STATUS_CONFIG } from "@/constants/RequisitionStatus";
+import RequisitionForm from "./components/RequisitionForm";
+import axios from "axios";
+import { LocationViewModel } from "../locations/types/location-view-model";
 
 enum modes {
   VIEW,
@@ -55,34 +53,19 @@ const VIEW_MODE_BY_ROLE_STATUS: Record<string, Record<string, modes>> = {
 
 export default function Requisitions() {
   //User
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const { user } = useAuth();
-
   const [page, setPage] = useState(1);
   const [pageSize] = useState(18);
-
   const [total, setTotal] = useState(0);
-
-  const [sorting, setSorting] = useState("");
-
-  //Requisitions
   const [requisitions, setRequisitions] = useState<any>([]);
   const [selectedRequisition, setSelectedRequisition] = useState<any | null>(
     null,
   );
-
-  //SearchBar
-  const [searchValue, setSearchValue] = useState<string>("");
-
-  const filteredRequisitions = requisitions.filter((u: any) =>
-    `${u.name} ${u.model} ${u.brand} ${u.email}`
-      .toLowerCase()
-      .includes(searchValue.toLowerCase()),
-  );
-
   const [showNewRequisition, setShowNewRequisition] = useState<boolean>(false);
   const [showRequisition, setShowRequisition] = useState<boolean>(false);
-  const [showUpdateRequisition, setShowUpdateRequisition] =
-    useState<boolean>(false);
+  useState<boolean>(false);
+  const [locations, setLocations] = useState<LocationViewModel[]>([]);
 
   const { getAll: getRequisitions, loading } = useRequisitions();
 
@@ -102,6 +85,19 @@ export default function Requisitions() {
     });
     setRequisitions(data.items);
     setTotal(data.total);
+  };
+
+  const handleGetLocations = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/locations`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      setLocations(response.data.data);
+    } catch (error: any) {
+      toast.error("Error obteniendo ubicaciones");
+    }
   };
 
   useSSE({
@@ -145,7 +141,10 @@ export default function Requisitions() {
           </h1>
 
           <button
-            onClick={() => setShowNewRequisition(true)}
+            onClick={() => {
+              setShowNewRequisition(true);
+              handleGetLocations();
+            }}
             className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
                      hover:bg-blue-500 transition text-sm font-medium"
           >
@@ -163,16 +162,14 @@ export default function Requisitions() {
         >
           <PagedDataGrid.Column field="id" title="ID">
             {(row: RequisitionViewModel) => (
-              <span className="text-gray-600">
-                {row.id}
-              </span>
+              <span className="text-gray-600">{row.id}</span>
             )}
           </PagedDataGrid.Column>
 
           <PagedDataGrid.Column field="type" title="Tipo">
             {(row: RequisitionViewModel) => (
               <span className="text-gray-600">
-                {REQUISITION_TYPE_LABELS[row.type].label}
+                {REQUISITION_TYPE_CONFIG[row.type].label}
               </span>
             )}
           </PagedDataGrid.Column>
@@ -197,8 +194,8 @@ export default function Requisitions() {
           <PagedDataGrid.Column field="status" title="Estado">
             {(row: RequisitionViewModel) => (
               <PrimaryBadge
-                label={REQUISITION_STATUS_LABELS[row.status].label}
-                variant={`${REQUISITION_STATUS_LABELS[row.status].className}`}
+                label={REQUISITION_STATUS_CONFIG[row.status].label}
+                variant={`${REQUISITION_STATUS_CONFIG[row.status].className}`}
               />
             )}
           </PagedDataGrid.Column>
@@ -211,7 +208,6 @@ export default function Requisitions() {
               />
             )}
           </PagedDataGrid.Column>
-          
         </PagedDataGrid>
       </div>
 
@@ -221,7 +217,7 @@ export default function Requisitions() {
         title="Nueva Requisicion"
         onClose={() => setShowNewRequisition(false)}
       >
-        <NewRequisitionForm
+        <RequisitionForm
           onSuccess={() => {
             setShowNewRequisition(false);
             handleGetRequisitions({ skip: 0, take: pageSize });
@@ -240,25 +236,9 @@ export default function Requisitions() {
           mode={modes.VIEW}
           onEdit={() => {
             setShowRequisition(false);
-            setShowUpdateRequisition(true);
           }}
           onSuccess={() => {
             setShowRequisition(false);
-            handleGetRequisitions({ skip: 0, take: pageSize });
-          }}
-        />
-      </Modal>
-
-      {/*EDIT REQUISITION*/}
-      <Modal
-        open={showUpdateRequisition}
-        title="Actualizar Requisición"
-        onClose={() => setShowUpdateRequisition(false)}
-      >
-        <UpdateRequisitionForm
-          requisitionId={selectedRequisition?.id}
-          onSuccess={() => {
-            setShowUpdateRequisition(false);
             handleGetRequisitions({ skip: 0, take: pageSize });
           }}
         />

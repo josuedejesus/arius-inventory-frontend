@@ -24,10 +24,7 @@ type Props = {
   onSuccess: () => void;
 };
 
-export default function LocationForm({
-  locationId,
-  onSuccess,
-}: Props) {
+export default function LocationForm({ locationId, onSuccess }: Props) {
   const [form, setForm] = useState<LocationViewModel>({
     id: undefined,
     name: "",
@@ -56,7 +53,11 @@ export default function LocationForm({
         setLoading(true);
         if (locationId) {
           setIsEdit(true);
-          await Promise.all([handleGetLocation(), handlGetMembers(), handleGetUsers()]);
+          await Promise.all([
+            handleGetLocation(),
+            handlGetMembers(),
+            handleGetUsers(),
+          ]);
           return;
         }
 
@@ -185,7 +186,7 @@ export default function LocationForm({
         },
       });
       const locationData = response.data.data;
-      console.log('DATOS DE UBICACION', locationData);
+      console.log("DATOS DE UBICACION", locationData);
       setForm(locationData);
     } catch (error: any) {
       const message =
@@ -230,87 +231,84 @@ export default function LocationForm({
 
   return (
     <div className="relative">
-      {saving && (
-        <SavingScreen />
-      )}
-<FormLayout title="Crear Ubicacion" onSubmit={handleSubmit}>
-      <FormTabs
-        tabs={[
-          { key: "general", label: "General" },
-          { key: "staff", label: "Personal" },
-        ]}
-        value={selectedTab}
-        onChange={setSelectedTab}
-      />
+      {saving && <SavingScreen />}
+      <FormLayout title="" onSubmit={handleSubmit}>
+        <FormTabs
+          tabs={[
+            { key: "general", label: "General" },
+            { key: "staff", label: "Personal" },
+          ]}
+          value={selectedTab}
+          onChange={setSelectedTab}
+        />
 
-      <FormTabPanel when="general" value={selectedTab}>
-        <FormSection
-          title="Información general"
-          description="Datos básicos de la ubicación"
-        >
-          <FormField
-            label="Nombre"
-            placeholder=""
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-          />
+        <FormTabPanel when="general" value={selectedTab}>
+          <FormSection
+            title="Información general"
+            description="Datos básicos de la ubicación"
+          >
+            <FormField
+              label="Nombre"
+              placeholder=""
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+            />
 
-          <FormRadioGroup
-            label="Tipo de ubicación"
-            options={[
-              { value: "WAREHOUSE", label: "Bodega" },
-              { value: "PROJECT", label: "Proyecto" },
-              { value: "MAINTENANCE", label: "Mantenimiento" },
-              { value: "VIRTUAL", label: "Virtual" },
-            ]}
-            name="type"
-            value={form.type}
-            onChange={handleChange}
-          />
-        </FormSection>
+            <FormRadioGroup
+              label="Tipo de ubicación"
+              options={[
+                { value: "WAREHOUSE", label: "Bodega" },
+                { value: "PROJECT", label: "Proyecto" },
+                { value: "MAINTENANCE", label: "Mantenimiento" },
+                { value: "VIRTUAL", label: "Virtual" },
+              ]}
+              name="type"
+              value={form.type}
+              onChange={handleChange}
+            />
+          </FormSection>
 
-        <FormSection
-          title="Detalles"
-          description="Información adicional y estado"
-        >
-          <FormText
-            label="Dirección / referencia"
-            placeholder=""
-            name="location"
-            value={form.location}
-            onChange={handleChange}
-          />
+          <FormSection
+            title="Detalles"
+            description="Información adicional y estado"
+          >
+            <FormText
+              label="Dirección / referencia"
+              placeholder=""
+              name="location"
+              value={form.location}
+              onChange={handleChange}
+            />
 
-          <FormSwitch
-            label="Activo"
-            name="is_active"
-            value={form.is_active}
-            onChange={handleChange}
-          />
-        </FormSection>
-      </FormTabPanel>
+            <FormSwitch
+              label="Activo"
+              name="is_active"
+              value={form.is_active}
+              onChange={handleChange}
+            />
+          </FormSection>
+        </FormTabPanel>
 
-      <FormTabPanel when="staff" value={selectedTab}>
-        <FormSection
-          title="Personal asignado"
-          description="Personal que administrara el inventario de la ubicación"
-        >
-          <FormSelectSearch
-            label="Personal"
-            options={users}
-            onSelect={addMember}
-          />
+        <FormTabPanel when="staff" value={selectedTab}>
+          <FormSection
+            title="Personal asignado"
+            description="Personal que administrara el inventario de la ubicación"
+          >
+            <FormSelectSearch
+              label="Personal"
+              options={users}
+              onSelect={addMember}
+            />
 
-          <AddedItemsContainer
-            placeholder="personal"
-            items={locationMembers}
-            onRemove={removeMember}
-          />
-        </FormSection>
-      </FormTabPanel>
-    </FormLayout>
+            <AddedItemsContainer
+              placeholder="personal"
+              items={locationMembers}
+              onRemove={removeMember}
+            />
+          </FormSection>
+        </FormTabPanel>
+      </FormLayout>
     </div>
-    
   );
 }

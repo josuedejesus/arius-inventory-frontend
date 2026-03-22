@@ -1,35 +1,34 @@
 import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
-import { ITEM_STATUS_CONFIG } from "@/constants/ItemStatus";
 import { useState } from "react";
 import { MdLocationOff, MdLocationOn, MdNoPhotography } from "react-icons/md";
 import { PrimaryBadge } from "../../../components/badges/PrimaryBadge";
-import { ItemViewModel } from "@/app/dashboard/items/types/item-view.model";
 import { ItemUnitViewModel } from "@/app/dashboard/items/types/item-unit-view.model";
-import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
+import { ITEM_UNIT_STATUS_CONFIG } from "@/constants/ItemUnitStatus";
 
 type ItemUnitCardProps = {
   itemUnit: ItemUnitViewModel;
   item?: any;
   onClick?: (item: any) => void;
+  disabled?: boolean;
 };
 
 export default function ItemUnitCard({
   itemUnit,
   item,
   onClick,
+  disabled = false,
 }: ItemUnitCardProps) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [error, setError] = useState(false);
 
-  const statusConfig = ITEM_STATUS_CONFIG[itemUnit?.status];
-
-  console.log(itemUnit);
+  const statusConfig = ITEM_UNIT_STATUS_CONFIG[itemUnit?.status];
 
   return (
     <button
       type="button"
       onClick={() => onClick && onClick(itemUnit)}
-      className="group w-full flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-3 py-3 hover:border-gray-300 hover:shadow-sm transition-all duration-150 text-left"
+      disabled={disabled}
+      className={`group w-full flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-3 py-3 hover:border-gray-300 hover:shadow-sm transition-all duration-150 text-left ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       {/* Image */}
       <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
@@ -75,7 +74,7 @@ export default function ItemUnitCard({
                 <span className="text-[10px] text-gray-400 uppercase">
                   <PrimaryBadge
                     label={conditionConfig?.label}
-                    variant={conditionConfig?.className}
+                    className={conditionConfig?.className}
                   />
                 </span>
               );
@@ -83,12 +82,12 @@ export default function ItemUnitCard({
 
           {itemUnit?.status &&
             (() => {
-              const statusConfig = ITEM_STATUS_CONFIG[itemUnit.status];
+              const statusConfig = ITEM_UNIT_STATUS_CONFIG[itemUnit.status];
               return (
                 <span className="text-[10px] text-gray-400 uppercase">
                   <PrimaryBadge
                     label={statusConfig?.label}
-                    variant={statusConfig?.className}
+                    className={statusConfig?.className}
                   />
                 </span>
               );
@@ -105,7 +104,7 @@ export default function ItemUnitCard({
           ) : (
             <span className="flex items-center text-blue-400 gap-1">
               <MdLocationOn className="text-xs" />
-              <p className="text-xs">{itemUnit?.location}</p>
+              <p className="text-xs">{itemUnit?.location_name}</p>
             </span>
           )}
 

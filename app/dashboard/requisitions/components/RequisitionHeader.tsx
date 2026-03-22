@@ -1,20 +1,10 @@
 "use client";
-
-import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
-import { REQUISITION_STATUS_LABELS } from "@/constants/RequisitionStatus";
-
 import {
   MdLocationOn,
-  MdSchedule,
   MdPerson,
-  MdEdit,
-  MdPrint,
-  MdArchive,
-  MdInventory,
   MdWarehouse,
   MdEvent,
   MdCategory,
-  MdSignalWifiStatusbar1Bar,
   MdInfo,
   MdNote,
   MdOutlineEditNote,
@@ -30,6 +20,8 @@ import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
 import { IoMdReturnLeft } from "react-icons/io";
 import InfoBadge from "@/app/components/badges/InfoBadge";
 import { RequisitionType } from "../types/requisition-type.enum";
+import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
+import { REQUISITION_STATUS_CONFIG } from "@/constants/RequisitionStatus";
 
 type Props = {
   requisition: RequisitionViewModel;
@@ -44,8 +36,6 @@ export default function RequisitionHeader({ requisition }: Props) {
           <h2 className="text-2xl font-semibold text-gray-800">
             #{requisition?.id}
           </h2>
-
-          
         </div>
 
         {requisition?.updated_at && (
@@ -66,39 +56,55 @@ export default function RequisitionHeader({ requisition }: Props) {
 
         {/* GRID COMPACTO */}
         <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-3 text-sm">
-          <InfoBadge
-            label="Destino"
-            icon={<MdWarehouse className="text-blue-400" />}
-            value={requisition?.destination_location_name}
-          />
+          {(() => {
+            const config = REQUISITION_TYPE_CONFIG[requisition?.type];
+            const Icon = config?.icon;
+            return (
+              <InfoBadge
+                label="Tipo de requisición"
+                icon={
+                  Icon ? (
+                    <Icon className="text-blue-400" />
+                  ) : (
+                    <MdCategory className="text-blue-400" />
+                  )
+                }
+                value={config?.label}
+              />
+            );
+          })()}
 
-          <InfoBadge
-            label="Dirección"
-            icon={<MdLocationOn className="text-orange-400" />}
-            value={requisition?.destination_address}
-          />
+          {requisition?.destination_location_name && (
+            <InfoBadge
+              label="Destino"
+              icon={<MdWarehouse className="text-blue-500" />}
+              value={requisition?.destination_location_name}
+            />
+          )}
 
-          <InfoBadge
-            label="Tipo de requisición"
-            icon={<MdCategory className="text-purple-400" />}
-            value={REQUISITION_TYPE_LABELS[requisition?.type]?.label}
-          />
+          {requisition?.destination_address && (
+            <InfoBadge
+              label="Dirección"
+              icon={<MdLocationOn className="text-blue-500" />}
+              value={requisition?.destination_address}
+            />
+          )}
 
           <InfoBadge
             label="Solicitado por"
-            icon={<MdPerson className="text-blue-400" />}
+            icon={<MdPerson className="text-blue-500" />}
             value={requisition?.requestor_name}
           />
 
           <InfoBadge
             label="Aprobado por"
-            icon={<MdPerson className="text-orange-400" />}
+            icon={<MdPerson className="text-blue-500" />}
             value={requisition?.approver_name}
           />
 
           <InfoBadge
             label="Fecha programada"
-            icon={<MdEvent className="text-gray-500" />}
+            icon={<MdEvent className="text-blue-500" />}
             value={
               requisition?.schedulled_at
                 ? formatDate(requisition?.schedulled_at)
@@ -108,16 +114,16 @@ export default function RequisitionHeader({ requisition }: Props) {
 
           <InfoBadge
             label="Estado"
-            icon={<MdInfo className="text-yellow-500" />}
-            badgeValue={REQUISITION_STATUS_LABELS[requisition?.status]?.label}
-            variant={REQUISITION_STATUS_LABELS[requisition?.status]?.className}
+            icon={<MdInfo className="text-blue-500" />}
+            badgeValue={REQUISITION_STATUS_CONFIG[requisition?.status]?.label}
+            variant={REQUISITION_STATUS_CONFIG[requisition?.status]?.className}
           />
 
           {(requisition?.type === RequisitionType.RENT ||
             requisition?.type === RequisitionType.TRANSFER) && (
             <InfoBadge
               label="Estado de devolución"
-              icon={<IoMdReturnLeft className="text-orange-400" />}
+              icon={<IoMdReturnLeft className="text-blue-500" />}
               badgeValue={
                 RETURN_STATUS_CONFIG[requisition?.return_status]?.label
               }
@@ -127,14 +133,16 @@ export default function RequisitionHeader({ requisition }: Props) {
             />
           )}
 
-          <InfoBadge
-            label="Notas"
-            icon={<MdOutlineEditNote className="text-orange-400" />}
-            value={requisition?.notes}
-          />
+          <div className="flex flex-col gap-1 p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+              <MdOutlineEditNote size={18} className="text-blue-500" />
+              Notas
+            </span>
+            <p className="text-sm text-gray-700 leading-relaxed pl-5">
+              {requisition?.notes}
+            </p>
+          </div>
         </div>
-
-       
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ type AddItemsFormProps = {
   onAdd: (items: any) => void;
   onAddSupply: (item: any) => void;
   requisitionType: RequisitionType;
+  destinationLocationId: number | undefined | null;
 };
 
 export default function AddItemsForm({
@@ -23,42 +24,45 @@ export default function AddItemsForm({
   onAdd,
   onAddSupply,
   requisitionType,
+  destinationLocationId,
 }: AddItemsFormProps) {
-  //API
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  //SearchBar
   const [searchValue, setSearchValue] = useState<string>("");
-
   const [selectedTab, setSelectedTab] = useState<any>("tool");
 
   const filteredItems = itemUnits.filter((u: any) =>
-    `${u.item_name} ${u.model} ${u.brand} ${u.internal_code}`
+    `${u.name} ${u.model} ${u.brand} ${u.internal_code}`
       .toLowerCase()
       .includes(searchValue.toLowerCase()),
   );
 
- const requisitionTabs: Partial<Record<RequisitionType, { key: string; label: string }[]>> = {
-  [RequisitionType.ADJUSTMENT]: [
-    { key: "tool", label: "Equipo" },
-    { key: "supply", label: "Insumo" },
-  ],
-  [RequisitionType.PURCHASE_RECEIPT]: [
-    { key: "tool", label: "Equipo" },
-    { key: "supply", label: "Insumo" },
-  ],
-  [RequisitionType.CONSUMPTION]: [
-    { key: "supply", label: "Insumo" },
-  ],
-};
+  const requisitionTabs: Partial<
+    Record<RequisitionType, { key: string; label: string }[]>
+  > = {
+    [RequisitionType.ADJUSTMENT]: [
+      { key: "tool", label: "Equipo" },
+      { key: "supply", label: "Insumo" },
+    ],
+    [RequisitionType.PURCHASE_RECEIPT]: [
+      { key: "tool", label: "Equipo" },
+      { key: "supply", label: "Insumo" },
+    ],
+    [RequisitionType.CONSUMPTION]: [{ key: "supply", label: "Insumo" }],
+  };
   return (
     <div className="">
       <FormSection
         title="Articulos"
         description="Lista de articulos disponibles"
       >
-        <FormTabs   tabs={requisitionTabs[requisitionType] ?? [{ key: "tool", label: "Equipo" }]}
- value={selectedTab} onChange={setSelectedTab} />
+        <FormTabs
+          tabs={
+            requisitionTabs[requisitionType] ?? [
+              { key: "tool", label: "Equipo" },
+            ]
+          }
+          value={selectedTab}
+          onChange={setSelectedTab}
+        />
         <SearchBar
           placeholder="Buscar artículo..."
           value={searchValue}
@@ -73,6 +77,7 @@ export default function AddItemsForm({
                   key={i.id}
                   itemUnit={i}
                   onClick={() => onAdd(i)}
+                  disabled={i.location_id == destinationLocationId}
                 />
               ))
             ) : (

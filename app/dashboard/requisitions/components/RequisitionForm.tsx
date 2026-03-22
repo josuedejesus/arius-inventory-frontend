@@ -16,7 +16,7 @@ import AddAccessoriesForm from "../../items/components/AddItemForm";
 import AddLinesForm from "../../../components/AddLinesForm";
 import { RequisitionType } from "../types/requisition-type.enum";
 import RequisitionLineCard from "./RequisitionLineCard";
-import AddSupplyForm from "@/app/components/AddSupply";
+import AddSupplyForm from "@/app/dashboard/items/components/AddSupply";
 import { DataGrid } from "@/app/components/datagrid/DataGrid";
 import { DataGridRow } from "@/app/components/datagrid/DataGridRow";
 import { DataGridCell } from "@/app/components/datagrid/DataGridCell";
@@ -25,123 +25,156 @@ import { RequisitionStatus } from "../types/requisition-status.enum";
 import { ItemType } from "../../items/types/item-type.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { ReturnStatus } from "../types/return-status.enum";
-import { REQUISITION_TYPE_LABELS } from "@/constants/RequisitionType";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
 import BooleanBadge from "@/app/components/badges/BooleanBadge";
-import { MdCheck, MdClose, MdDelete } from "react-icons/md";
+import {
+  MdCheck,
+  MdClose,
+  MdDelete,
+  MdOutlineInventory2,
+} from "react-icons/md";
 import ActionButton from "@/app/components/ActionButton";
+import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
+import { LocationType } from "../../locations/types/location-type.enum";
+import { ROLE_REASON_OPTIONS } from "../types/role-reason-options";
+import { CreateRequisitionDto } from "../dto/create-requisition.dto";
+import {
+  filterLocationsByRule,
+  requiresDestination,
+} from "../helpers/requisition-location.helper";
+import { MovementType } from "../types/movement-type";
 
 const REQUISITION_TYPE_OPTIONS = [
-  /*{
+  {
     value: "INTERNAL_TRANSFER",
     label: "Transferencia interna",
     roles: ["ADMIN", "WAREHOUSE_MANAGER"],
-  },*/
+  },
   {
     value: RequisitionType.ADJUSTMENT,
-    label: REQUISITION_TYPE_LABELS[RequisitionType.ADJUSTMENT].label,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.ADJUSTMENT].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER"],
   },
   {
     value: RequisitionType.PURCHASE_RECEIPT,
-    label: REQUISITION_TYPE_LABELS[RequisitionType.PURCHASE_RECEIPT].label,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.PURCHASE_RECEIPT].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER"],
   },
 
   {
     value: RequisitionType.RENT,
-    label: REQUISITION_TYPE_LABELS[RequisitionType.RENT].label,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.RENT].label,
     roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.RETURN,
-    label: REQUISITION_TYPE_LABELS[RequisitionType.RETURN].label,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.RETURN].label,
     roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.CONSUMPTION,
-    label: REQUISITION_TYPE_LABELS[RequisitionType.CONSUMPTION].label,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.CONSUMPTION].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.TRANSFER,
-    label: REQUISITION_TYPE_LABELS[RequisitionType.TRANSFER].label,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.TRANSFER].label,
     roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
   },
   {
     value: RequisitionType.SALE,
-    label: REQUISITION_TYPE_LABELS[RequisitionType.SALE].label,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.SALE].label,
+    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
+  },
+
+  {
+    value: RequisitionType.MAINTENANCE,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.MAINTENANCE].label,
+    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
+  },
+  {
+    value: RequisitionType.OUT_OF_SERVICE,
+    label: REQUISITION_TYPE_CONFIG[RequisitionType.OUT_OF_SERVICE].label,
     roles: ["ADMIN", "WAREHOUSE_MANAGER"],
   },
 ];
 
 const REQUISITION_TYPE_LOCATIONS = [
   {
-    value: "INTERNAL_TRANSFER",
+    value: RequisitionType.INTERNAL_TRANSFER,
     showSource: false,
     showDestination: true,
   },
   {
-    value: "TRANSFER",
+    value: RequisitionType.TRANSFER,
     showSource: false,
     showDestination: true,
   },
   {
-    value: "ADJUSTMENT",
+    value: RequisitionType.ADJUSTMENT,
     showSource: false,
     showDestination: true,
   },
   {
-    value: "PURCHASE_RECEIPT",
+    value: RequisitionType.PURCHASE_RECEIPT,
     showSource: false,
     showDestination: true,
   },
   {
-    value: "RENT",
+    value: RequisitionType.RENT,
     showSource: false,
     showDestination: true,
   },
   {
-    value: "SALE",
+    value: RequisitionType.SALE,
     showSource: false,
     showDestination: true,
   },
   {
-    value: "CONSUMPTION",
+    value: RequisitionType.CONSUMPTION,
     showSource: false,
     showDestination: true,
   },
   {
-    value: "RETURN",
+    value: RequisitionType.RETURN,
+    showSource: false,
+    showDestination: true,
+  },
+  {
+    value: RequisitionType.MAINTENANCE,
     showSource: false,
     showDestination: true,
   },
 ];
 
-type NewRequisitionFormProps = {
+type Props = {
+  type?: RequisitionType;
   onSuccess: () => void;
 };
 
-const columns = [
-  { key: "item", title: "Ítem" },
-  { key: "quantity", title: "Cantidad" },
-  { key: "move", title: "Movimiento" },
-  { key: "status", title: "Estado" },
-  { key: "action", title: "Acción" },
-];
-
-export default function NewRequisitionForm({
-  onSuccess,
-}: NewRequisitionFormProps) {
-  //API
+export default function NewRequisitionForm({ type, onSuccess }: Props) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
   const [step, setStep] = useState<number>(1);
-
-  //User
   const { user } = useAuth();
-
   const role = user?.user_role;
+  const [movement, setMovement] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddItems, setShowAddItems] = useState<boolean>(false);
+  const [showDestinations, setshowDestinations] = useState<boolean>(false);
+  const [showAddTool, setShowAddTool] = useState<boolean>(false);
+  const [showAddSupply, setShowAddSupply] = useState<boolean>(false);
+  const [showAddLines, setShowAddLines] = useState<boolean>(false);
+  const [itemUnits, setItemUnits] = useState<any[]>([]);
+  const [filteredItemUnits, setFilteredItemUnits] = useState<any[]>([]);
+  const [filteredLines, setFilteredLines] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [filteredLocations, setFilteredLocations] = useState<any[]>([]);
+  const [requisitionItems, setRequisitionItems] = useState<any[]>([]);
+  const [selectedItem, setSelectedItem] = useState<any>(undefined);
+  const [lines, setLines] = useState<any[]>([]);
+  const [supplies, setSupples] = useState<any[]>([]);
+  const [requireDestination, setRequireDestination] = useState<boolean>(false);
 
   const requisitionTypeOptions = useMemo(() => {
     if (!role) return [];
@@ -152,7 +185,8 @@ export default function NewRequisitionForm({
     id: "",
     requested_by: user?.person_id || "",
     approved_by: "",
-    destination_location_id: "",
+    destination_location_id: null,
+    movement: MovementType.IN,
     type: RequisitionType.INTERNAL_TRANSFER,
     status: RequisitionStatus.DRAFT,
     notes: "",
@@ -170,41 +204,6 @@ export default function NewRequisitionForm({
     return_status: ReturnStatus.NONE,
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [selectedTab, setSelectedTab] = useState<string>("general");
-
-  //Modals
-  const [showAddItems, setShowAddItems] = useState<boolean>(false);
-  const [showOrigins, setShowOrigins] = useState<boolean>(false);
-  const [showDestinations, setshowDestinations] = useState<boolean>(false);
-  const [showAddTool, setShowAddTool] = useState<boolean>(false);
-  const [showAddSupply, setShowAddSupply] = useState<boolean>(false);
-
-  const [showAddLines, setShowAddLines] = useState<boolean>(false);
-
-  const [itemUnits, setItemUnits] = useState<any[]>([]);
-  const [filteredItemUnits, setFilteredItemUnits] = useState<any[]>([]);
-  const [filteredLines, setFilteredLines] = useState<any[]>([]);
-
-  //Locations
-  const [locations, setLocations] = useState<any[]>([]);
-  const [filteredLocations, setFilteredLocations] = useState<any[]>([]);
-
-  //Requisition Items
-  const [requisitionItems, setRequisitionItems] = useState<any[]>([]);
-
-  const [selectedItem, setSelectedItem] = useState<any>(undefined);
-
-  const [lines, setLines] = useState<any[]>([]);
-
-  const [supplies, setSupples] = useState<any[]>([]);
-
-  const typeConfig = REQUISITION_TYPE_LOCATIONS.find(
-    (t) => t.value === form.type,
-  );
-
   const { create: createRequisition } = useRequisitions();
 
   const handleChange = (
@@ -220,18 +219,22 @@ export default function NewRequisitionForm({
     setLoading(true);
     setError(null);
 
+    console.log("lines", requisitionItems);
+
     const lines = requisitionItems.map((i: any) => ({
       item_id: i.item_id,
       item_unit_id: i.item_unit_id || null,
       quantity: i.quantity,
       accessories: i.accessories || null,
       return_of_line_id: i.return_of_id || null,
+      source_location_id: i.internal_code === "" ? i.source_location_id : null,
     }));
 
-    const payload = {
+    const payload: CreateRequisitionDto = {
       requested_by: form.requested_by || "",
-      destination_location_id: form.destination_location_id || "",
+      destination_location_id: Number(form.destination_location_id) || null,
       type: form.type,
+      movement: form.movement,
       status: form.status,
       notes: form.notes || "",
       lines: lines,
@@ -289,16 +292,44 @@ export default function NewRequisitionForm({
     }
   };
 
+  /*const handleGetItemUnits = async () => {
+    try {
+      const response = await axios.get(
+        `${apiUrl}/items/get-all-with-properties`,
+        {
+          params: {
+            destinationId: form?.destination_location_id,
+            requisitionType: form?.type,
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      );
+
+      const newItems = response.data.data;
+      console.log("Fetched item units:", newItems);
+      setItemUnits(newItems);
+      setFilteredItemUnits(newItems);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ??
+        "El servidor no está disponible en este momento. Intente más tarde.";
+      toast.error(message);
+    }
+  };*/
+
   const handleGetSupplies = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/items`, {
-        params: { type: ItemType.SUPPLY },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      const response = await axios.get(
+        `${apiUrl}/items/get-available-supplies`,
+        {
+          params: { type: ItemType.SUPPLY },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
         },
-      });
-
-      console.log("supplies", response.data.data);
+      );
       setSupples(response.data.data);
     } catch (error: any) {
       if (error.response) {
@@ -313,58 +344,45 @@ export default function NewRequisitionForm({
   };
   const handleFilterAdded = () => {
     const newItems = itemUnits;
-
     const addedIds = new Set(requisitionItems.map((i: any) => i.item_unit_id));
-
     const filtered = newItems.filter((i: any) => !addedIds.has(i.item_unit_id));
-
     setFilteredItemUnits(filtered);
   };
 
-  const handleFilterLocations = (requisitionType: RequisitionType) => {
-    if (
-      requisitionType === RequisitionType.ADJUSTMENT ||
-      requisitionType === RequisitionType.PURCHASE_RECEIPT ||
-      requisitionType === RequisitionType.RETURN ||
-      requisitionType === RequisitionType.INTERNAL_TRANSFER
-    ) {
-      setFilteredLocations(locations.filter((l) => l.type === "WAREHOUSE"));
-    } else if (
-      requisitionType === RequisitionType.RENT ||
-      requisitionType === RequisitionType.CONSUMPTION ||
-      requisitionType === RequisitionType.TRANSFER
-    ) {
-      setFilteredLocations(locations.filter((l) => l.type === "PROJECT"));
-    } else {
-      setFilteredLocations(locations);
-    }
+  const handleFilterLocations = (
+    requisitionType: RequisitionType,
+    currentMovement: string, // recibe el valor nuevo
+  ) => {
+    console.log("Filtering locations for type", requisitionType, "and movement", currentMovement);
+    const filtered = filterLocationsByRule(
+      locations,
+      requisitionType,
+      currentMovement as MovementType,
+    );
+    console.log("filtered locations", filtered);
+    setFilteredLocations(filtered);
+    setRequireDestination(filtered.length > 0);
   };
 
   const handleFilterLines = async () => {
     const newLines = lines;
-
     const addedIds = new Set(requisitionItems.map((l: any) => l.item_unit_id));
-
     const filtered = newLines.filter((l: any) => !addedIds.has(l.item_unit_id));
-
     setFilteredLines(filtered);
   };
 
   const selectDestination = (location: any) => {
-    console.log("ubicación seleccionada", location);
     setForm((prev) => ({
       ...prev,
       destination_location_id: location.id,
       destination_location_name: location.name,
     }));
-
-    console.log("form actualizado", form);
-
     setshowDestinations(false);
   };
 
   const handleAddItem = (item: any) => {
-    console.log("agregando item", item);
+    console.log("Adding item to requisition:", item);
+
     const newItem = {
       temp_id: item.temp_id,
       item_id: Number(item.item_id),
@@ -400,7 +418,6 @@ export default function NewRequisitionForm({
   };
 
   const removeItem = (item: any) => {
-    console.log("removiendo item", item);
     setRequisitionItems((prev) =>
       prev.filter((a) => a.temp_id !== item.temp_id),
     );
@@ -413,8 +430,8 @@ export default function NewRequisitionForm({
   const handleClearLocations = () => {
     setForm((prev) => ({
       ...prev,
-      source_location_id: "",
-      destination_location_id: "",
+      source_location_id: null,
+      destination_location_id: null,
       source: undefined,
       destination: undefined,
     }));
@@ -498,36 +515,75 @@ export default function NewRequisitionForm({
             title="Información general"
             description="Datos básicos de la requisición"
           >
-            <FormRadioGroup
-              label="Tipo de requisición"
-              name="type"
-              value={RequisitionType[form.type as RequisitionType]}
-              options={requisitionTypeOptions}
-              onChange={(e: any) => {
-                handleChange(e);
-                handleClearLocations();
-                handleFilterLocations(e.target.value);
-                selectDestination({
-                  id: "",
-                  name: "",
-                });
-              }}
-            />
+            {type ? (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  {/* ícono según el tipo */}
+                  {React.createElement(
+                    REQUISITION_TYPE_CONFIG[type]?.icon ?? MdOutlineInventory2,
+                    {
+                      size: 16,
+                      className: "text-blue-500",
+                    },
+                  )}
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-blue-700">
+                    {REQUISITION_TYPE_CONFIG[type]?.label}
+                  </div>
+                  <div className="text-xs text-blue-500">
+                    {REQUISITION_TYPE_CONFIG[type]?.description}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <FormRadioGroup
+                  label="Movimiento"
+                  name="movement"
+                  value={form?.movement}
+                  options={[
+                    { label: "Entrada", value: "IN" },
+                    { label: "Salida", value: "OUT" },
+                    { label: "Interno", value: "INT" },
+                  ]}
+                  onChange={(e: any) => {
+                    handleChange(e);
+                    handleClearLocations();
+                    handleFilterLocations(form.type, e.target.value); // pasa el valor nuevo
+                    setForm((prev) => ({ ...prev, type: "" as any }));
+                  }}
+                />
 
-            <div>
-              <span className="text-sm text-gray-500">
-                {
-                  REQUISITION_TYPE_LABELS[form.type as RequisitionType]
-                    ?.description
-                }
-              </span>
-            </div>
+                {form.movement && (
+                  <FormRadioGroup
+                    label="Razón"
+                    name="type"
+                    value={form.type}
+                    options={
+                      ROLE_REASON_OPTIONS[role ? role : ""]
+                        ?.filter((o: any) => o.movement === form.movement)
+                        .map((o: any) => ({
+                          label: o.label,
+                          value: o.reason,
+                        })) ?? []
+                    }
+                    onChange={(e: any) => {
+                      handleChange(e);
+                      handleClearLocations();
+                      handleFilterLocations(e.target.value, form.movement); // pasa el valor nuevo
+                      selectDestination({ id: null, name: "" });
+                    }}
+                  />
+                )}
+              </>
+            )}
 
-            {typeConfig?.showDestination && (
+            {requireDestination && (
               <FormSelectSearch
                 label="Destino"
                 value={{
-                  id: form.destination_location_id,
+                  id: String(form.destination_location_id),
                   name: form.destination_location_name || "",
                 }}
                 options={filteredLocations}
@@ -554,12 +610,11 @@ export default function NewRequisitionForm({
               <button
                 type="button"
                 onClick={() => {
-                  if (
-                    !form.type ||
-                    !form.destination_location_id ||
-                    !form.schedulled_at
-                  ) {
+                  if (!form.type || !form.schedulled_at) {
                     return toast.error("Complete todos los campos requeridos");
+                  }
+                  if (requireDestination && !form.destination_location_id) {
+                    return toast.error("Seleccione un destino");
                   }
                   handleGetItemUnits();
                   handleGetSupplies();
@@ -572,7 +627,6 @@ export default function NewRequisitionForm({
             </div>
           </FormSection>
         )}
-
         {/* STEP 2 */}
         {step === 2 && (
           <FormSection
@@ -597,7 +651,6 @@ export default function NewRequisitionForm({
               onLoadData={() => {}}
               pagination={false}
             >
-              <div></div>
               <PagedDataGrid.Column field="item" title="Artículo">
                 {(row) => (
                   <div className="flex flex-col">
@@ -789,6 +842,7 @@ export default function NewRequisitionForm({
               setShowAddSupply(true);
               setSelectedItem(item);
             }}
+            destinationLocationId={form?.destination_location_id}
           />
         </Modal>
       )}
@@ -813,7 +867,7 @@ export default function NewRequisitionForm({
         onClose={() => setShowAddSupply(false)}
       >
         <AddSupplyForm
-          itemId={selectedItem?.id}
+          item={selectedItem}
           requisitionType={RequisitionType[form.type as RequisitionType]}
           onAdd={handleAddItem}
           onClose={() => setShowAddSupply(false)}

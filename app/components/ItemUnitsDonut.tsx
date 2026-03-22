@@ -2,40 +2,40 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-const COLORS: any = {
-  Disponibles: "#22c55e",
-  Reservados: "#f97316",
-  "Sin ubicación": "#ef4444",
-  Rentados: "#3b82f6",
-  "En tránsito": "#eab308",
-};
+import { ItemUnitStatus } from "@/app/components/item-units/types/item-units-status.enum";
+import { ITEM_UNIT_STATUS_CONFIG } from "@/constants/ItemUnitStatus";
 
 export default function ItemUnitsDonut({ stats }: { stats: any }) {
+  console.log("stats", stats);
   const parse = (v: any) => Number(v || 0);
 
-  const data = [
-    { name: "Disponibles", value: parse(stats?.available_units) },
-    { name: "Reservados", value: parse(stats?.reserved_units) },
-    { name: "Sin ubicación", value: parse(stats?.without_location) },
-    { name: "Rentados", value: parse(stats?.rented_units) },
-    { name: "En tránsito", value: parse(stats?.in_transit_units) },
-  ].filter((d) => d.value > 0);
+  const data = Object.values(ItemUnitStatus)
+    .map((status) => {
+      const config = ITEM_UNIT_STATUS_CONFIG[status];
+
+      return {
+        name: config.label,
+        value: parse(stats?.[status.toLowerCase()]),
+        color: config.color,
+      };
+    })
+    .filter((d) => d.value > 0);
 
   return (
-    <div className="flex justify-center items-center gap-4">
+    <div className="flex justify-center items-center gap-6">
       {/* 🔷 DONUT */}
-      <div className="w-32 h-50">
+      <div className="w-40 h-40">
         <ResponsiveContainer>
           <PieChart>
             <Pie
               data={data}
-              innerRadius={35}
-              outerRadius={50}
+              innerRadius={45}
+              outerRadius={65}
               paddingAngle={3}
               dataKey="value"
             >
               {data.map((entry, index) => (
-                <Cell key={index} fill={COLORS[entry.name]} />
+                <Cell key={index} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip />
@@ -44,13 +44,13 @@ export default function ItemUnitsDonut({ stats }: { stats: any }) {
       </div>
 
       {/* 🔷 LEYENDA */}
-      <div className="space-y-1 text-xs">
+      <div className="space-y-2 text-xs">
         {data.map((d, i) => (
-          <div key={i} className="flex items-center justify-between gap-3">
+          <div key={i} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <span
                 className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: COLORS[d.name] }}
+                style={{ backgroundColor: d.color }}
               />
               <span className="text-gray-600">{d.name}</span>
             </div>
