@@ -75,7 +75,7 @@ export default function LoginForm() {
         </p>
       </div>
 
-      <FormLayout title="" onSubmit={handleSubmit} buttonWidth="full" buttonClassName="bg-gray-900 text-white hover:bg-gray-800">
+      <FormLayout title="" onSubmit={handleSubmit} buttonWidth="full" buttonClassName="bg-gray-900 text-white hover:bg-gray-800" submitLabel="Iniciar sesión" loading={loading}>
         {/* El formulario se encuentra aquí */}
         <FormField
           name="username"
