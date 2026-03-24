@@ -344,10 +344,10 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
     }
   };*/
 
-  const handleGetCatalog = async () => {
+  const handleGetCatalog = async (movement: string, type: string) => {
     try {
       const response = await axios.get(`${apiUrl}/items/get-catalog`, {
-        params: { movement: form.movement, type: form.type },
+        params: { movement, type },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
@@ -647,7 +647,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                   }
                   //handleGetItemUnits();
                   //handleGetSupplies();
-                  handleGetCatalog();
+                  handleGetCatalog(form.movement, form.type);
                   setStep(2);
                 }}
                 className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg"
