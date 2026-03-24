@@ -86,6 +86,7 @@ export default function LoginForm() {
         <FormField
           name="password"
           label="Contraseña"
+          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />

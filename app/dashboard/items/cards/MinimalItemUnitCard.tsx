@@ -9,6 +9,7 @@ export default function MinimalItemUnitCard({
   itemUnit,
   showStats = false,
 }: Props) {
+  console.log("Rendering MinimalItemUnitCard for itemUnit", itemUnit);
   return (
     <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-100 gap-3">
       {/* Info */}

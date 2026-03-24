@@ -100,24 +100,6 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
     }
   };
 
-  /*const handleGetItemUnits = async (filters: { locationId: number }) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${apiUrl}/item-units`, {
-        params: filters,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      setItemUnits(response.data.data);
-    } catch (error: any) {
-      const message = error?.response?.data?.message ?? "";
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };*/
-
   const handleGetItemUnits = async (filters: { locationId: number }) => {
     try {
       setLoading(true);

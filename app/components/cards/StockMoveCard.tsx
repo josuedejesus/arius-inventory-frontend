@@ -1,4 +1,4 @@
-import { timeAgo } from "@/app/utils/formatters";
+import { timeAgo, timeAgoDetailed } from "@/app/utils/formatters";
 
 type Props = {
   movement: any;
