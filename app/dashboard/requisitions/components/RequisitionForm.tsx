@@ -319,7 +319,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
     }
   };*/
 
-  const handleGetSupplies = async () => {
+  /*const handleGetSupplies = async () => {
     try {
       const response = await axios.get(
         `${apiUrl}/items/get-available-supplies`,
@@ -330,7 +330,31 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
           },
         },
       );
+      console.log("Fetched supplies:", response.data.data);
       setSupples(response.data.data);
+    } catch (error: any) {
+      if (error.response) {
+        toast.error(error.response.data.message);
+      } else {
+        const message =
+          error?.response?.data?.message ??
+          "El servidor no está disponible en este momento. Intente más tarde.";
+        toast.error(message);
+      }
+    }
+  };*/
+
+  const handleGetCatalog = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/items/get-catalog`, {
+        params: { movement: form.movement, type: form.type },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      console.log("Fetched catalog:", response.data);
+      setItemUnits(response.data.itemUnits);
+      setSupples(response.data.supplies);
     } catch (error: any) {
       if (error.response) {
         toast.error(error.response.data.message);
@@ -353,7 +377,12 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
     requisitionType: RequisitionType,
     currentMovement: string, // recibe el valor nuevo
   ) => {
-    console.log("Filtering locations for type", requisitionType, "and movement", currentMovement);
+    console.log(
+      "Filtering locations for type",
+      requisitionType,
+      "and movement",
+      currentMovement,
+    );
     const filtered = filterLocationsByRule(
       locations,
       requisitionType,
@@ -616,8 +645,9 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                   if (requireDestination && !form.destination_location_id) {
                     return toast.error("Seleccione un destino");
                   }
-                  handleGetItemUnits();
-                  handleGetSupplies();
+                  //handleGetItemUnits();
+                  //handleGetSupplies();
+                  handleGetCatalog();
                   setStep(2);
                 }}
                 className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg"

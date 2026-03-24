@@ -186,8 +186,10 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
         tracking: form.type === ItemType.TOOL ? "SERIAL" : "NONE",
         unit_id: unit.id,
         is_active: form.is_active,
-        minimum_stock: Number(form.minimum_stock),
-        usage_hours: Number(form.usage_hours),
+        minimum_stock:
+          form.type === ItemType.SUPPLY ? Number(form.minimum_stock) : null,
+        usage_hours:
+          form.type === ItemType.TOOL ? Number(form.usage_hours) : null,
         accessories: itemAccessories,
         item_units: itemUnits,
       };
@@ -331,7 +333,6 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
   };
 
   const handleAddAccessory = (accessory: any) => {
-
     setItemAccessories((prev) => {
       if (prev.some((a) => Number(a.id) === Number(accessory.id))) {
         return prev;
@@ -345,6 +346,19 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
         },
       ];
     });
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newType = e.target.value as ItemType;
+    setForm((prev: any) => ({
+      ...prev,
+      type: newType,
+      minimum_stock: newType === ItemType.SUPPLY ? prev.minimum_stock : 0,
+      usage_hours: newType === ItemType.TOOL ? prev.usage_hours : 0,
+      unit_id: "",
+      unit_name: "",
+    }));
+    handleGetUnits();
   };
 
   const skeleton = (
@@ -397,7 +411,7 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                   { value: "SUPPLY", label: "Insumo" },
                 ]}
                 value={String(form?.type)}
-                onChange={handleChange}
+                onChange={(e) => handleTypeChange(e)}
               />
 
               <FormField
@@ -439,23 +453,27 @@ export default function ItemForm({ itemId, onSuccess }: ItemFormProps) {
                 }
               />
 
-              <FormField
-                label="Stock mínimo"
-                name="minimum_stock"
-                type="number"
-                value={String(form.minimum_stock)}
-                placeholder=""
-                onChange={handleChange}
-              />
+              {form?.type === ItemType.SUPPLY && (
+                <FormField
+                  label="Stock mínimo"
+                  name="minimum_stock"
+                  type="number"
+                  value={String(form.minimum_stock)}
+                  placeholder=""
+                  onChange={handleChange}
+                />
+              )}
 
-              <FormField
-                label="Horas promedio de uso "
-                name="usage_hours"
-                type="number"
-                value={String(form.usage_hours)}
-                placeholder=""
-                onChange={handleChange}
-              />
+              {form?.type === ItemType.TOOL && (
+                <FormField
+                  label="Horas promedio de uso"
+                  name="usage_hours"
+                  type="number"
+                  value={String(form.usage_hours)}
+                  placeholder=""
+                  onChange={handleChange}
+                />
+              )}
 
               <FormSwitch
                 label="Activo"

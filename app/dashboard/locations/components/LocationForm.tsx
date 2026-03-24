@@ -31,6 +31,7 @@ export default function LocationForm({ locationId, onSuccess }: Props) {
     type: LocationType.WAREHOUSE,
     location: "",
     is_active: true,
+    member_count: 0,
   });
 
   //API
@@ -96,7 +97,6 @@ export default function LocationForm({ locationId, onSuccess }: Props) {
   };
 
   const handleCreate = async () => {
-    console.log("creating");
     const payload: CreateLocationDto = {
       name: form?.name,
       type: form?.type,
@@ -115,7 +115,8 @@ export default function LocationForm({ locationId, onSuccess }: Props) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
     } finally {
-      setLoading(false);
+      console.log("finalizo");
+      setSaving(false);
     }
   };
 
@@ -140,7 +141,7 @@ export default function LocationForm({ locationId, onSuccess }: Props) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 

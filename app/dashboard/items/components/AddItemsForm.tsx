@@ -8,6 +8,9 @@ import { toast } from "sonner";
 import ItemUnitCard from "../cards/ItemUnitCard";
 import SupplyCard from "../../../components/cards/SupplyCard";
 import { RequisitionType } from "../../requisitions/types/requisition-type.enum";
+import EmptyList from "@/app/components/EmptyList";
+import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
+import { ItemType } from "../types/item-type.enum";
 
 type AddItemsFormProps = {
   itemUnits: any[];
@@ -35,19 +38,6 @@ export default function AddItemsForm({
       .includes(searchValue.toLowerCase()),
   );
 
-  const requisitionTabs: Partial<
-    Record<RequisitionType, { key: string; label: string }[]>
-  > = {
-    [RequisitionType.ADJUSTMENT]: [
-      { key: "tool", label: "Equipo" },
-      { key: "supply", label: "Insumo" },
-    ],
-    [RequisitionType.PURCHASE_RECEIPT]: [
-      { key: "tool", label: "Equipo" },
-      { key: "supply", label: "Insumo" },
-    ],
-    [RequisitionType.CONSUMPTION]: [{ key: "supply", label: "Insumo" }],
-  };
   return (
     <div className="">
       <FormSection
@@ -55,10 +45,10 @@ export default function AddItemsForm({
         description="Lista de articulos disponibles"
       >
         <FormTabs
-          tabs={
-            requisitionTabs[requisitionType] ?? [
-              { key: "tool", label: "Equipo" },
-            ]
+          tabs={[
+            { key: "tool", label: "Equipo" },
+            { key: "supply", label: "Suministro" },
+          ]
           }
           value={selectedTab}
           onChange={setSelectedTab}
@@ -81,20 +71,7 @@ export default function AddItemsForm({
                 />
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 mb-3">
-                  <span className="text-gray-400 text-xl">📦</span>
-                </div>
-
-                <p className="text-sm font-medium text-gray-700">
-                  No hay artículos disponibles
-                </p>
-
-                <p className="text-xs text-gray-400 mt-1 max-w-xs">
-                  Todos los artículos ya fueron agregados o no hay coincidencias
-                  para esta selección.
-                </p>
-              </div>
+              <EmptyList message="No hay artículos disponibles" icon={ITEM_TYPE_LABELS[ItemType?.TOOL]?.icon} />
             )}
           </div>
         </FormTabPanel>
@@ -110,7 +87,7 @@ export default function AddItemsForm({
                 />
               ))
             ) : (
-              <p></p>
+              <EmptyList  message="No hay suministros disponibles" icon={ITEM_TYPE_LABELS[ItemType?.SUPPLY]?.icon} />
             )}
           </div>
         </FormTabPanel>

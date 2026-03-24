@@ -6,6 +6,8 @@ type FormLayoutProps = {
   error?: string | null;
   submitLabel?: string;
   children: React.ReactNode;
+  buttonWidth?: string;
+  buttonClassName?: string;
 };
 
 export function FormLayout({
@@ -16,13 +18,11 @@ export function FormLayout({
   error,
   submitLabel = "Guardar",
   children,
+  buttonWidth = "w-auto",
+  buttonClassName = "",
 }: FormLayoutProps) {
   return (
-    <form
-      onSubmit={onSubmit}
-      autoComplete=""
-      className="space-y-2"
-    >
+    <form onSubmit={onSubmit} autoComplete="" className="space-y-2">
       <div>
         <h2 className="text-xl font-semibold">{title}</h2>
         {description && <p className="text-sm text-gray-500">{description}</p>}
@@ -50,9 +50,9 @@ export function FormLayout({
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-3 rounded-xl 
+          className={`px-4 py-3 rounded-md w-${buttonWidth}
         bg-blue-500 text-white hover:bg-blue-400
-        disabled:opacity-50 cursor-pointer"
+        disabled:opacity-50 cursor-pointer ${buttonClassName}`}
         >
           {loading ? "Guardando..." : submitLabel}
         </button>

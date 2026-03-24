@@ -17,6 +17,7 @@ import { UserRole } from "../types/user-role.enum";
 import { CreatePersonDto } from "../types/create-person.dto";
 import { set } from "date-fns";
 import SavingScreen from "@/app/components/SavingScreen";
+import { formatHNPhone } from "@/app/utils/phone";
 
 type Person = {
   id: number;
@@ -54,6 +55,8 @@ export default function PersonsForm({
     rtn: "",
     //user
     username: "",
+    //locations
+    location_count: 0,
   });
 
   const [userForm, setUserForm] = useState<UserViewModel>({
@@ -303,7 +306,7 @@ export default function PersonsForm({
                 label="Teléfono "
                 placeholder=""
                 name="phone"
-                value={form?.phone}
+                value={formatHNPhone(form?.phone || "")}
                 onChange={handleChange}
               />
             </FormSection>

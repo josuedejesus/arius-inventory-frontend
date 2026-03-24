@@ -6,8 +6,8 @@ export interface UpdateItemDto {
   tracking: string;
   unit_id: number | null;
   is_active: boolean;
-  minimum_stock?: number;
-  usage_hours?: number;
+  minimum_stock?: number | null;
+  usage_hours?: number | null;
   accessories?: {
     id: number;
     name: string;

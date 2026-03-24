@@ -13,6 +13,7 @@ import { LocationViewModel } from "./types/location-view-model";
 import BooleanBadge from "@/app/components/badges/BooleanBadge";
 import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
 import SearchBar from "@/app/components/SearchBar";
+import { MdWarning } from "react-icons/md";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -113,7 +114,9 @@ export default function Warehouses() {
             const typeConfig = LOCATION_TYPE_CONFIG[row?.type];
             return (
               <span className="flex items-center justify-start gap-2">
-                {typeConfig?.icon && <typeConfig.icon color={typeConfig.className} />}{" "}
+                {typeConfig?.icon && (
+                  <typeConfig.icon color={typeConfig.className} />
+                )}{" "}
                 {typeConfig?.label}
               </span>
             );
@@ -122,15 +125,18 @@ export default function Warehouses() {
         <PagedDataGrid.Column field="address" title="Dirección">
           {(row: LocationViewModel) => <span>{row?.location}</span>}
         </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="is_active" title="Estado">
+        <PagedDataGrid.Column field="location_count" title="Ubicaciones">
           {(row: LocationViewModel) => (
-            <span>
-              <BooleanBadge
-                value={row?.is_active}
-                trueLabel="Activo"
-                falseLabel="Inactivo"
-              />
-            </span>
+            <div className=" flex items-center justify-center gap-1">
+              {row.member_count > 0 ? (
+                <span className="text-gray-600">{row.member_count}</span>
+              ) : (
+                <span className="text-gray-400 flex items-center gap-1">
+                  {" "}
+                  <MdWarning className="text-red-400" />
+                </span>
+              )}
+            </div>
           )}
         </PagedDataGrid.Column>
       </PagedDataGrid>

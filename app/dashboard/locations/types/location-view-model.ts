@@ -8,4 +8,7 @@ export interface LocationViewModel {
   is_active: boolean;
   created_at?: Date;
   updated_at?: Date;
+
+  //members
+  member_count: number;
 }

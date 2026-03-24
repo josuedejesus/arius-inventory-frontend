@@ -6,12 +6,14 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { FormLayout } from "./form/FormLayout";
+import FormField from "./form/FormField";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string[]>([]);
 
   const router = useRouter();
 
@@ -23,7 +25,7 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError([]);
     setLoading(true);
 
     try {
@@ -39,10 +41,15 @@ export default function LoginForm() {
       router.push("/dashboard");
     } catch (error: any) {
       console.log("Login error", error);
-      const message =
-        error?.response?.data?.message ??
-        "El servidor no está disponible en este momento. Intente más tarde.";
-      setError(message);
+      const rawMessage = error?.response?.data?.message;
+
+      const messages = Array.isArray(rawMessage)
+        ? rawMessage
+        : typeof rawMessage === "string"
+        ? rawMessage.split("\n")
+        : ["El servidor no está disponible en este momento. Intente más tarde."];
+
+      setError(messages);
     } finally {
       setLoading(false);
     }
@@ -68,57 +75,31 @@ export default function LoginForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Usuario */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Usuario
-          </label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2
-                       focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-700"
-            placeholder="Ingrese su usuario"
-          />
-        </div>
-
-        {/* Contraseña */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Contraseña
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2
-                       focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-700"
-            placeholder="Ingrese su contraseña"
-          />
-        </div>
-
+      <FormLayout title="" onSubmit={handleSubmit} buttonWidth="full" buttonClassName="bg-gray-900 text-white hover:bg-gray-800">
+        {/* El formulario se encuentra aquí */}
+        <FormField
+          name="username"
+          label="Usuario"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <FormField
+          name="password"
+          label="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
         {/* Error */}
-        {error && (
+        {error.length > 0 && (
           <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-            {error}
+            {error.map((e, i) => (
+              <p key={i}>{e}</p>
+            ))}
           </div>
         )}
 
-        {/* Botón */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gray-900 text-white py-2.5 rounded-lg
-                     hover:bg-gray-800 transition
-                     disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? "Ingresando…" : "Ingresar"}
-        </button>
-      </form>
+       
+      </FormLayout>
 
       {/* Footer */}
       <div className="mt-6 text-center text-xs text-gray-400">

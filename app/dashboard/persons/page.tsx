@@ -11,6 +11,7 @@ import { PersonViewModel } from "./types/person-view-model";
 import { PERSON_ROLE_LABELS } from "@/constants/PersonRoles";
 import { formatDate } from "@/app/utils/formatters";
 import SearchBar from "@/app/components/SearchBar";
+import { MdWarning } from "react-icons/md";
 
 export default function Persons() {
   //API
@@ -40,6 +41,7 @@ export default function Persons() {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
+      console.log("response", response);
 
       setPersons(response.data);
     } catch (error: any) {
@@ -67,7 +69,11 @@ export default function Persons() {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        <SearchBar placeholder="Buscar persona..." value={searchValue} onChange={(e: any) => setSearchValue(e)} />
+        <SearchBar
+          placeholder="Buscar persona..."
+          value={searchValue}
+          onChange={(e: any) => setSearchValue(e)}
+        />
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
@@ -115,11 +121,18 @@ export default function Persons() {
           )}
         </PagedDataGrid.Column>
 
-        <PagedDataGrid.Column field="updated_at" title="Actualizado">
+        <PagedDataGrid.Column field="location_count" title="Ubicaciones">
           {(row: PersonViewModel) => (
-            <span className="text-gray-500 text-xs">
-              {row.updated_at ? formatDate(row.updated_at) : "-"}
-            </span>
+            <div className=" flex items-center justify-center gap-1">
+              {row.location_count > 0 ? (
+                <span className="text-gray-600">{row.location_count}</span>
+              ) : (
+                <span className="text-gray-400 flex items-center gap-1">
+                  {" "}
+                  <MdWarning className="text-red-400" />
+                </span>
+              )}
+            </div>
           )}
         </PagedDataGrid.Column>
       </PagedDataGrid>

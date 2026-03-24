@@ -100,7 +100,7 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
     }
   };
 
-  const handleGetItemUnits = async (filters: { locationId: number }) => {
+  /*const handleGetItemUnits = async (filters: { locationId: number }) => {
     try {
       setLoading(true);
       const response = await axios.get(`${apiUrl}/item-units`, {
@@ -109,6 +109,26 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
+      setItemUnits(response.data.data);
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };*/
+
+  const handleGetItemUnits = async (filters: { locationId: number }) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${apiUrl}/item-units/get-all-with-stats/${locationId}/location`, {
+        params: filters,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+
+      console.log("item units por ubicación", response.data);
       setItemUnits(response.data.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -223,7 +243,7 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {itemUnits?.length ? (
               itemUnits.map((iu) => (
-                <MinimalItemUnitCard key={iu.id} itemUnit={iu} />
+                <MinimalItemUnitCard key={iu.id} itemUnit={iu} showStats={true} />
               ))
             ) : (
               <p className="text-sm text-gray-400">Sin equipos asignados</p>
