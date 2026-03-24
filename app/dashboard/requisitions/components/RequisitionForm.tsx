@@ -345,6 +345,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
   };*/
 
   const handleGetCatalog = async (movement: string, type: string) => {
+     console.log("Fetching catalog with movement", movement, "and type", type);
     try {
       const response = await axios.get(`${apiUrl}/items/get-catalog`, {
         params: { movement, type },
@@ -354,6 +355,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
       });
       console.log("Fetched catalog:", response.data);
       setItemUnits(response.data.itemUnits);
+      setFilteredItemUnits(response.data.itemUnits);
       setSupples(response.data.supplies);
     } catch (error: any) {
       if (error.response) {
