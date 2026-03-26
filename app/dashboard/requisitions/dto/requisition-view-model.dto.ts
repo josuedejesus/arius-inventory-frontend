@@ -1,10 +1,11 @@
-import { MovementType } from "./movement-type";
-import { RequisitionStatus } from "./requisition-status.enum";
-import { RequisitionType } from "./requisition-type.enum";
-import { ReturnStatus } from "./return-status.enum";
+import { MovementType } from "../types/movement-type";
+import { RequisitionStatus } from "../types/requisition-status.enum";
+import { RequisitionType } from "../types/requisition-type.enum";
+import { ReturnStatus } from "../types/return-status.enum";
 
 export interface RequisitionViewModel {
   id: string;
+  code: string;
   requested_by: string;
   destination_location_id?: number | null;
   movement: MovementType;

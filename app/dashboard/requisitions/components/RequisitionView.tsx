@@ -4,50 +4,30 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Modal from "../../../components/Modal";
-import FormSection from "../../../components/form/FormSection";
 import RequisitionLinePhotosForm from "./RequisitionLinePhotosForm";
 import { useAuth } from "@/context/AuthContext";
 import RequisitionHeader from "./RequisitionHeader";
 import { DataGrid } from "@/app/components/datagrid/DataGrid";
-import { DataGridRow } from "@/app/components/datagrid/DataGridRow";
-import { DataGridCell } from "@/app/components/datagrid/DataGridCell";
-import RequisitionLineCard from "./RequisitionLineCard";
-import { RequisitionViewModel } from "../types/requisition-view.model";
+import { RequisitionViewModel } from "../dto/requisition-view-model.dto";
 import { VIEW_MODE_BY_ROLE_STATUS } from "@/permissions/requisition.permissions";
-import { ReturnStatus } from "../types/return-status.enum";
-import ActionButton from "@/app/components/ActionButton";
 import {
   MdArchive,
-  MdArrowRightAlt,
   MdCheckCircle,
   MdEdit,
   MdNoPhotography,
-  MdPendingActions,
-  MdPrint,
+  MdPictureAsPdf,
   MdWarning,
 } from "react-icons/md";
-import { is, se } from "date-fns/locale";
-import { FaSpinner } from "react-icons/fa";
-import LoadingScreen from "@/app/components/LoadingScreen";
-import { GridLoader, MoonLoader } from "react-spinners";
 import { RequisitionStatus } from "../types/requisition-status.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { useRequisitionLines } from "@/hooks/useRequisitionLines";
-import { on } from "events";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
 import { RequisitionType } from "../types/requisition-type.enum";
 import { IoMdCamera } from "react-icons/io";
 import BooleanBadge from "@/app/components/badges/BooleanBadge";
 import RequisitionTimeline from "./RequisitionTimeline";
 import SavingScreen from "@/app/components/SavingScreen";
-
-const columns = [
-  { key: "item", title: "Ítem" },
-  { key: "quantity", title: "Cantidad" },
-  { key: "move", title: "Movimiento" },
-  { key: "status", title: "Estado" },
-  { key: "action", title: "Acción" },
-];
+import { RequisitionLineViewModel } from "../dto/requisition-line-view-model.dto";
 
 enum modes {
   VIEW,
@@ -70,15 +50,16 @@ export default function RequisitionView({
   onEdit,
 }: Props) {
   const [form, setForm] = useState<RequisitionViewModel>(undefined!);
-  const [selectedItem, setSelectedItem] = useState<any>(undefined);
+  const [selectedItem, setSelectedItem] = useState<RequisitionLineViewModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddPhotos, setShowAddPhotos] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [returnStatus, setReturnStatus] = useState<ReturnStatus>(
-    ReturnStatus.NONE,
-  );
-  const [requisitionLines, setRequisitionLiness] = useState<any[]>([]);
+  const [requisitionLines, setRequisitionLines] = useState<RequisitionLineViewModel[]>([]);
+
+  const canEdit = [
+    RequisitionStatus.DRAFT,
+  ].includes(requisition?.status);
 
   const {
     getById: getRequisition,
@@ -161,9 +142,8 @@ export default function RequisitionView({
   };
 
   const handleGetLines = async () => {
-    await getRequisitionLines(Number(requisition?.id)).then(
-      setRequisitionLiness,
-    );
+    const data = await getRequisitionLines(Number(requisition?.id));
+    setRequisitionLines(data);
   };
 
   const handleApprove = async () => {
@@ -296,35 +276,46 @@ export default function RequisitionView({
 
         <div className="flex flex-col w-full  gap-2  cursor-pointer">
           {/*ACTIONS*/}
-          <div className="flex items-center gap-2 flex-wrap pb-2">
-            <ActionButton
-              label="Editar"
-              icon={<MdEdit />}
-              color="bg-blue-50 text-blue-500 hover:bg-blue-100"
-              onClick={() => onEdit()}
-            />
-            <ActionButton
-              label="Archivar"
-              icon={<MdArchive />}
-              color="bg-orange-50 text-orange-500 hover:bg-orange-100"
-              onClick={() => console.log("Archivar requisición")}
-            />
-            <ActionButton
-              label="Generar PDF"
-              icon={<MdPrint />}
-              color="bg-gray-50 text-gray-500 hover:bg-gray-100"
-              onClick={() => handleGeneratePDF()}
-            />
+          <div className="flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-xl">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={canEdit ? onEdit : undefined}
+                disabled={!canEdit}
+                title={
+                  !canEdit
+                    ? "Solo se puede editar en estado borrador o aprobado"
+                    : undefined
+                }
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors
+    ${
+      canEdit
+        ? "text-gray-600 hover:text-gray-900 hover:bg-gray-100 cursor-pointer"
+        : "text-gray-300 cursor-not-allowed"
+    }`}
+              >
+                <MdEdit size={16} />
+                Editar
+              </button>
+
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+                <MdArchive size={16} />
+                Archivar
+              </button>
+
+              <button
+                onClick={handleGeneratePDF}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+              >
+                <MdPictureAsPdf size={16} />
+                Generar PDF
+              </button>
+            </div>
           </div>
 
           <RequisitionHeader requisition={form} />
 
           {/* 🟣 TIMELINE (FULL WIDTH) */}
           <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-              Linea de Tiempo
-            </h3>
-
             <RequisitionTimeline
               created_at={requisition?.created_at}
               approved_at={requisition?.approved_at}
@@ -343,16 +334,20 @@ export default function RequisitionView({
           >
             <PagedDataGrid.Column field="item" title="Artículo">
               {(row) => (
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-500">
-                    {row.internal_code}
-                  </span>
+                <div className="flex flex-col justify-center">
+                  {row.internal_code && (
+                    <span className="text-xs text-gray-500">
+                      {row.internal_code}
+                    </span>
+                  )}
                   <span className="text-gray-800 font-semibold">
-                    {row.item_name}
+                    {row.name}
                   </span>
-                  <span className="text-xs text-gray-500">
-                    {row.item_brand} · {row.item_model}
-                  </span>
+                  {row.brand && row.model && (
+                    <span className="text-xs text-gray-500">
+                      {row.brand} · {row.model}
+                    </span>
+                  )}
                 </div>
               )}
             </PagedDataGrid.Column>

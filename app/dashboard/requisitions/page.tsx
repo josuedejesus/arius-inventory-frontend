@@ -8,7 +8,7 @@ import { useSSE } from "@/hooks/userSSE";
 import RequisitionView from "@/app/dashboard/requisitions/components/RequisitionView";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import LoadingScreen from "@/app/components/LoadingScreen";
-import { RequisitionViewModel } from "./types/requisition-view.model";
+import { RequisitionViewModel } from "./dto/requisition-view-model.dto";
 import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
 import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
@@ -211,16 +211,18 @@ export default function Requisitions() {
         </PagedDataGrid>
       </div>
 
-      {/*NEW REQUISITION*/}
+      {/*REQUISITION FORM*/}
       <Modal
         open={showNewRequisition}
-        title="Nueva Requisicion"
-        onClose={() => setShowNewRequisition(false)}
+        title="Requisición"
+        onClose={() => {setShowNewRequisition(false); setSelectedRequisition(undefined)}}
       >
         <RequisitionForm
+          requisition={selectedRequisition}
           onSuccess={() => {
             setShowNewRequisition(false);
             handleGetRequisitions({ skip: 0, take: pageSize });
+            setSelectedRequisition(undefined);
           }}
         />
       </Modal>
@@ -229,17 +231,19 @@ export default function Requisitions() {
       <Modal
         open={showRequisition}
         title="Requisición"
-        onClose={() => setShowRequisition(false)}
+        onClose={() => {setShowRequisition(false); setSelectedRequisition(undefined)}}
       >
         <RequisitionView
           requisition={selectedRequisition}
           mode={modes.VIEW}
           onEdit={() => {
             setShowRequisition(false);
+            setShowNewRequisition(true);
           }}
           onSuccess={() => {
             setShowRequisition(false);
             handleGetRequisitions({ skip: 0, take: pageSize });
+            setSelectedRequisition(undefined);
           }}
         />
       </Modal>

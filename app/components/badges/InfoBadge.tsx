@@ -21,7 +21,7 @@ export default function InfoBadge({
   return (
     <div className="flex items-center gap-2 text-sm text-gray-600">
       {icon && <span className={`${classname}`}>{icon}</span>}
-      <span className="text-gray-400">{label}:</span>
+      <span className="text-gray-500">{label}:</span>
 
       <div className="flex items-center gap-1 font-medium text-gray-800">
         {value ? (

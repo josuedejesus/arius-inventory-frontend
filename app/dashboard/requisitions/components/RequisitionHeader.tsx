@@ -1,148 +1,189 @@
-"use client";
-import {
-  MdLocationOn,
-  MdPerson,
-  MdWarehouse,
-  MdEvent,
-  MdCategory,
-  MdInfo,
-  MdNote,
-  MdOutlineEditNote,
-} from "react-icons/md";
-import { formatDate, timeAgo } from "../../../utils/formatters";
-import { RequisitionViewModel } from "../types/requisition-view.model";
-
-import RequisitionTimeline from "./RequisitionTimeline";
-import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
-import InfoCard from "@/app/components/InforCard";
-import ActionButton from "@/app/components/ActionButton";
-import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
+import React from "react";
+import { MdEvent, MdWarehouse, MdLocationOn } from "react-icons/md";
 import { IoMdReturnLeft } from "react-icons/io";
-import InfoBadge from "@/app/components/badges/InfoBadge";
-import { RequisitionType } from "../types/requisition-type.enum";
+import { RequisitionType } from "@/app/dashboard/requisitions/types/requisition-type.enum";
+import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
+import { formatDate } from "@/app/utils/formatters";
+import { MOVEMENT_TYPE_CONFIG } from "@/constants/MovementTypeConfig";
 import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
 import { REQUISITION_STATUS_CONFIG } from "@/constants/RequisitionStatus";
+import { RequisitionViewModel } from "../dto/requisition-view-model.dto";
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
+import { ROLE_REASON_OPTIONS } from "../types/role-reason-options";
+import { useAuth } from "@/context/AuthContext";
 
 type Props = {
   requisition: RequisitionViewModel;
 };
 
-export default function RequisitionHeader({ requisition }: Props) {
+function getInitials(name: string): string {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+}
+
+type InfoCellProps = {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+};
+
+function InfoCell({ label, children, className = "" }: InfoCellProps) {
   return (
-    <div className="space-y-2">
-      {/* 🔷 HEADER */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            #{requisition?.id}
-          </h2>
-        </div>
+    <div className={`px-5 py-3.5 ${className}`}>
+      <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-1.5 font-medium">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
 
-        {requisition?.updated_at && (
-          <span className="text-xs text-gray-400 whitespace-nowrap">
-            Actualizado {timeAgo(requisition?.updated_at)}
-          </span>
-        )}
+type AvatarProps = {
+  name: string;
+  color?: "blue" | "teal";
+};
+
+function Avatar({ name, color = "blue" }: AvatarProps) {
+  const styles = {
+    blue: "bg-blue-50 text-blue-700",
+    teal: "bg-teal-50 text-teal-700",
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${styles[color]}`}
+      >
+        {getInitials(name)}
       </div>
+      <span className="text-sm font-medium text-gray-800">{name}</span>
+    </div>
+  );
+}
 
-      {/* 🔷 GRID PRINCIPAL */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm space-y-4">
-        {/* HEADER */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-            Resumen de Requisición
-          </h3>
-        </div>
+export default function RequisitionHeader({ requisition }: Props) {
+  const user = useAuth().user;
 
-        {/* GRID COMPACTO */}
-        <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-3 text-sm">
-          {(() => {
-            const config = REQUISITION_TYPE_CONFIG[requisition?.type];
-            const Icon = config?.icon;
-            return (
-              <InfoBadge
-                label="Tipo de requisición"
-                icon={
-                  Icon ? (
-                    <Icon className="text-blue-400" />
-                  ) : (
-                    <MdCategory className="text-blue-400" />
-                  )
-                }
-                value={config?.label}
-              />
-            );
-          })()}
+  const movementConfig = MOVEMENT_TYPE_CONFIG[requisition?.movement];
+  const typeConfig = ROLE_REASON_OPTIONS[user?.user_role as string]?.find(
+    (opt) => opt.reason === requisition?.type,
+  );
+  const statusConfig = REQUISITION_STATUS_CONFIG[requisition?.status];
+  const returnStatusConfig = RETURN_STATUS_CONFIG[requisition?.return_status];
+  const MovementIcon = movementConfig?.icon;
 
-          {requisition?.destination_location_name && (
-            <InfoBadge
-              label="Destino"
-              icon={<MdWarehouse className="text-blue-500" />}
-              value={requisition?.destination_location_name}
-            />
-          )}
+  const showReturnStatus =
+    requisition?.type === RequisitionType.RENT ||
+    requisition?.type === RequisitionType.TRANSFER;
 
-          {requisition?.destination_address && (
-            <InfoBadge
-              label="Dirección"
-              icon={<MdLocationOn className="text-blue-500" />}
-              value={requisition?.destination_address}
-            />
-          )}
-
-          <InfoBadge
-            label="Solicitado por"
-            icon={<MdPerson className="text-blue-500" />}
-            value={requisition?.requestor_name}
-          />
-
-          <InfoBadge
-            label="Aprobado por"
-            icon={<MdPerson className="text-blue-500" />}
-            value={requisition?.approver_name}
-          />
-
-          <InfoBadge
-            label="Fecha programada"
-            icon={<MdEvent className="text-blue-500" />}
-            value={
-              requisition?.schedulled_at
-                ? formatDate(requisition?.schedulled_at)
-                : "No programada"
-            }
-          />
-
-          <InfoBadge
-            label="Estado"
-            icon={<MdInfo className="text-blue-500" />}
-            badgeValue={REQUISITION_STATUS_CONFIG[requisition?.status]?.label}
-            variant={REQUISITION_STATUS_CONFIG[requisition?.status]?.className}
-          />
-
-          {(requisition?.type === RequisitionType.RENT ||
-            requisition?.type === RequisitionType.TRANSFER) && (
-            <InfoBadge
-              label="Estado de devolución"
-              icon={<IoMdReturnLeft className="text-blue-500" />}
-              badgeValue={
-                RETURN_STATUS_CONFIG[requisition?.return_status]?.label
-              }
-              variant={
-                RETURN_STATUS_CONFIG[requisition?.return_status]?.className
-              }
-            />
-          )}
-
-          <div className="flex flex-col gap-1 p-3 bg-gray-50 rounded-xl border border-gray-100">
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400 uppercase tracking-wider">
-              <MdOutlineEditNote size={18} className="text-blue-500" />
-              Notas
-            </span>
-            <p className="text-sm text-gray-700 leading-relaxed pl-5">
-              {requisition?.notes}
-            </p>
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      {/* HEADER — movimiento y tipo como protagonistas */}
+      <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
+        <div className="flex items-center gap-4">
+          <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+            {MovementIcon && (
+              <MovementIcon size={20} className="text-blue-600" />
+            )}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-lg font-semibold text-gray-900">
+                {movementConfig?.label}
+              </span>
+              <span className="text-gray-300">·</span>
+              <span className="text-sm text-gray-500">{typeConfig?.label}</span>
+            </div>
+            <span className="text-xs text-gray-400">{requisition?.code}</span>
           </div>
         </div>
+
+        <div className="flex items-center gap-2">
+          {showReturnStatus && returnStatusConfig && (
+            <PrimaryBadge
+              label={returnStatusConfig.label}
+              variant={returnStatusConfig.className}
+            />
+          )}
+          {statusConfig && (
+            <PrimaryBadge
+              label={statusConfig.label}
+              variant={statusConfig.className}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* GRID DE DETALLES */}
+      <div className="grid grid-cols-1 sm:grid-cols-3">
+        <InfoCell
+          label="Solicitado por"
+          className="border-b sm:border-b border-r-0 sm:border-r border-gray-100"
+        >
+          <Avatar name={requisition?.requestor_name} color="blue" />
+        </InfoCell>
+
+        <InfoCell
+          label="Aprobado por"
+          className="border-b sm:border-b border-r-0 sm:border-r border-gray-100"
+        >
+          <Avatar name={requisition?.approver_name} color="teal" />
+        </InfoCell>
+
+        <InfoCell label="Fecha programada" className="border-b border-gray-100">
+          <div className="flex items-center gap-1.5">
+            <MdEvent size={14} className="text-gray-400" />
+            <span className="text-sm font-medium text-gray-800">
+              {requisition?.schedulled_at
+                ? formatDate(requisition.schedulled_at)
+                : "No programada"}
+            </span>
+          </div>
+        </InfoCell>
+
+        {requisition?.destination_location_name && (
+          <InfoCell
+            label="Destino"
+            className="border-b sm:border-b-0 border-r-0 sm:border-r border-gray-100"
+          >
+            <div className="flex items-center gap-1.5">
+              <MdWarehouse size={14} className="text-gray-400" />
+              <span className="text-sm font-medium text-gray-800">
+                {requisition.destination_location_name}
+              </span>
+            </div>
+          </InfoCell>
+        )}
+
+        {requisition?.destination_address && (
+          <InfoCell
+            label="Dirección"
+            className="border-b sm:border-b-0 border-r-0 sm:border-r border-gray-100"
+          >
+            <div className="flex items-center gap-1.5">
+              <MdLocationOn size={14} className="text-gray-400" />
+              <span className="text-sm font-medium text-gray-800">
+                {requisition.destination_address}
+              </span>
+            </div>
+          </InfoCell>
+        )}
+
+        {requisition?.notes && (
+          <InfoCell
+            label="Notas"
+            className="col-span-1 sm:col-span-3 border-t border-gray-100"
+          >
+            <p className="text-sm text-gray-500 leading-relaxed">
+              {requisition.notes}
+            </p>
+          </InfoCell>
+        )}
       </div>
     </div>
   );

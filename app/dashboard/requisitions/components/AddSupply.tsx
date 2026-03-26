@@ -5,13 +5,18 @@ import FormTabs from "../../../components/form/FormTabs";
 import FormTabPanel from "../../../components/form/FormTabPanel";
 import FormSection from "../../../components/form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "../cards/ItemUnitCard";
+import ItemUnitCard from "../../items/cards/ItemUnitCard";
 import NumberSelector from "../../../components/NumberSelector";
 import SupplyCard from "../../../components/cards/SupplyCard";
-import { RequisitionType } from "../../requisitions/types/requisition-type.enum";
+import { RequisitionType } from "../types/requisition-type.enum";
 import { PrimaryBadge } from "../../../components/badges/PrimaryBadge";
+import { getItemKey } from "@/app/utils/requisition-utils";
+import { ItemViewModel } from "../../items/types/item-view.model";
+import { AddedLineViewModel } from "../dto/added-line-view-model.dto";
+import { id } from "date-fns/locale";
 
 type AddSupplyFormProps = {
+  selectedItem: AddedLineViewModel;
   item: any;
   requisitionType: RequisitionType | "";
   onAdd: (item: any) => void;
@@ -19,24 +24,21 @@ type AddSupplyFormProps = {
 };
 
 export default function AddSupplyForm({
+  selectedItem,
   item,
   requisitionType,
   onAdd,
   onClose,
 }: AddSupplyFormProps) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const [accessories, setAccessories] = useState<any[]>([]);
   const [error, setError] = useState(false);
-  const [quantity, setQuantity] = useState<number>(0.0);
+  const [quantity, setQuantity] = useState<number>(
+    selectedItem?.quantity ?? 0.0,
+  ); // 👈 si viene quantity la usa
+  const isEditing = !!selectedItem?.item_key; // 👈
   const isLimited =
     requisitionType !== RequisitionType.ADJUSTMENT &&
     requisitionType !== RequisitionType.PURCHASE_RECEIPT;
-  const [searchValue, setSearchValue] = useState<string>("");
-
-  const filteredItems = accessories.filter((u: any) =>
-    `${u.name}`.toLowerCase().includes(searchValue.toLowerCase()),
-  );
-
   const increaseQty = () => {
     setQuantity(quantity + 1);
   };
@@ -44,21 +46,22 @@ export default function AddSupplyForm({
   const decreaseQty = () => {
     setQuantity(quantity - 1);
   };
-
-  const handleAdd = (item: any) => {
+  const handleAdd = () => {
     if (quantity <= 0) {
       toast.warning("La cantidad debe ser mayor a 0");
       return;
     }
     const payload: any = {
-      temp_id: Math.floor(Math.random() * 1000000), // Genera un ID temporal único
-      item_id: Number(item.id),
-      name: item.name,
+      id: selectedItem?.id,
+      item_key: item.item_key ?? getItemKey(item), // 👈
+      item_id: Number(item.item_id ?? item.id),
+      name: item.name ?? item.item_name,
       quantity: quantity,
+      available_quantity: item.available_quantity,
       unit_code: item.unit_code,
       unit_name: item.unit_name,
-      location_id: item.location_id,
-      location_name: item.location_name,
+      location_id: item.location_id ?? item.source_location_id,
+      location_name: item.location_name ?? item.source_location_name,
     };
 
     onAdd(payload);
@@ -71,7 +74,7 @@ export default function AddSupplyForm({
           <img
             src={
               !error && item?.image_path
-                ? `${apiUrl}/uploads/${item.image_path}`
+                ? `${item.image_path}`
                 : "/placeholder-unit.png"
             }
             onError={() => setError(true)}
@@ -87,7 +90,7 @@ export default function AddSupplyForm({
             label={
               isLimited
                 ? item?.available_quantity > 0
-                  ? "Dispobile"
+                  ? "Disponible"
                   : "No disponible"
                 : "Disponible"
             }
@@ -142,13 +145,14 @@ export default function AddSupplyForm({
           Cancelar
         </button>
         <button
-          onClick={() => handleAdd(item)}
+          onClick={handleAdd}
           type="button"
           className="px-4 py-3 rounded-xl 
         bg-blue-500 text-white hover:bg-blue-400
         disabled:opacity-50 cursor-pointer"
         >
-          Agregar
+          {}
+          {isEditing ? "Actualizar" : "Agregar"}
         </button>
       </div>
     </div>

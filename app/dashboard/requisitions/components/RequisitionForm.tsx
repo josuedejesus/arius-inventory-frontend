@@ -11,31 +11,19 @@ import FormSelectSearch from "../../../components/form/FormSelectSearch";
 import FormText from "../../../components/form/FormText";
 import RequisitionHeader from "./RequisitionHeader";
 import FormDate from "../../../components/form/FormDate";
-import AddItemsForm from "../../items/components/AddItemsForm";
-import AddAccessoriesForm from "../../items/components/AddItemForm";
+import AddItemsForm from "./AddItemsForm";
+import AddAccessoriesForm from "./AddItemForm";
 import AddLinesForm from "../../../components/AddLinesForm";
 import { RequisitionType } from "../types/requisition-type.enum";
-import RequisitionLineCard from "./RequisitionLineCard";
-import AddSupplyForm from "@/app/dashboard/items/components/AddSupply";
+import AddSupplyForm from "@/app/dashboard/requisitions/components/AddSupply";
 import { DataGrid } from "@/app/components/datagrid/DataGrid";
-import { DataGridRow } from "@/app/components/datagrid/DataGridRow";
-import { DataGridCell } from "@/app/components/datagrid/DataGridCell";
-import { RequisitionViewModel } from "../types/requisition-view.model";
+import { RequisitionViewModel } from "../dto/requisition-view-model.dto";
 import { RequisitionStatus } from "../types/requisition-status.enum";
-import { ItemType } from "../../items/types/item-type.enum";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { ReturnStatus } from "../types/return-status.enum";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
-import BooleanBadge from "@/app/components/badges/BooleanBadge";
-import {
-  MdCheck,
-  MdClose,
-  MdDelete,
-  MdOutlineInventory2,
-} from "react-icons/md";
-import ActionButton from "@/app/components/ActionButton";
+import { MdCheck, MdClose, MdOutlineInventory2 } from "react-icons/md";
 import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
-import { LocationType } from "../../locations/types/location-type.enum";
 import { ROLE_REASON_OPTIONS } from "../types/role-reason-options";
 import { CreateRequisitionDto } from "../dto/create-requisition.dto";
 import {
@@ -43,121 +31,28 @@ import {
   requiresDestination,
 } from "../helpers/requisition-location.helper";
 import { MovementType } from "../types/movement-type";
-
-const REQUISITION_TYPE_OPTIONS = [
-  {
-    value: "INTERNAL_TRANSFER",
-    label: "Transferencia interna",
-    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
-  },
-  {
-    value: RequisitionType.ADJUSTMENT,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.ADJUSTMENT].label,
-    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
-  },
-  {
-    value: RequisitionType.PURCHASE_RECEIPT,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.PURCHASE_RECEIPT].label,
-    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
-  },
-
-  {
-    value: RequisitionType.RENT,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.RENT].label,
-    roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
-  },
-  {
-    value: RequisitionType.RETURN,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.RETURN].label,
-    roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
-  },
-  {
-    value: RequisitionType.CONSUMPTION,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.CONSUMPTION].label,
-    roles: ["ADMIN", "WAREHOUSE_MANAGER", "CLIENT", "CONTRACTOR"],
-  },
-  {
-    value: RequisitionType.TRANSFER,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.TRANSFER].label,
-    roles: ["ADMIN", "CLIENT", "CONTRACTOR"],
-  },
-  {
-    value: RequisitionType.SALE,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.SALE].label,
-    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
-  },
-
-  {
-    value: RequisitionType.MAINTENANCE,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.MAINTENANCE].label,
-    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
-  },
-  {
-    value: RequisitionType.OUT_OF_SERVICE,
-    label: REQUISITION_TYPE_CONFIG[RequisitionType.OUT_OF_SERVICE].label,
-    roles: ["ADMIN", "WAREHOUSE_MANAGER"],
-  },
-];
-
-const REQUISITION_TYPE_LOCATIONS = [
-  {
-    value: RequisitionType.INTERNAL_TRANSFER,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.TRANSFER,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.ADJUSTMENT,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.PURCHASE_RECEIPT,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.RENT,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.SALE,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.CONSUMPTION,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.RETURN,
-    showSource: false,
-    showDestination: true,
-  },
-  {
-    value: RequisitionType.MAINTENANCE,
-    showSource: false,
-    showDestination: true,
-  },
-];
+import { getItemKey } from "@/app/utils/requisition-utils";
+import { toDateInputValue } from "@/app/utils/formatters";
+import { useRequisitionLines } from "@/hooks/useRequisitionLines";
+import { AddedLineViewModel } from "../dto/added-line-view-model.dto";
+import { is } from "date-fns/locale";
+import { on } from "events";
 
 type Props = {
+  requisition?: RequisitionViewModel;
   type?: RequisitionType;
   onSuccess: () => void;
 };
 
-export default function NewRequisitionForm({ type, onSuccess }: Props) {
+export default function NewRequisitionForm({
+  requisition,
+  type,
+  onSuccess,
+}: Props) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [step, setStep] = useState<number>(1);
   const { user } = useAuth();
   const role = user?.user_role;
-  const [movement, setMovement] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddItems, setShowAddItems] = useState<boolean>(false);
@@ -175,14 +70,12 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
   const [lines, setLines] = useState<any[]>([]);
   const [supplies, setSupples] = useState<any[]>([]);
   const [requireDestination, setRequireDestination] = useState<boolean>(false);
-
-  const requisitionTypeOptions = useMemo(() => {
-    if (!role) return [];
-    return REQUISITION_TYPE_OPTIONS.filter((opt) => opt.roles.includes(role));
-  }, [role]);
+  const [item, setItem] = useState<any>(undefined);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const [form, setForm] = useState<RequisitionViewModel>({
     id: "",
+    code: "",
     requested_by: user?.person_id || "",
     approved_by: "",
     destination_location_id: null,
@@ -206,6 +99,19 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
 
   const { create: createRequisition } = useRequisitions();
 
+  useEffect(() => {
+    if (requisition) {
+      setLoading(true);
+      setIsEdit(true);
+      const fetchData = async () => {
+        await handleGetRequisition(Number(requisition.id));
+        await handleGetLines(Number(requisition.id));
+      };
+      fetchData();
+      setLoading(false);
+    }
+  }, [requisition]);
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -214,12 +120,62 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const { getById: getRequisition } = useRequisitions();
+  const { getByRequisitionId: getRequisitionLines } = useRequisitionLines();
+
+  const handleGetRequisition = async (id: number) => {
+    const { success, data } = await getRequisition(id);
+    if (success) {
+      const dataWithFormattedDate = {
+        ...data,
+        schedulled_at: toDateInputValue(data.schedulled_at),
+      };
+      setForm(dataWithFormattedDate);
+    }
+  };
+
+  const handleGetLines = async (id: number) => {
+    const data = await getRequisitionLines(id);
+    const items: AddedLineViewModel[] = data.map(
+      (line: any): AddedLineViewModel => ({
+        id: line.id,
+        item_key: getItemKey(line),
+        item_id: line.item_id,
+        item_unit_id: line.item_unit_id,
+        name: line.name,
+        brand: line.brand,
+        model: line.model,
+        internal_code: line.internal_code,
+        available_quantity: line.available_quantity,
+        image_path: line.image_path,
+        //extras
+        quantity: line.quantity,
+        unit_code: line.unit_code,
+        unit_name: line.unit_name,
+        return_of_id: line.return_of_line_id,
+        accessories: line.accessories,
+        source_location_id: line.source_location_id,
+        source_location_name: line.source_location_name,
+        destination_location_id: line.destination_location_id,
+        destination_location_name: line.destination_location_name,
+      }),
+    );
+
+    setRequisitionItems(items);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEdit) {
+      handleUpdate(e);
+    } else {
+      handleCreate(e);
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-
-    console.log("lines", requisitionItems);
 
     const lines = requisitionItems.map((i: any) => ({
       item_id: i.item_id,
@@ -227,18 +183,18 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
       quantity: i.quantity,
       accessories: i.accessories || null,
       return_of_line_id: i.return_of_id || null,
-      source_location_id: i.internal_code === "" ? i.source_location_id : null,
+      source_location_id: i.internal_code === null ? i.source_location_id : null,
     }));
 
     const payload: CreateRequisitionDto = {
-      requested_by: form.requested_by || "",
-      destination_location_id: Number(form.destination_location_id) || null,
-      type: form.type,
-      movement: form.movement,
-      status: form.status,
-      notes: form.notes || "",
+      requested_by: form?.requested_by || "",
+      destination_location_id: Number(form?.destination_location_id) || null,
+      type: form?.type,
+      movement: form?.movement,
+      status: form?.status,
+      notes: form?.notes || "",
       lines: lines,
-      schedulled_at: form.schedulled_at,
+      schedulled_at: form?.schedulled_at,
     };
 
     const { success } = await createRequisition(payload);
@@ -246,6 +202,60 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
     if (success) {
       onSuccess();
       toast.success("Requisición creada exitosamente");
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      console.log("Requisition items to update:", requisitionItems);
+      const lines = requisitionItems.map((i: any) => ({
+        id: i.id,
+        item_id: i.item_id,
+        item_unit_id: i.item_unit_id || null,
+        quantity: i.quantity,
+        accessories: i.accessories || null,
+        return_of_line_id: i.return_of_id || null,
+        source_location_id:
+          i.internal_code === null ? i.source_location_id : null,
+      }));
+
+      console.log("Lines to update:", lines);
+
+      const payload: CreateRequisitionDto = {
+        requested_by: form?.requested_by || "",
+        destination_location_id: Number(form?.destination_location_id) || null,
+        type: form?.type,
+        movement: form?.movement,
+        status: form?.status,
+        notes: form?.notes || "",
+        lines: lines,
+        schedulled_at: form?.schedulled_at,
+      };
+
+      console.log("Payload for update:", payload);
+
+      const response = await axios.put(
+        `${apiUrl}/requisitions/${form.id}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      );
+
+      toast.success("Requisición actualizada exitosamente");
+      onSuccess();
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ??
+        "El servidor no está disponible en este momento. Intente más tarde.";
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -265,87 +275,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
       toast.error(message);
     }
   };
-
-  const handleGetItemUnits = async () => {
-    try {
-      const response = await axios.get(
-        `${apiUrl}/item-units/get-by-requisition-type`,
-        {
-          params: {
-            destinationId: form?.destination_location_id,
-            requisitionType: form?.type,
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-
-      const newItems = response.data.data;
-      setItemUnits(newItems);
-      setFilteredItemUnits(newItems);
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ??
-        "El servidor no está disponible en este momento. Intente más tarde.";
-      toast.error(message);
-    }
-  };
-
-  /*const handleGetItemUnits = async () => {
-    try {
-      const response = await axios.get(
-        `${apiUrl}/items/get-all-with-properties`,
-        {
-          params: {
-            destinationId: form?.destination_location_id,
-            requisitionType: form?.type,
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-
-      const newItems = response.data.data;
-      console.log("Fetched item units:", newItems);
-      setItemUnits(newItems);
-      setFilteredItemUnits(newItems);
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ??
-        "El servidor no está disponible en este momento. Intente más tarde.";
-      toast.error(message);
-    }
-  };*/
-
-  /*const handleGetSupplies = async () => {
-    try {
-      const response = await axios.get(
-        `${apiUrl}/items/get-available-supplies`,
-        {
-          params: { type: ItemType.SUPPLY },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-      console.log("Fetched supplies:", response.data.data);
-      setSupples(response.data.data);
-    } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.data.message);
-      } else {
-        const message =
-          error?.response?.data?.message ??
-          "El servidor no está disponible en este momento. Intente más tarde.";
-        toast.error(message);
-      }
-    }
-  };*/
-
   const handleGetCatalog = async (movement: string, type: string) => {
-     console.log("Fetching catalog with movement", movement, "and type", type);
     try {
       const response = await axios.get(`${apiUrl}/items/get-catalog`, {
         params: { movement, type },
@@ -353,7 +283,6 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("Fetched catalog:", response.data);
       setItemUnits(response.data.itemUnits);
       setFilteredItemUnits(response.data.itemUnits);
       setSupples(response.data.supplies);
@@ -379,20 +308,15 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
     requisitionType: RequisitionType,
     currentMovement: string, // recibe el valor nuevo
   ) => {
-    console.log(
-      "Filtering locations for type",
-      requisitionType,
-      "and movement",
-      currentMovement,
-    );
     const filtered = filterLocationsByRule(
       locations,
       requisitionType,
       currentMovement as MovementType,
     );
-    console.log("filtered locations", filtered);
     setFilteredLocations(filtered);
-    setRequireDestination(filtered.length > 0);
+    setRequireDestination(
+      requiresDestination(requisitionType, currentMovement as MovementType),
+    );
   };
 
   const handleFilterLines = async () => {
@@ -412,20 +336,24 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
   };
 
   const handleAddItem = (item: any) => {
-    console.log("Adding item to requisition:", item);
+    console.log("Selected item:", item);
+    const itemKey = getItemKey(item); // 👈
 
     const newItem = {
-      temp_id: item.temp_id,
+      id: item?.id,
+      item_key: itemKey,
       item_id: Number(item.item_id),
-      item_name: item.name,
-      item_brand: item.brand ?? "",
-      item_model: item.model ?? "",
       item_unit_id: item.item_unit_id ?? "",
-      internal_code: item.internal_code ?? "",
+      name: item.name,
+      brand: item.brand ?? "",
+      model: item.model ?? "",
+      internal_code: item.internal_code ?? null,
+      available_quantity: item.available_quantity,
+      image_path: item.image_path ?? null,
+      //extras
       quantity: item.quantity,
       unit_code: item.unit_code,
       unit_name: item.unit_name,
-      image_path: item.image_path ?? null,
       return_of_id: item?.return_of_id ?? null,
       accessories: item?.accessories,
       source_location_id: item?.location_id,
@@ -434,15 +362,19 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
       destination_location_name: form?.destination_location_name,
     };
 
+    console.log("New item to add:", newItem);
+
     setRequisitionItems((prev) => {
-      const exists = prev.some((a) => a.temp_id === item.temp_id);
+      const exists = prev.some((a) => a.item_key === itemKey); // 👈
 
       toast.success("Artículo agregado exitosamente");
       return exists
-        ? prev.map((a) => (a.temp_id === item.temp_id ? newItem : a))
+        ? prev.map((a) => (a.item_key === itemKey ? newItem : a))
         : [...prev, newItem];
     });
 
+    setSelectedItem(undefined);
+    setItem(undefined);
     setShowAddTool(false);
     setShowAddSupply(false);
     setShowAddLines(false);
@@ -450,7 +382,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
 
   const removeItem = (item: any) => {
     setRequisitionItems((prev) =>
-      prev.filter((a) => a.temp_id !== item.temp_id),
+      prev.filter((a) => a.item_key !== item.item_key),
     );
   };
 
@@ -479,7 +411,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
 
   return (
     <>
-      <form onSubmit={handleCreate} className="space-y-2">
+      <form onSubmit={handleSubmit} className="space-y-2">
         {/* STEPPER */}
         <div className="relative w-full flex items-start mb-8">
           {[1, 2, 3].map((s, idx) => {
@@ -581,19 +513,20 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                   onChange={(e: any) => {
                     handleChange(e);
                     handleClearLocations();
-                    handleFilterLocations(form.type, e.target.value); // pasa el valor nuevo
+                    handleFilterLocations(form?.type, e.target.value); // pasa el valor nuevo
                     setForm((prev) => ({ ...prev, type: "" as any }));
+                    setRequisitionItems([]);
                   }}
                 />
 
-                {form.movement && (
+                {form?.movement && (
                   <FormRadioGroup
                     label="Razón"
                     name="type"
-                    value={form.type}
+                    value={form?.type}
                     options={
                       ROLE_REASON_OPTIONS[role ? role : ""]
-                        ?.filter((o: any) => o.movement === form.movement)
+                        ?.filter((o: any) => o.movement === form?.movement)
                         .map((o: any) => ({
                           label: o.label,
                           value: o.reason,
@@ -602,8 +535,9 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                     onChange={(e: any) => {
                       handleChange(e);
                       handleClearLocations();
-                      handleFilterLocations(e.target.value, form.movement); // pasa el valor nuevo
+                      handleFilterLocations(e.target.value, form?.movement); // pasa el valor nuevo
                       selectDestination({ id: null, name: "" });
+                      setRequisitionItems([]);
                     }}
                   />
                 )}
@@ -614,8 +548,8 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
               <FormSelectSearch
                 label="Destino"
                 value={{
-                  id: String(form.destination_location_id),
-                  name: form.destination_location_name || "",
+                  id: String(form?.destination_location_id),
+                  name: form?.destination_location_name || "",
                 }}
                 options={filteredLocations}
                 onSelect={selectDestination}
@@ -625,7 +559,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
             <FormDate
               label="Fecha programada"
               name="schedulled_at"
-              value={form.schedulled_at}
+              value={form?.schedulled_at}
               onChange={handleChange}
             />
 
@@ -633,7 +567,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
               placeholder=""
               label="Notas"
               name="notes"
-              value={form.notes}
+              value={form?.notes}
               onChange={handleChange}
             />
 
@@ -641,15 +575,13 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
               <button
                 type="button"
                 onClick={() => {
-                  if (!form.type || !form.schedulled_at) {
+                  if (!form?.type || !form?.schedulled_at) {
                     return toast.error("Complete todos los campos requeridos");
                   }
-                  if (requireDestination && !form.destination_location_id) {
+                  if (requireDestination && !form?.destination_location_id) {
                     return toast.error("Seleccione un destino");
                   }
-                  //handleGetItemUnits();
-                  //handleGetSupplies();
-                  handleGetCatalog(form.movement, form.type);
+                  handleGetCatalog(form?.movement, form?.type);
                   setStep(2);
                 }}
                 className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg"
@@ -682,19 +614,36 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
               pageSize={DataGrid.length}
               onLoadData={() => {}}
               pagination={false}
+              onRowClick={(i: any) => {
+                if (!i.internal_code) {
+                  const supplyItem = supplies.find(
+                    (s) =>
+                      s.id == i.item_id &&
+                      s.location_id == i.source_location_id,
+                  );
+
+                  setSelectedItem(i);
+                  setItem(supplyItem);
+                  setShowAddSupply(true);
+                }
+              }}
             >
               <PagedDataGrid.Column field="item" title="Artículo">
                 {(row) => (
-                  <div className="flex flex-col">
-                    <span className="text-xs text-gray-500">
-                      {row.internal_code}
-                    </span>
+                  <div className="flex flex-col justify-center">
+                    {row.internal_code && (
+                      <span className="text-xs text-gray-500">
+                        {row.internal_code}
+                      </span>
+                    )}
                     <span className="text-gray-800 font-semibold">
-                      {row.item_name}
+                      {row.name}
                     </span>
-                    <span className="text-xs text-gray-500">
-                      {row.item_brand} · {row.item_model}
-                    </span>
+                    {row.brand && row.model && (
+                      <span className="text-xs text-gray-500">
+                        {row.brand} · {row.model}
+                      </span>
+                    )}
                   </div>
                 )}
               </PagedDataGrid.Column>
@@ -726,16 +675,11 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                   </span>
                 )}
               </PagedDataGrid.Column>
-              <PagedDataGrid.Column field="actions" title="Acciones">
-                {(row) => (
-                  <ActionButton
-                    icon={<MdClose />}
-                    label=""
-                    onClick={() => removeItem(row)}
-                    color="bg-red-50 hover:bg-red-100 text-red-400"
-                  />
-                )}
-              </PagedDataGrid.Column>
+              <PagedDataGrid.Action
+                icon={<MdClose />}
+                label=""
+                onClick={(row) => removeItem(row)}
+              />
             </PagedDataGrid>
 
             <div className="flex justify-between mt-6">
@@ -743,7 +687,6 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                 type="button"
                 onClick={() => {
                   setStep(1);
-                  setRequisitionItems([]);
                 }}
                 className="bg-gray-200 hover:bg-gray-100 text-gray-800 px-6 py-2 rounded-lg"
               >
@@ -780,23 +723,28 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                 pagination={false}
               >
                 <PagedDataGrid.Column field="item" title="Artículo">
-                  {(row) => (
+                  {(row: AddedLineViewModel) => (
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">
-                        {row.internal_code}
-                      </span>
+                      {row.internal_code && (
+                        <span className="text-xs text-gray-500">
+                          {row.internal_code}
+                        </span>
+                      )}
                       <span className="text-gray-800 font-semibold">
-                        {row.item_name}
+                        {row.name}
                       </span>
-                      <span className="text-xs text-gray-500">
-                        {row.item_brand} · {row.item_model}
-                      </span>
+
+                      {row.brand && row.model && (
+                        <span className="text-xs text-gray-500">
+                          {row.brand} · {row.model}
+                        </span>
+                      )}
                     </div>
                   )}
                 </PagedDataGrid.Column>
 
                 <PagedDataGrid.Column field="quantity" title="Cantidad">
-                  {(row) => (
+                  {(row: AddedLineViewModel) => (
                     <span className="text-xs text-gray-500">
                       {row.quantity} {row.unit_code}
                     </span>
@@ -822,16 +770,6 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                     </span>
                   )}
                 </PagedDataGrid.Column>
-                <PagedDataGrid.Column field="actions" title="Acciones">
-                  {(row) => (
-                    <ActionButton
-                      icon={<MdClose />}
-                      label=""
-                      onClick={() => removeItem(row)}
-                      color="bg-red-50 hover:bg-red-100 text-red-400"
-                    />
-                  )}
-                </PagedDataGrid.Column>
               </PagedDataGrid>
             </FormSection>
 
@@ -848,7 +786,7 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
                 type="submit"
                 className="bg-green-600 text-white px-6 py-2 rounded-lg"
               >
-                Crear Requisición
+                {isEdit ? "Actualizar Requisición" : "Crear Requisición"}
               </button>
             </div>
           </>
@@ -864,15 +802,19 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
         >
           <AddItemsForm
             itemUnits={filteredItemUnits}
-            requisitionType={form?.type}
+            addedItems={requisitionItems}
             supplies={supplies}
             onAdd={(item: any) => {
               setShowAddTool(true);
               setSelectedItem(item);
             }}
-            onAddSupply={(item: any) => {
+            onAddSupply={(i: any) => {
+              const supplyItem = supplies.find(
+                (s) => s.id == i.id && s.location_id == i.location_id,
+              );
+              //setSelectedItem(i);
+              setItem(supplyItem);
               setShowAddSupply(true);
-              setSelectedItem(item);
             }}
             destinationLocationId={form?.destination_location_id}
           />
@@ -896,13 +838,23 @@ export default function NewRequisitionForm({ type, onSuccess }: Props) {
       <Modal
         title="Agregar Articulo"
         open={showAddSupply}
-        onClose={() => setShowAddSupply(false)}
+        onClose={() => {
+          setSelectedItem(undefined);
+          setItem(undefined);
+          setShowAddSupply(false);
+        }}
       >
         <AddSupplyForm
-          item={selectedItem}
-          requisitionType={RequisitionType[form.type as RequisitionType]}
+          selectedItem={selectedItem}
+          item={item}
+          requisitionType={RequisitionType[form?.type as RequisitionType]}
           onAdd={handleAddItem}
-          onClose={() => setShowAddSupply(false)}
+          onClose={() => {
+            console.log("Closing AddSupplyForm");
+            setSelectedItem(undefined);
+            setItem(undefined);
+            setShowAddSupply(false);
+          }}
         />
       </Modal>
 

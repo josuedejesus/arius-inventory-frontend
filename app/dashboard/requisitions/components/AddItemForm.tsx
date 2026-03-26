@@ -5,7 +5,7 @@ import FormTabs from "../../../components/form/FormTabs";
 import FormTabPanel from "../../../components/form/FormTabPanel";
 import FormSection from "../../../components/form/FormSection";
 import { toast } from "sonner";
-import ItemUnitCard from "../cards/ItemUnitCard";
+import ItemUnitCard from "../../items/cards/ItemUnitCard";
 import NumberSelector from "../../../components/NumberSelector";
 
 type Props = {

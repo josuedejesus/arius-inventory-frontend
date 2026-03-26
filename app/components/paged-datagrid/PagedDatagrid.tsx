@@ -8,6 +8,7 @@ import {
   MdNavigateBefore,
   MdNavigateNext,
 } from "react-icons/md";
+import { Action } from "./DatagridAction";
 
 type GridContextType = {
   data: any[];
@@ -32,6 +33,12 @@ type ColumnProps = {
   width?: string; // 🔥 NUEVO
 };
 
+type ActionProps = {
+  icon: React.ReactNode;
+  label?: string;
+  onClick: (row: any) => void;
+};
+
 type Props = {
   data: any[];
   total: number;
@@ -45,6 +52,7 @@ type Props = {
 
 type PagedDataGridType = React.FC<Props> & {
   Column: typeof Column;
+  Action: typeof Action;
 };
 
 const PagedDataGrid = (({
@@ -62,6 +70,12 @@ const PagedDataGrid = (({
   ) as React.ReactElement<ColumnProps>[];
 
   const columnCount = columns.length;
+
+  const actions = React.Children.toArray(children).filter(
+    (child) => (child as React.ReactElement).type === Action,
+  ) as React.ReactElement<ActionProps>[];
+
+  const hasActions = actions.length > 0;
 
   // 🔥 TEMPLATE DINÁMICO
   const gridTemplate = columns
@@ -123,6 +137,9 @@ const PagedDataGrid = (({
                     {col.props.title}
                   </th>
                 ))}
+                {hasActions && (
+                  <th className="text-left p-2 font-semibold whitespace-nowrap"></th>
+                )}
               </tr>
             </thead>
 
@@ -144,6 +161,26 @@ const PagedDataGrid = (({
                         : row[col.props.field]}
                     </td>
                   ))}
+
+                  {hasActions && (
+                    <td
+                      className="p-2 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()} // 👈 evita el onRowClick
+                    >
+                      <div className="flex items-center gap-1">
+                        {actions.map((action, i) => (
+                          <button
+                            key={i}
+                            title={action.props.label}
+                            onClick={() => action.props.onClick(row)}
+                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            {action.props.icon}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -212,5 +249,6 @@ const PagedDataGrid = (({
 }) as PagedDataGridType;
 
 PagedDataGrid.Column = Column;
+PagedDataGrid.Action = Action;
 
 export default PagedDataGrid;
