@@ -12,6 +12,7 @@ import {
   MdPhotoCamera,
 } from "react-icons/md";
 import { toast } from "sonner";
+import MinimalItemUnitCard from "../../items/cards/MinimalItemUnitCard";
 
 const PHOTO_UPLOAD_ROLES = ["WAREHOUSE_MANAGER", "ADMIN", "OPERATION_MANAGER"];
 
@@ -142,31 +143,7 @@ export default function RequisitionLinePhotosForm({
       <div className="space-y-6">
         {/* HEADER */}
         <div>
-          {/* ITEM CARD */}
-          <div className="flex items-start gap-3 bg-gray-50 border rounded-lg p-3">
-            {/* ICON */}
-            <div className="w-10 h-10 bg-white border rounded flex items-center justify-center">
-              <MdInventory className="text-gray-400 text-xl" />
-            </div>
-
-            {/* INFO */}
-            <div className="flex flex-col flex-1 text-sm">
-              {/* NAME */}
-              <span className="font-semibold text-gray-800">
-                {line.item_name}
-              </span>
-
-              {/* BRAND + MODEL */}
-              <span className="text-xs text-gray-500">
-                {line.item_brand} · {line.item_model}
-              </span>
-
-              {/* CODE */}
-              <span className="text-xs text-gray-400">
-                Código: {line.internal_code}
-              </span>
-            </div>
-          </div>
+          <MinimalItemUnitCard itemUnit={line}/>
         </div>
 
         {/* FOTOS EXISTENTES */}
@@ -305,8 +282,8 @@ group-hover:opacity-100 flex items-center justify-center transition duration-300
               onClick={handleUpdloadPhotos}
               disabled={loading || files.length === 0}
               className="
-            bg-blue-600 text-white px-5 py-2 rounded-md text-sm
-            hover:bg-blue-700 transition
+            bg-green-600 text-white px-5 py-2 rounded-md text-sm
+            hover:bg-green-500 transition
             disabled:opacity-50 disabled:cursor-not-allowed
           "
             >

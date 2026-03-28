@@ -16,28 +16,35 @@ export default function BooleanBadge({
   onClick,
 }: Props) {
   return (
-    <div
-      className={`
-    inline-flex items-center gap-1.5
-    text-[11px] font-medium
-    px-2.5 py-0.5
-    rounded-md
-    whitespace-nowrap
-    transition-colors
-    cursor-pointer
-    border
-    uppercase
-    ${value ? "text-green-600 bg-green-50 border-green-200" : "text-red-500 bg-red-50 border-red-200"}
-  `}
-      onClick={onClick}
-    >
-      {(trueIcon || falseIcon) && (
-        <span className="text-xs">{value ? trueIcon : falseIcon}</span>
-      )}
+  <div
+    className={`
+      inline-flex items-center justify-center
+      text-[11px] font-bold uppercase
+      px-2 py-1.5
+      rounded-md
+      whitespace-nowrap
+      transition-colors
+      cursor-pointer
+      leading-none
+      ${value ? "text-green-500 bg-green-100" : "text-red-500 bg-red-100"}
+    `}
+    onClick={onClick}
+  >
+    <div className="flex items-center justify-center gap-1 w-full">
+      
+      {value ? trueIcon : falseIcon ? (
+        <span className="flex items-center justify-center">
+          {value ? trueIcon : falseIcon}
+        </span>
+      ) : null}
 
-      {(trueLabel || falseLabel) && (
-        <span>{value ? trueLabel : falseLabel}</span>
-      )}
+      {value ? trueLabel : falseLabel ? (
+        <span className="flex items-center justify-center text-center">
+          {value ? trueLabel : falseLabel}
+        </span>
+      ) : null}
+
     </div>
-  );
+  </div>
+);
 }

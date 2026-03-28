@@ -1,17 +1,21 @@
-import { ItemUnitViewModel } from "../types/item-unit-view.model";
+import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
 
 type Props = {
   itemUnit: ItemUnitViewModel;
   showStats?: boolean;
+  onClick?: (itemUnit: ItemUnitViewModel) => void;
 };
 
 export default function MinimalItemUnitCard({
   itemUnit,
   showStats = false,
+  onClick,
 }: Props) {
-  console.log("Rendering MinimalItemUnitCard for itemUnit", itemUnit);
   return (
-    <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-100 gap-3">
+    <div
+      className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-gray-100 border border-gray-100 hover:bg-gray-50 gap-3"
+      onClick={() => onClick?.(itemUnit)}
+    >
       {/* Info */}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-gray-800 truncate">

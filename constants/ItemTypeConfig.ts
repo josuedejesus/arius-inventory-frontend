@@ -1,8 +1,7 @@
-import { ItemType } from "@/app/dashboard/items/types/item-type.enum";
-import React from "react";
 import { MdBuild, MdInventory, MdBrandingWatermark, MdWidgets, MdCategory } from "react-icons/md";
 
 import { IconType } from "react-icons";
+import { ItemType } from "@/app/types/item/item-type.enum";
 
 export const ITEM_TYPE_LABELS: Record<
   ItemType,

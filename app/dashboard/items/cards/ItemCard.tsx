@@ -1,15 +1,14 @@
 import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
 import { MdAccessTime, MdBuild, MdInventory } from "react-icons/md";
-import { ItemType } from "../types/item-type.enum";
 import BooleanBadge from "@/app/components/badges/BooleanBadge";
 import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
+import { ItemType } from "@/app/types/item/item-type.enum";
 
 type Props = {
   item: any;
 };
 
-export default function ItemCard({ item }: { item: any }) {
-  console.log("Rendering ItemCard for item:", item);
+export default function ItemCard({ item }: Props) {
   return (
     <div className="w-full bg-white border border-gray-200 rounded-xl p-4 flex gap-4 hover:shadow-md transition">
       {/* ICON / IMAGE */}

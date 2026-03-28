@@ -3,7 +3,7 @@ import { ReactNode, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import { Toaster } from "sonner";
-import AuthGuard from "../components/AuthGuard";
+import AuthGuard from "../components/guards/AuthGuard";
 
 
 

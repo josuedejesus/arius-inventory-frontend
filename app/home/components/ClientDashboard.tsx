@@ -1,10 +1,20 @@
 "use client";
+import Button from "@/app/components/Button";
+import StatCard from "@/app/components/StatCard";
 import { LocationViewModel } from "@/app/dashboard/locations/types/location-view-model";
+import { variant } from "@/constants/VariantEnum";
 import {
   MdOutlineInventory2,
   MdOutlineAssignment,
   MdOutlineKeyboardReturn,
   MdOutlineHistory,
+  MdInventory,
+  MdLocationOn,
+  MdRequestQuote,
+  MdRequestPage,
+  MdPending,
+  MdPendingActions,
+  MdAdd,
 } from "react-icons/md";
 
 // --- TIPOS ---
@@ -31,6 +41,8 @@ type DashboardSummary = {
   in_progress: number;
   rented: number;
   due_soon: number;
+  active_locations: number;
+  total_item_units: number;
 };
 
 type Project = {
@@ -183,7 +195,6 @@ export default function ClientDashboard({
       {/* HEADER */}
       <div className="flex items-start justify-between">
         <div>
-
           {/* Selector de proyecto */}
           <div className="flex items-center gap-1.5 mt-1.5">
             <span className="text-xs text-gray-400">Proyecto:</span>
@@ -220,38 +231,46 @@ export default function ClientDashboard({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onNewEquipmentOrder}
-          className="flex items-center gap-1.5 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
-        >
-          <span className="text-lg leading-none">+</span>
-          Nueva orden
-        </button>
+        <Button label="Nueva orden" onClick={onNewEquipmentOrder} variant={variant.dark} icon={<MdAdd/>}/>
       </div>
 
       {/* MÉTRICAS */}
-      <div className="grid grid-cols-4 gap-2.5">
-        <MetricCard
-          value={summary.pending}
-          label="Pendientes"
-          dotColor="bg-yellow-400"
-        />
-        <MetricCard
-          value={summary.in_progress}
-          label="En proceso"
-          dotColor="bg-blue-400"
-        />
-        <MetricCard
-          value={summary.rented}
-          label="Rentados"
-          dotColor="bg-green-400"
-        />
-        <MetricCard
-          value={summary.due_soon}
-          label="Por devolver"
-          dotColor="bg-orange-400"
-        />
+      <div className="grid grid-cols-2  lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Equipo rentado"
+          count={summary.total_item_units}
+          icon={<MdInventory />}
+          textColor="text-blue-400"
+        >
+          <div></div>
+        </StatCard>
+
+        <StatCard
+          title="Proyectos activos"
+          count={summary.active_locations}
+          icon={<MdLocationOn />}
+          textColor="text-green-400"
+        >
+          <div></div>
+        </StatCard>
+
+        <StatCard
+          title="Solicitudes pendientes"
+          count={0}
+          icon={<MdPendingActions />}
+          textColor="text-yellow-400"
+        >
+          <div></div>
+        </StatCard>
+
+        <StatCard
+          title=""
+          count={0}
+          icon={<MdInventory />}
+          textColor="text-orange-400"
+        >
+          <div></div>
+        </StatCard>
       </div>
 
       {/* BODY */}

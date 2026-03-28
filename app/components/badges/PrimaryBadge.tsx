@@ -1,16 +1,18 @@
 interface PrimaryBadgeProps {
   label: string;
   icon?: React.ReactNode;
-  variant?: "success" | "warning" | "info" | "danger" | "neutral";
+  variant?: "success" | "warning" | "info" | "danger" | "neutral" | "light" | "dark";
   className?: string;
 }
 
 const variantStyles = {
-  success: "bg-green-100 text-green-600 border border-green-200",
-  warning: "bg-yellow-100 text-yellow-600 border border-yellow-200",
-  info: "bg-blue-100 text-blue-600 border border-blue-200",
-  danger: "bg-red-100 text-red-600 border border-red-200",
-  neutral: "bg-gray-100 text-gray-600 border border-gray-200",
+  success: "bg-green-400 ",
+  warning: "bg-yellow-400 ",
+  info: "bg-blue-400",
+  danger: "bg-red-400",
+  neutral: "bg-gray-400",
+  light: "bg-gray-200",
+  dark: "bg-gray-800",
 };
 
 export function PrimaryBadge({
@@ -23,8 +25,8 @@ export function PrimaryBadge({
     <span
       className={`
         inline-flex items-center gap-1.5
-        text-[11px] font-medium
-        px-2.5 py-0.5
+        text-[11px] font-bold text-white
+        px-1.5 py-0.5
         rounded-md
         whitespace-nowrap
         transition-colors

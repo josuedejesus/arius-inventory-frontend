@@ -12,6 +12,8 @@ import { set } from "date-fns";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
 import { UnitViewModel } from "./types/unit-view.model";
+import PermissionGuard from "@/app/components/guards/PermissionGuard";
+import { PERMISSIONS } from "@/app/lib/auth/permissions";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -48,6 +50,7 @@ export default function Units() {
   }
 
   return (
+    <PermissionGuard permission={PERMISSIONS.VIEW_UNITS}>
     <div className="">
       <div className="flex items-start justify-between space-x-2 pb-4">
         <h1 className="text-2xl font-semibold text-gray-800 mb-6">Unidades</h1>
@@ -74,10 +77,10 @@ export default function Units() {
         pagination={false}
       >
         <PagedDataGrid.Column field="name" title="Nombre">
-          {(row: UnitViewModel) => <span>{row?.name}</span>}
+          {(row: UnitViewModel) => <span className="font-semibold text-gray-700">{row?.name}</span>}
         </PagedDataGrid.Column>
         <PagedDataGrid.Column field="code" title="Código">
-          {(row: UnitViewModel) => <span>{row?.code}</span>}
+          {(row: UnitViewModel) => <span className="text-xs text-gray-700">{row?.code}</span>}
         </PagedDataGrid.Column>
       </PagedDataGrid>
 
@@ -100,5 +103,6 @@ export default function Units() {
         />
       </Modal>
     </div>
+    </PermissionGuard>
   );
 }

@@ -12,6 +12,10 @@ import { PERSON_ROLE_LABELS } from "@/constants/PersonRoles";
 import { formatDate } from "@/app/utils/formatters";
 import SearchBar from "@/app/components/SearchBar";
 import { MdWarning } from "react-icons/md";
+import BooleanBadge from "@/app/components/badges/BooleanBadge";
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
+import PermissionGuard from "@/app/components/guards/PermissionGuard";
+import { PERMISSIONS } from "@/app/lib/auth/permissions";
 
 export default function Persons() {
   //API
@@ -63,98 +67,101 @@ export default function Persons() {
   }
 
   return (
-    <div className="">
-      <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-2">Personas</h1>
-      </div>
+    <PermissionGuard permission={PERMISSIONS.VIEW_USERS}>
+      <div className="">
+        <div className="flex items-start justify-between">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-2">
+            Personas
+          </h1>
+        </div>
 
-      <div className="flex justify-between items-center mb-4">
-        <SearchBar
-          placeholder="Buscar persona..."
-          value={searchValue}
-          onChange={(e: any) => setSearchValue(e)}
-        />
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
+        <div className="flex justify-between items-center mb-4">
+          <SearchBar
+            placeholder="Buscar persona..."
+            value={searchValue}
+            onChange={(e: any) => setSearchValue(e)}
+          />
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
                      hover:bg-blue-500 transition text-sm font-medium"
+          >
+            <span className="text-lg">＋</span>
+          </button>
+        </div>
+
+        <PagedDataGrid
+          data={filteredPersons}
+          total={filteredPersons?.length}
+          pageSize={1}
+          page={1}
+          pagination={false}
+          onLoadData={handleGetPersons}
+          onRowClick={(row: PersonViewModel) => {
+            setSelectedPerson(row);
+            setShowForm(true);
+          }}
         >
-          <span className="text-lg">＋</span>
-        </button>
-      </div>
-
-      <PagedDataGrid
-        data={filteredPersons}
-        total={filteredPersons?.length}
-        pageSize={1}
-        page={1}
-        pagination={false}
-        onLoadData={handleGetPersons}
-        onRowClick={(row: PersonViewModel) => {
-          setSelectedPerson(row);
-          setShowForm(true);
-        }}
-      >
-        <PagedDataGrid.Column field="name" title="Nombre">
-          {(row: PersonViewModel) => (
-            <span className="text-gray-600">{row.name}</span>
-          )}
-        </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="username" title="Usuario">
-          {(row: PersonViewModel) => (
-            <span className="text-gray-600">{row.username}</span>
-          )}
-        </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="contact" title="Contacto">
-          {(row: PersonViewModel) => (
-            <div className="flex flex-col">
-              <span className="text-gray-600">{row.email}</span>
-              <span className="text-gray-600">{row.phone}</span>
-            </div>
-          )}
-        </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="type" title="Tipo">
-          {(row: PersonViewModel) => (
-            <span className="text-gray-600">
-              {PERSON_ROLE_LABELS[row.role]}
-            </span>
-          )}
-        </PagedDataGrid.Column>
-
-        <PagedDataGrid.Column field="location_count" title="Ubicaciones">
-          {(row: PersonViewModel) => (
-            <div className=" flex items-center justify-center gap-1">
-              {row.location_count > 0 ? (
-                <span className="text-gray-600">{row.location_count}</span>
-              ) : (
-                <span className="text-gray-400 flex items-center gap-1">
-                  {" "}
-                  <MdWarning className="text-red-400" />
+          <PagedDataGrid.Column field="name" title="Nombre">
+            {(row: PersonViewModel) => (
+              <span className="font-semibold text-gray-800">{row?.name}</span>
+            )}
+          </PagedDataGrid.Column>
+          <PagedDataGrid.Column field="username" title="Usuario">
+            {(row: PersonViewModel) => (
+              <span className="font-semibold text-blue-400">
+                {row.username}
+              </span>
+            )}
+          </PagedDataGrid.Column>
+          <PagedDataGrid.Column field="contact" title="Contacto">
+            {(row: PersonViewModel) => (
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium text-gray-800">
+                  {row.email}
                 </span>
-              )}
-            </div>
-          )}
-        </PagedDataGrid.Column>
-      </PagedDataGrid>
+                <span className="text-xs text-gray-400">
+                  {row.phone || "Sin teléfono"}
+                </span>
+              </div>
+            )}
+          </PagedDataGrid.Column>
+          <PagedDataGrid.Column field="type" title="Tipo">
+            {(row: PersonViewModel) => (
+              <PrimaryBadge label={PERSON_ROLE_LABELS[row.role]} />
+            )}
+          </PagedDataGrid.Column>
 
-      {/*PERSON FORM*/}
-      <Modal
-        open={showForm}
-        title="Actualizar Persona"
-        onClose={() => {
-          setShowForm(false);
-          setSelectedPerson(undefined);
-        }}
-      >
-        <PersonsForm
-          personId={selectedPerson?.id}
-          onSuccess={() => {
+          <PagedDataGrid.Column field="location_count" title="Ubicaciones">
+            {(row: PersonViewModel) => (
+              <BooleanBadge
+                value={row.location_count > 0}
+                trueLabel={row.location_count.toString()}
+                falseIcon={<MdWarning className="text-red-400" />}
+              />
+            )}
+          </PagedDataGrid.Column>
+        </PagedDataGrid>
+
+        {/*PERSON FORM*/}
+        <Modal
+          open={showForm}
+          title="Actualizar Persona"
+          onClose={() => {
             setShowForm(false);
-            handleGetPersons();
             setSelectedPerson(undefined);
           }}
-        />
-      </Modal>
-    </div>
+        >
+          <PersonsForm
+            personId={selectedPerson?.id}
+            onSuccess={() => {
+              setShowForm(false);
+              handleGetPersons();
+              setSelectedPerson(undefined);
+            }}
+          />
+        </Modal>
+      </div>
+    </PermissionGuard>
   );
 }

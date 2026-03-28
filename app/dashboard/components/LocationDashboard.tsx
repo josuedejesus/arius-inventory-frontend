@@ -13,9 +13,9 @@ import {
   MdSwapHoriz,
 } from "react-icons/md";
 import { toast } from "sonner";
-import { PrimaryBadge } from "./badges/PrimaryBadge";
-import MinimalItemCard from "../dashboard/items/cards/MinimalItemCard";
-import StockMoveCard from "./cards/StockMoveCard";
+import { PrimaryBadge } from "../../components/badges/PrimaryBadge";
+import MinimalItemCard from "../items/cards/MinimalItemCard";
+import StockMoveCard from "../../components/cards/StockMoveCard";
 
 type Props = {
   locationId: number;
@@ -103,12 +103,15 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
   const handleGetItemUnits = async (filters: { locationId: number }) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${apiUrl}/item-units/get-all-with-stats/${locationId}/location`, {
-        params: filters,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      const response = await axios.get(
+        `${apiUrl}/item-units/get-all-with-stats/${locationId}/location`,
+        {
+          params: filters,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
         },
-      });
+      );
 
       console.log("item units por ubicación", response.data);
       setItemUnits(response.data.data);
@@ -225,7 +228,11 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {itemUnits?.length ? (
               itemUnits.map((iu) => (
-                <MinimalItemUnitCard key={iu.id} itemUnit={iu} showStats={true} />
+                <MinimalItemUnitCard
+                  key={iu.id}
+                  itemUnit={iu}
+                  showStats={true}
+                />
               ))
             ) : (
               <p className="text-sm text-gray-400">Sin equipos asignados</p>
@@ -262,7 +269,22 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {movements?.length ? (
             movements.map((m) => (
-              <StockMoveCard key={m.id} movement={m} locationId={locationId} />
+              <StockMoveCard
+                key={m.id}
+                label={
+                  <>
+                    {m.item_name}
+                    {(m.item_brand || m.item_model) && (
+                      <span className="text-gray-400 font-normal">
+                        {" "}
+                        • {m.item_brand}
+                        {m.item_model && ` ${m.item_model}`}
+                      </span>
+                    )}
+                  </>
+                }
+                movement={m}
+              />
             ))
           ) : (
             <p className="text-sm text-gray-400">Sin movimientos recientes</p>

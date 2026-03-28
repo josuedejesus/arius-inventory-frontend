@@ -1,4 +1,4 @@
-"use client";  // agrega esto en la primera línea
+"use client"; // agrega esto en la primera línea
 import axios from "axios";
 import ClientDashboard from "./components/ClientDashboard";
 import { useAuth } from "@/context/AuthContext";
@@ -7,10 +7,21 @@ import { useEffect, useState } from "react";
 import { LocationViewModel } from "../dashboard/locations/types/location-view-model";
 import Modal from "../components/Modal";
 import { ItemUnitStatus } from "../components/item-units/types/item-units-status.enum";
-import { ItemUnitViewModel } from "../dashboard/items/types/item-unit-view.model";
-import RequisitionForm from "../dashboard/requisitions/components/RequisitionForm";
+import RequisitionForm from "../dashboard/requisitions/forms/RequisitionForm";
 import { RequisitionType } from "../dashboard/requisitions/types/requisition-type.enum";
+import PermissionGuard from "../components/guards/PermissionGuard";
+import { PERMISSIONS } from "../lib/auth/permissions";
+import { MovementType } from "../dashboard/requisitions/types/movement-type";
+import { ItemUnitViewModel } from "../types/item/item-unit-view.model";
 
+type SummaryDto = {
+  totalItemUnits: number;
+  totalActiveLocations: number;
+  pending: number;
+  inProgress: number;
+  rented: number;
+  dueSoon: number;
+};
 export default function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const user = useAuth().user;
@@ -23,11 +34,19 @@ export default function Home() {
   const [requisitionType, setRequisitionType] = useState<
     RequisitionType | undefined
   >(undefined);
+  const [movementType, setMovementType] = useState<MovementType | undefined>(
+    undefined,
+  );
+  const [summary, setSummary] = useState<SummaryDto | null>(null);
 
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
-      await Promise.all([handleGetLocations(), handleGetItemUnitStats()]);
+      await Promise.all([
+        handleGetDashboardData(),
+        handleGetLocations(),
+        handleGetItemUnitStats(),
+      ]);
       setLoading(false);
     };
     fetchData();
@@ -79,28 +98,55 @@ export default function Home() {
     }
   };
 
+  const handleGetDashboardData = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/dashboard/summary/external`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      console.log(response.data);
+      setSummary(response.data);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ??
+        "El servidor no está disponible en este momento. Intente más tarde.";
+      toast.error(message);
+    }
+  };
+
   return (
-    <>
+    <PermissionGuard permission={PERMISSIONS.VIEW_HOME}>
       <ClientDashboard
         client_name="Cliente Ejemplo"
         locations={locations}
         activeLocation={activeLocation!}
         onChangeLocation={setActiveLocation}
-        summary={{ pending: 0, in_progress: 0, rented: 0, due_soon: 0 }}
+        summary={{
+          total_item_units: summary?.totalItemUnits || 0,
+          active_locations: summary?.totalActiveLocations || 0,
+          pending: summary?.pending || 0,
+          in_progress: summary?.inProgress || 0,
+          rented: summary?.rented || 0,
+          due_soon: summary?.dueSoon || 0,
+        }}
         recent_orders={[]}
         rented_items={[]}
         onNewEquipmentOrder={() => {
           setShowForm(true);
+          setMovementType(MovementType.OUT);
           setRequisitionType(RequisitionType.RENT);
           handleGetItemUnits({ status: ItemUnitStatus.AVAILABLE });
         }}
         onNewMaterialOrder={() => {
           setShowForm(true);
+          setMovementType(MovementType.OUT);
           setRequisitionType(RequisitionType.CONSUMPTION);
           handleGetItemUnits({ status: ItemUnitStatus.AVAILABLE });
         }}
         onReturn={() => {
           setShowForm(true);
+          setMovementType(MovementType.IN);
           setRequisitionType(RequisitionType.RETURN);
           handleGetItemUnits({
             status: ItemUnitStatus.RENTED,
@@ -123,10 +169,11 @@ export default function Home() {
         }
       >
         <RequisitionForm
+          movement={MovementType.OUT}
           type={requisitionType}
           onSuccess={() => setShowForm(false)}
         />
       </Modal>
-    </>
+    </PermissionGuard>
   );
 }

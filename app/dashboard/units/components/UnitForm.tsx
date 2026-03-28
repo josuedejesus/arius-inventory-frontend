@@ -8,10 +8,10 @@ import { useEffect, useEffectEvent, useState } from "react";
 import { toast } from "sonner";
 import { CreateUnitDto } from "../types/create-unit.dto";
 import { UpdateUnitDto } from "../types/update-units.dto";
-import { UpdateItemDto } from "../../items/types/update-item.dto";
 import { UnitViewModel } from "../types/unit-view.model";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import SavingScreen from "@/app/components/SavingScreen";
+import { UpdateItemDto } from "@/app/types/item/update-item.dto";
 
 type UnitFormProps = {
   unitId: number;

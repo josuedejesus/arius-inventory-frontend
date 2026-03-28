@@ -11,7 +11,6 @@ import SupplyCard from "../../../components/cards/SupplyCard";
 import { RequisitionType } from "../types/requisition-type.enum";
 import { PrimaryBadge } from "../../../components/badges/PrimaryBadge";
 import { getItemKey } from "@/app/utils/requisition-utils";
-import { ItemViewModel } from "../../items/types/item-view.model";
 import { AddedLineViewModel } from "../dto/added-line-view-model.dto";
 import { id } from "date-fns/locale";
 

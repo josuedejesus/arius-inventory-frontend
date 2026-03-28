@@ -4,4 +4,6 @@ export enum variant {
   info = "info",
   danger = "danger",
   neutral = "neutral",
+  light = "light",
+  dark = "dark",
 }

@@ -20,9 +20,10 @@ import {
   MdSwapHoriz,
   MdSettings,
   MdLogout,
+  MdHome,
 } from "react-icons/md";
-
-import { IoMdLogOut, IoMdSettings } from "react-icons/io";
+import { useCan } from "../lib/auth/useCan";
+import { hasPermission, PERMISSIONS } from "../lib/auth/permissions";
 
 type SidebarProps = {
   mobileOpen: boolean;
@@ -31,20 +32,22 @@ type SidebarProps = {
 
 const links = [
   // Core
-  { label: "Inicio", href: "/dashboard", icon: MdDashboard },
-  { label: "Personas", href: "/dashboard/persons", icon: MdPeople },
+  { label: "Inicio", href: "/dashboard", icon: MdDashboard, permission: PERMISSIONS.VIEW_DASHBOARD },
+  { label: "Inicio", href: "/home", icon: MdHome, permission: PERMISSIONS.VIEW_HOME },
+  { label: "Personas", href: "/dashboard/persons", icon: MdPeople, permission: PERMISSIONS.VIEW_USERS },
 
-  { label: "Ubicaciones", href: "/dashboard/locations", icon: MdPlace },
-  { label: "Articulos", href: "/dashboard/items", icon: MdInventory2 },
+  { label: "Ubicaciones", href: "/dashboard/locations", icon: MdPlace, permission: PERMISSIONS.VIEW_LOCATIONS },
+  { label: "Articulos", href: "/dashboard/items", icon: MdInventory2, permission: PERMISSIONS.VIEW_ITEMS },
 
   // Catálogos
-  { label: "Unidades", href: "/dashboard/units", icon: MdStraighten },
+  { label: "Unidades", href: "/dashboard/units", icon: MdStraighten, permission: PERMISSIONS.VIEW_UNITS },
 
   // Operación
   {
     label: "Requisiciones",
     href: "/dashboard/requisitions",
     icon: MdSwapHoriz,
+    permission: PERMISSIONS.VIEW_REQUISITIONS,
   },
 ];
 
@@ -53,6 +56,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(true);
 
   const { logout, user } = useAuth();
+
+  const filteredLinks = links.filter((l) => hasPermission(user!, l.permission));
 
   return (
     <>
@@ -85,7 +90,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 px-2 space-y-1">
-          {links.map((l) => {
+          {filteredLinks.map((l) => {
             const active = pathname === l.href;
             const Icon = l.icon;
 

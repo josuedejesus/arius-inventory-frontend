@@ -13,7 +13,9 @@ import { LocationViewModel } from "./types/location-view-model";
 import BooleanBadge from "@/app/components/badges/BooleanBadge";
 import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
 import SearchBar from "@/app/components/SearchBar";
-import { MdWarning } from "react-icons/md";
+import { MdLocationOn, MdWarning } from "react-icons/md";
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
+import PermissionGuard from "@/app/components/guards/PermissionGuard";
 
 const columns: ColumnDef<any>[] = [
   { key: "name", title: "Nombre" },
@@ -72,6 +74,7 @@ export default function Warehouses() {
   }
 
   return (
+    <PermissionGuard permission="VIEW_LOCATIONS">
     <div className="">
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-semibold text-gray-800 mb-2">
@@ -107,36 +110,33 @@ export default function Warehouses() {
         }}
       >
         <PagedDataGrid.Column field="name" title="Nombre">
-          {(row: LocationViewModel) => <span>{row?.name}</span>}
+          {(row: LocationViewModel) => (
+            <span className="font-semibold text-gray-800">{row?.name}</span>
+          )}
         </PagedDataGrid.Column>
         <PagedDataGrid.Column field="type" title="Tipo">
           {(row: LocationViewModel) => {
             const typeConfig = LOCATION_TYPE_CONFIG[row?.type];
+
             return (
-              <span className="flex items-center justify-start gap-2">
-                {typeConfig?.icon && (
-                  <typeConfig.icon color={typeConfig.className} />
-                )}{" "}
-                {typeConfig?.label}
-              </span>
+              <PrimaryBadge label={typeConfig?.label} icon={typeConfig?.icon ? <typeConfig.icon /> : undefined} />
             );
           }}
         </PagedDataGrid.Column>
         <PagedDataGrid.Column field="address" title="Dirección">
-          {(row: LocationViewModel) => <span>{row?.location}</span>}
-        </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="location_count" title="Ubicaciones">
           {(row: LocationViewModel) => (
-            <div className=" flex items-center justify-center gap-1">
-              {row.member_count > 0 ? (
-                <span className="text-gray-600">{row.member_count}</span>
-              ) : (
-                <span className="text-gray-400 flex items-center gap-1">
-                  {" "}
-                  <MdWarning className="text-red-400" />
-                </span>
-              )}
-            </div>
+            <span className="text-sm text-gray-600 line-clamp-2">
+              {row?.location || "Sin dirección"}
+            </span>
+          )}
+        </PagedDataGrid.Column>
+        <PagedDataGrid.Column field="member_count" title="Personal">
+          {(row: LocationViewModel) => (
+            <BooleanBadge
+              value={row.member_count > 0}
+              trueLabel={row.member_count.toString()}
+              falseIcon={<MdWarning className="text-red-400" />}
+            />
           )}
         </PagedDataGrid.Column>
       </PagedDataGrid>
@@ -160,5 +160,6 @@ export default function Warehouses() {
         />
       </Modal>
     </div>
+    </PermissionGuard>
   );
 }

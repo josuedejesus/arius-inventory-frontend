@@ -9,10 +9,10 @@ import FormSection from "../../../components/form/FormSection";
 import FormRadioGroup from "../../../components/form/FormRadioGroup";
 import FormSelectSearch from "../../../components/form/FormSelectSearch";
 import FormText from "../../../components/form/FormText";
-import RequisitionHeader from "./RequisitionHeader";
+import RequisitionHeader from "../components/RequisitionHeader";
 import FormDate from "../../../components/form/FormDate";
-import AddItemsForm from "./AddItemsForm";
-import AddAccessoriesForm from "./AddItemForm";
+import AddItemsForm from "../components/AddItemsForm";
+import AddAccessoriesForm from "../components/AddItemForm";
 import AddLinesForm from "../../../components/AddLinesForm";
 import { RequisitionType } from "../types/requisition-type.enum";
 import AddSupplyForm from "@/app/dashboard/requisitions/components/AddSupply";
@@ -40,12 +40,14 @@ import { on } from "events";
 
 type Props = {
   requisition?: RequisitionViewModel;
+  movement?: MovementType;
   type?: RequisitionType;
   onSuccess: () => void;
 };
 
 export default function NewRequisitionForm({
   requisition,
+  movement,
   type,
   onSuccess,
 }: Props) {
@@ -79,8 +81,8 @@ export default function NewRequisitionForm({
     requested_by: user?.person_id || "",
     approved_by: "",
     destination_location_id: null,
-    movement: MovementType.IN,
-    type: RequisitionType.INTERNAL_TRANSFER,
+    movement: movement || MovementType.IN,
+    type: type || RequisitionType.INTERNAL_TRANSFER,
     status: RequisitionStatus.DRAFT,
     notes: "",
     created_at: "",
@@ -276,6 +278,7 @@ export default function NewRequisitionForm({
     }
   };
   const handleGetCatalog = async (movement: string, type: string) => {
+    console.log("Fetching catalog with movement:", movement, "and type:", type);
     try {
       const response = await axios.get(`${apiUrl}/items/get-catalog`, {
         params: { movement, type },
@@ -283,6 +286,7 @@ export default function NewRequisitionForm({
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
+      console.log("Catalog response:", response);
       setItemUnits(response.data.itemUnits);
       setFilteredItemUnits(response.data.itemUnits);
       setSupples(response.data.supplies);

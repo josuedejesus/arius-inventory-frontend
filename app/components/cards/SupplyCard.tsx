@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { ItemViewModel } from "@/app/dashboard/items/types/item-view.model";
-import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
 import { MdLocationOff, MdLocationOn, MdNoPhotography } from "react-icons/md";
 import { PrimaryBadge } from "../badges/PrimaryBadge";
 

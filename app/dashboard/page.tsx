@@ -15,8 +15,10 @@ import LocationStatcard from "../components/cards/LocationStatCard";
 import {
   MdAddBox,
   MdCategory,
+  MdDashboard,
   MdInventory,
   MdLocationOn,
+  MdNotifications,
   MdPerson,
   MdWarningAmber,
 } from "react-icons/md";
@@ -29,16 +31,14 @@ import ItemUnitUsageCard from "../components/cards/ItemUnitUsageCard";
 import ItemUnitView from "./items/components/ItemUnitView";
 import PagedDataGrid from "../components/paged-datagrid/PagedDatagrid";
 import MinimalItemUnitCard from "./items/cards/MinimalItemUnitCard";
-import { ItemUnitViewModel } from "./items/types/item-unit-view.model";
-import LocationDashboard from "../components/LocationDashboard";
-import UserDashboard from "../components/UserDashBoard";
+import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
+import LocationDashboard from "./components/LocationDashboard";
+import UserDashboard from "./components/UserDashBoard";
 import ItemUnitsDonut from "../components/ItemUnitsDonut";
 import SidePanel from "../components/SidePanel";
-
-const columns: ColumnDef<any>[] = [
-  { key: "item", title: "Artículo" },
-  { key: "status", title: "Estado" },
-];
+import PercentageCard from "../components/cards/PercentageCard";
+import ItemUnitDashboard from "./components/ItemUnitDashboard";
+import PermissionGuard from "../components/guards/PermissionGuard";
 
 export default function Dashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -49,18 +49,17 @@ export default function Dashboard() {
   const [locations, setLocations] = useState<any[]>([]);
   const [userStats, setUserStats] = useState<any>(undefined);
   const [stockLevels, setStockLevels] = useState<any[]>([]);
-  const [showItemsModal, setShowItemsModal] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingItems, setLoadingItems] = useState(false);
-  const [itemUnits, setItemUnits] = useState<any[]>([]);
-  const [unitsForStats, setUnitsForStats] = useState<any[]>([]);
+  const [itemUnits, setItemUnits] = useState<ItemUnitViewModel[]>([]);
   const [showItemModal, setShowItemModal] = useState<boolean>(false);
   const [selectedItemUnit, setSelectedItemUnit] = useState<any>(null);
-  const [showLocationItems, setShowLocationItems] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showUserDetails, setShowUserDetails] = useState<boolean>(false);
-
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
+  const [totalActiveUnits, setTotalActiveUnits] = useState<number>(0);
   useEffect(() => {
     setLoading(true);
     refreshAll();
@@ -69,9 +68,11 @@ export default function Dashboard() {
   const handleGetItemUnitsStats = async () => {
     try {
       const response = await axios.get(`${apiUrl}/item-units/get-stats`);
-      console.log("item units stats", response.data);
       setItemUnitsStats(response.data.data);
-    } catch (error: any) {}
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    }
   };
 
   const handleGetLocationsStats = async () => {
@@ -80,6 +81,7 @@ export default function Dashboard() {
       const stats = response.data.data;
       setLocations(stats.locations);
       setActiveLocations(stats.active_locations);
+      setTotalActiveUnits(stats.total_units);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -102,6 +104,7 @@ export default function Dashboard() {
       const response = await axios.get(
         `${apiUrl}/item-units/get-stats-by-users`,
       );
+      console.log("users stats", response.data);
       setUserStats(response.data.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -120,13 +123,11 @@ export default function Dashboard() {
   };
 
   const handleGetItemUnits = async (filters?: any) => {
-    console.log("fetching item units with filters", filters);
     try {
       setLoadingItems(true);
       const response = await axios.get(`${apiUrl}/item-units`, {
         params: filters,
       });
-      console.log("item units", response.data);
       setItemUnits(response.data.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -136,21 +137,29 @@ export default function Dashboard() {
     }
   };
 
-  const handleGetItemUnitForStats = async () => {
+  const handleGetData = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/item-units`);
-      setUnitsForStats(response.data.data);
+      setLoading(true);
+      const response = await axios.get(`${apiUrl}/dashboard/summary/internal`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      setSummary(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
     } finally {
+      setLoading(false);
     }
   };
 
   const refreshAll = useCallback(async () => {
     try {
       await Promise.all([
+        handleGetData(),
         handleGetItemUnitsStats(),
+        handleGetItemUnits(),
         handleGetLocationsStats(),
         handleGetSuppliesStats(),
         handleGetUsersStats(),
@@ -187,161 +196,277 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Equipos con seguimiento"
-          count={itemUnitsStats?.total_units}
-          icon={<MdInventory />}
-        >
-          <ItemUnitsDonut stats={itemUnitsStats} />
-        </StatCard>
+    <PermissionGuard permission="VIEW_UNITS">
+      <div className="space-y-6">
+        <div className="grid grid-cols-2  lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Equipos"
+            count={summary?.totalItemUnits}
+            icon={<MdInventory />}
+            textColor="text-blue-400"
+          >
+            <div></div>
+          </StatCard>
 
-        <StatCard
-          title="Ubicaciones activas"
-          count={locations?.length}
-          icon={<MdLocationOn />}
-        >
-          {/* Stats rows */}
-          <div className="space-y-2 text-sm">
-            {locations?.length ? (
-              locations?.map((stat: any) => (
-                <LocationStatcard
-                  key={stat?.id}
-                  stat={stat}
-                  onClick={(e: any) => {
-                    setSelectedLocation(stat);
-                    handleGetItemUnits({
-                      locationId: stat?.id,
-                    });
-                    setShowLocationItems(true);
-                  }}
-                />
-              ))
-            ) : (
-              <p className="text-xs text-gray-400">Sin datos</p>
-            )}
-          </div>
-        </StatCard>
+          <StatCard
+            title="Ubicaciones activas"
+            count={summary?.totalActiveLocations}
+            icon={<MdLocationOn />}
+            textColor="text-green-400"
+          >
+            <div></div>
+          </StatCard>
 
-        <StatCard
-          title="Usuarios activos"
-          count={userStats?.length}
-          icon={<MdPerson />}
-        >
-          <div className="space-y-2 text-sm">
-            {userStats?.map((user: any) => (
-              <UserStatCard
-                key={user.id}
-                stat={user}
-                onClick={() => {
-                  console.log("selected user", user);
-                  setSelectedUser(user);
-                  setShowUserDetails(true);
-                }}
-              />
-            ))}
-          </div>
-        </StatCard>
+          <StatCard
+            title="Usuarios activos"
+            count={summary?.totalActiveUsers}
+            icon={<MdPerson />}
+            textColor="text-yellow-400"
+          >
+            <div></div>
+          </StatCard>
 
-        <StatCard
-          title="Insumos"
-          count={supplesStats?.total_users}
-          icon={<MdCategory />}
-        >
-          {/* Stats rows */}
-          <div className="space-y-1 text-sm">
-            {/* Stock total */}
-            <button
-              onClick={() =>
-                handleGetItemUnits({
-                  status: "AVAILABLE",
-                  requireLocation: true,
-                })
-              }
-              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
-    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-green-500">●</span>
-                <span>Stock total</span>
-              </div>
+          <StatCard
+            title="Insumos"
+            count={summary?.totalSupplies}
+            icon={<MdInventory />}
+            textColor="text-orange-400"
+          >
+            <div></div>
+          </StatCard>
+        </div>
 
-              <span className="font-semibold text-green-600">
-                {supplesStats?.total_stock}
-              </span>
-            </button>
-
-            {/* Stock bajo */}
-            <button
-              className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
-    text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-150"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-red-400">●</span>
-                <span>Stock bajo</span>
-              </div>
-
-              <span className="font-semibold text-red-500">
-                {supplesStats?.low_stock_items}
-              </span>
-            </button>
-
-            {/* Lista de bajo stock */}
-            <div className="flex items-center gap-2 mt-3 mb-1 text-sm font-medium text-amber-600">
-              <span>Insumos por nivel de stock</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <StatCard
+            title="Notificaciones recientes"
+            count={0}
+            icon={<MdNotifications className="text-yellow-400" />}
+          >
+            <div className="space-y-2 text-sm">
+              {notifications?.map((notification: any) => (
+                <div></div>
+              ))}
             </div>
-            {stockLevels?.length > 0 && (
-              <div className="mt-2 border-t pt-2 space-y-1">
-                {stockLevels?.map((item: any) => (
+          </StatCard>
+        </div>
+
+        {/* BOTTOM */}
+        <div className="w-full flex gap-4">
+          {/* LEFT */}
+          <div className="w-full">
+            <StatCard title="Resumen operativo" icon={<MdDashboard />}>
+              {/* 🔥 TOP: DONUT + LOCATIONS */}
+              <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Estado de los equipos
+                </h4>
+                {/* DONUT */}
+                <div className="flex justify-center">
+                  <ItemUnitsDonut stats={itemUnitsStats} />
+                </div>
+              </div>
+
+              {/* LOCATIONS */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Ubicaciones activas
+                </h4>
+
+                {locations.map((location: any) => (
                   <button
-                    key={item.id}
-                    className="flex justify-between items-center w-full px-2 py-1 rounded
-          hover:bg-red-50 transition text-xs text-gray-600"
+                    key={location.id}
+                    onClick={() => setSelectedLocation(location)}
+                    className="group flex items-center gap-3 w-full px-2 py-2 rounded-lg
+            hover:bg-gray-50 transition"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="truncate">{item.name}</span>
+                    {/* Nombre */}
+                    <div className="flex items-center gap-2 w-36 shrink-0">
+                      <span className="text-blue-400">●</span>
+                      <span className="text-xs truncate text-gray-700">
+                        {location.name}
+                      </span>
                     </div>
 
-                    <ItemPercentageCard item={item} />
+                    {/* Barra */}
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            totalActiveUnits > 0
+                              ? (location.total_units / totalActiveUnits) * 100
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
+
+                    {/* % */}
+                    <span className="text-xs font-semibold text-gray-700 w-10 text-right">
+                      {totalActiveUnits > 0
+                        ? Math.round(
+                            (location.total_units / totalActiveUnits) * 100,
+                          )
+                        : 0}
+                      %
+                    </span>
                   </button>
                 ))}
               </div>
-            )}
+
+              {/* 🔥 DIVIDER */}
+              <div className="border-t my-4" />
+
+              {/* 🔥 USERS */}
+
+              <div className="space-y-2 text-sm">
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Usuarios activos
+                </h4>
+                {userStats?.length ? (
+                  userStats?.map((user: any) => (
+                    <UserStatCard
+                      key={user.person_id}
+                      stat={user}
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowUserDetails(true);
+                      }}
+                    />
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">Sin datos</p>
+                )}
+              </div>
+            </StatCard>
           </div>
-        </StatCard>
+
+          {/* RIGHT */}
+          <div className="w-full grid grid-cols-1 lg:grid-cols-1 gap-4">
+            <StatCard title="Artículos" icon={<MdInventory />}>
+              {/* ITEM UNITS */}
+              <div className="space-y-2 text-sm">
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Inventario de equipos
+                </h4>
+                {itemUnits?.length ? (
+                  itemUnits?.map((stat: any) => (
+                    <MinimalItemUnitCard
+                      key={stat?.id}
+                      itemUnit={stat}
+                      onClick={() => setSelectedItemUnit(stat)}
+                    />
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">Sin datos</p>
+                )}
+              </div>
+              {/* 🔥 DIVIDER */}
+              <div className="border-t my-4" />
+
+              {/* 🔥 SUPPLIES */}
+              <div className="space-y-2 text-sm">
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Inventario de insumos
+                </h4>
+
+                {/* Stock total */}
+                <button
+                  onClick={() =>
+                    handleGetItemUnits({
+                      status: "AVAILABLE",
+                      requireLocation: true,
+                    })
+                  }
+                  className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
+        text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500">●</span>
+                    <span>Stock total</span>
+                  </div>
+
+                  <span className="font-semibold text-green-600">
+                    {supplesStats?.total_stock}
+                  </span>
+                </button>
+
+                {/* Stock bajo */}
+                <button
+                  className="group flex justify-between items-center w-full px-3 py-2 rounded-lg
+        text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-red-400">●</span>
+                    <span>Stock bajo</span>
+                  </div>
+
+                  <span className="font-semibold text-red-500">
+                    {supplesStats?.low_stock_items}
+                  </span>
+                </button>
+
+                {/* Lista */}
+                {stockLevels?.length > 0 && (
+                  <div className="mt-3 border-t pt-2 space-y-1">
+                    {stockLevels.map((item: any) => (
+                      <button
+                        key={item.id}
+                        className="flex justify-between items-center w-full px-2 py-1 rounded
+              hover:bg-red-50 transition text-xs text-gray-600"
+                      >
+                        <span className="truncate">{item.name}</span>
+                        <ItemPercentageCard item={item} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </StatCard>
+          </div>
+        </div>
+
+        <Modal
+          open={showItemModal}
+          title="Detalles del artículo"
+          onClose={() => setShowItemModal(false)}
+        >
+          <ItemUnitView itemUnidId={selectedItemUnit?.id} />
+        </Modal>
+
+        <SidePanel
+          isOpen={!!selectedLocation}
+          onClose={() => setSelectedLocation(null)}
+          title="Detalles de la ubicación"
+        >
+          {selectedLocation && (
+            <LocationDashboard locationId={selectedLocation?.id} />
+          )}
+        </SidePanel>
+
+        <SidePanel
+          isOpen={!!selectedUser}
+          onClose={() => setSelectedUser(null)}
+          title={"Detalles del usuario"}
+        >
+          {selectedUser && (
+            <UserDashboard
+              personId={selectedUser?.person_id}
+              userId={selectedUser?.user_id}
+            />
+          )}
+        </SidePanel>
+
+        <SidePanel
+          isOpen={!!selectedItemUnit}
+          onClose={() => setSelectedItemUnit(null)}
+          title={"Detalles del artículo"}
+        >
+          {selectedItemUnit && (
+            <ItemUnitDashboard itemUnitId={selectedItemUnit?.id} />
+          )}
+        </SidePanel>
       </div>
-
-      <Modal
-        open={showItemModal}
-        title="Detalles del artículo"
-        onClose={() => setShowItemModal(false)}
-      >
-        <ItemUnitView itemUnidId={selectedItemUnit?.id} />
-      </Modal>
-
-      <SidePanel
-        isOpen={!!selectedLocation}
-        onClose={() => setSelectedLocation(null)}
-        title="Detalles de la ubicación"
-      >
-        {selectedLocation && (
-          <LocationDashboard locationId={selectedLocation?.id} />
-        )}
-      </SidePanel>
-
-      <SidePanel
-        isOpen={!!selectedUser}
-        onClose={() => setSelectedUser(null)}
-        title={"Detalles del usuario"}
-      >
-        {selectedUser && (
-          <UserDashboard
-            personId={selectedUser?.person_id}
-            userId={selectedUser?.user_id}
-          />
-        )}
-      </SidePanel>
-    </div>
+    </PermissionGuard>
   );
 }

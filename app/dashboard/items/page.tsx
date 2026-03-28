@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import ItemForm from "@/app/dashboard/items/components/ItemForm";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
-import { ItemViewModel } from "./types/item-view.model";
-import { ItemType } from "./types/item-type.enum";
 import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
-import { ItemUnitViewModel } from "./types/item-unit-view.model";
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
+import PermissionGuard from "@/app/components/guards/PermissionGuard";
+import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
+import { ItemViewModel } from "@/app/types/item/item-view.model";
+import { ItemType } from "@/app/types/item/item-type.enum";
 
 export default function Items() {
   //API
@@ -45,70 +47,80 @@ export default function Items() {
   }
 
   return (
-    <div className="">
-      <div className="flex items-start justify-between space-x-2 pb-4">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Articulos</h1>
+    <PermissionGuard permission="VIEW_DASHBOARD">
+      <div className="">
+        <div className="flex items-start justify-between space-x-2 pb-4">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-6">
+            Articulos
+          </h1>
 
-        <button
-          onClick={() => setShowItemForm(true)}
-          className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
+          <button
+            onClick={() => setShowItemForm(true)}
+            className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
                      hover:bg-blue-500 transition text-sm font-medium"
+          >
+            <span className="text-lg">＋</span>
+          </button>
+        </div>
+
+        <PagedDataGrid
+          data={items}
+          page={1}
+          pageSize={1}
+          total={items?.length}
+          pagination={false}
+          onLoadData={handleGetItems}
+          onRowClick={(row: ItemUnitViewModel) => {
+            setSelectedItem(row);
+            setShowItemForm(true);
+          }}
         >
-          <span className="text-lg">＋</span>
-        </button>
-      </div>
+          <PagedDataGrid.Column field="name" title="Articulo">
+            {(row: ItemViewModel) => (
+              <span className="font-semibold text-gray-700">{row?.name}</span>
+            )}
+          </PagedDataGrid.Column>
+          <PagedDataGrid.Column field="brand" title="Marca">
+            {(row: ItemViewModel) => (
+              <span className="text-xs text-gray-700">{row?.brand}</span>
+            )}
+          </PagedDataGrid.Column>
+          <PagedDataGrid.Column field="model" title="Modelo">
+            {(row: ItemViewModel) => (
+              <span className="text-xs text-gray-700">{row?.model}</span>
+            )}
+          </PagedDataGrid.Column>
+          <PagedDataGrid.Column field="type" title="Tipo">
+            {(row: ItemViewModel) => {
+              const typeConfig = ITEM_TYPE_LABELS[row?.type as ItemType];
+              return (
+                <PrimaryBadge
+                  label={typeConfig?.label}
+                  icon={typeConfig?.icon ? <typeConfig.icon /> : undefined}
+                />
+              );
+            }}
+          </PagedDataGrid.Column>
+        </PagedDataGrid>
 
-
-      <PagedDataGrid
-        data={items}
-        page={1}
-        pageSize={1}
-        total={items?.length}
-        pagination={false}
-        onLoadData={handleGetItems}
-        onRowClick={(row: ItemUnitViewModel) => {
-          setSelectedItem(row);
-          setShowItemForm(true);
-        }}
-      >
-        <PagedDataGrid.Column field="name" title="Articulo">
-          {(row: ItemViewModel) => <span>{row?.name}</span>}
-        </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="brand" title="Marca">
-          {(row: ItemViewModel) => <span>{row?.brand}</span>}
-        </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="model" title="Modelo">
-          {(row: ItemViewModel) => <span>{row?.model}</span>}
-        </PagedDataGrid.Column>
-        <PagedDataGrid.Column field="type" title="Tipo">
-          {(row: ItemViewModel) => {
-            const typeConfig = ITEM_TYPE_LABELS[row?.type as ItemType];
-            return (
-              <span className="flex items-center gap-2">
-                <typeConfig.icon /> {typeConfig.label}
-              </span>
-            );
-          }}
-        </PagedDataGrid.Column>
-      </PagedDataGrid>
-
-      <Modal
-        open={showItemForm}
-        title="Articulo"
-        onClose={() => {
-          setShowItemForm(false);
-          setSelectedItem(undefined);
-        }}
-      >
-        <ItemForm
-          itemId={selectedItem?.id}
-          onSuccess={() => {
-            setSelectedItem(undefined);
+        <Modal
+          open={showItemForm}
+          title="Articulo"
+          onClose={() => {
             setShowItemForm(false);
-            handleGetItems();
+            setSelectedItem(undefined);
           }}
-        />
-      </Modal>
-    </div>
+        >
+          <ItemForm
+            itemId={selectedItem?.id}
+            onSuccess={() => {
+              setSelectedItem(undefined);
+              setShowItemForm(false);
+              handleGetItems();
+            }}
+          />
+        </Modal>
+      </div>
+    </PermissionGuard>
   );
 }

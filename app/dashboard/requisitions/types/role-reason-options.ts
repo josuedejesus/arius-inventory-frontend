@@ -57,8 +57,8 @@ export const ROLE_REASON_OPTIONS: Record<
     {
       movement: "OUT",
       reason: RequisitionType.RENT,
-      label: "Salida a proyecto",
-      description: "Equipo enviado a un proyecto con fecha de devolución",
+      label: "Renta",
+      description: "Salida temporal de equipo rentado a un proyecto",
     },
     {
       movement: "OUT",

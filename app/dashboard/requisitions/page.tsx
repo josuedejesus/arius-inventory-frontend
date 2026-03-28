@@ -14,9 +14,11 @@ import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
 import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
 import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
 import { REQUISITION_STATUS_CONFIG } from "@/constants/RequisitionStatus";
-import RequisitionForm from "./components/RequisitionForm";
+import RequisitionForm from "./forms/RequisitionForm";
 import axios from "axios";
 import { LocationViewModel } from "../locations/types/location-view-model";
+import { MOVEMENT_TYPE_CONFIG } from "@/constants/MovementTypeConfig";
+import PermissionGuard from "@/app/components/guards/PermissionGuard";
 
 enum modes {
   VIEW,
@@ -133,7 +135,7 @@ export default function Requisitions() {
   }
 
   return (
-    <>
+    <PermissionGuard permission="VIEW_REQUISITIONS">
       <div className="">
         <div className="flex requisitions-start justify-between space-x-2">
           <h1 className="text-2xl font-semibold text-gray-800 mb-6">
@@ -160,18 +162,45 @@ export default function Requisitions() {
           onLoadData={handleGetRequisitions}
           onRowClick={(row) => handleViewRequisition(row)}
         >
-          <PagedDataGrid.Column field="id" title="ID">
+          <PagedDataGrid.Column field="code" title="Código">
             {(row: RequisitionViewModel) => (
-              <span className="text-gray-600">{row.id}</span>
+              <span className="font-semibold text-gray-600">{row.code}</span>
             )}
           </PagedDataGrid.Column>
 
-          <PagedDataGrid.Column field="type" title="Tipo">
-            {(row: RequisitionViewModel) => (
-              <span className="text-gray-600">
-                {REQUISITION_TYPE_CONFIG[row.type].label}
-              </span>
-            )}
+          <PagedDataGrid.Column field="movement" title="Movimiento">
+            {(row: RequisitionViewModel) => {
+              const movementType = row.movement
+                ? MOVEMENT_TYPE_CONFIG[row.movement]
+                : null;
+              return (
+                <div className="flex items-center gap-2">
+                  {movementType && (
+                    <PrimaryBadge
+                      variant={movementType?.variant}
+                      label={movementType?.label}
+                      icon={
+                        movementType.icon ? <movementType.icon /> : undefined
+                      }
+                    />
+                  )}
+                </div>
+              );
+            }}
+          </PagedDataGrid.Column>
+
+          <PagedDataGrid.Column field="type" title="Razón">
+            {(row: RequisitionViewModel) => {
+              const typeConfig = REQUISITION_TYPE_CONFIG[row.type];
+              return (
+                <div className="flex items-center gap-2">
+                  <PrimaryBadge
+                    label={typeConfig.label}
+                    icon={typeConfig.icon ? <typeConfig.icon /> : undefined}
+                  />
+                </div>
+              );
+            }}
           </PagedDataGrid.Column>
 
           <PagedDataGrid.Column field="requestor_name" title="Solicitante">
@@ -215,7 +244,10 @@ export default function Requisitions() {
       <Modal
         open={showNewRequisition}
         title="Requisición"
-        onClose={() => {setShowNewRequisition(false); setSelectedRequisition(undefined)}}
+        onClose={() => {
+          setShowNewRequisition(false);
+          setSelectedRequisition(undefined);
+        }}
       >
         <RequisitionForm
           requisition={selectedRequisition}
@@ -231,7 +263,10 @@ export default function Requisitions() {
       <Modal
         open={showRequisition}
         title="Requisición"
-        onClose={() => {setShowRequisition(false); setSelectedRequisition(undefined)}}
+        onClose={() => {
+          setShowRequisition(false);
+          setSelectedRequisition(undefined);
+        }}
       >
         <RequisitionView
           requisition={selectedRequisition}
@@ -247,6 +282,6 @@ export default function Requisitions() {
           }}
         />
       </Modal>
-    </>
+    </PermissionGuard>
   );
 }

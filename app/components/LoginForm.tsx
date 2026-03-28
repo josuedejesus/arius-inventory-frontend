@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { FormLayout } from "./form/FormLayout";
 import FormField from "./form/FormField";
+import { getDefaultRouteByRole } from "../lib/auth/redirect";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
@@ -37,10 +38,12 @@ export default function LoginForm() {
       const token = response.data.data.access_token;
 
       localStorage.setItem("access_token", token);
-      await reloadUser();
-      router.push("/dashboard");
+      const user = await reloadUser();
+
+      const route = getDefaultRouteByRole(user!.user_role);
+
+      router.push(route);
     } catch (error: any) {
-      console.log("Login error", error);
       const rawMessage = error?.response?.data?.message;
 
       const messages = Array.isArray(rawMessage)
@@ -75,7 +78,7 @@ export default function LoginForm() {
         </p>
       </div>
 
-      <FormLayout title="" onSubmit={handleSubmit} buttonWidth="full" buttonClassName="bg-gray-900 text-white hover:bg-gray-800" submitLabel="Iniciar sesión" loading={loading}>
+      <FormLayout title="" onSubmit={handleSubmit} buttonWidth="full" buttonClassName="bg-gray-900 text-white hover:bg-gray-800" submitLabel="Iniciar sesión" submitingLabel="Iniciando sesión..." loading={loading}>
         {/* El formulario se encuentra aquí */}
         <FormField
           name="username"

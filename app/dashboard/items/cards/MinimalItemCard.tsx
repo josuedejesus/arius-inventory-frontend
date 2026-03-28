@@ -1,4 +1,4 @@
-import { ItemViewModel } from "../types/item-view.model";
+import { ItemViewModel } from "@/app/types/item/item-view.model";
 
 type Props = {
   item: any;
@@ -13,7 +13,7 @@ export default function MinimalItemCard({ item }: Props) {
   return (
     <div
       key={item.id}
-      className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
+      className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-50 border border-gray-100"
     >
       {/* 🔷 INFO */}
       <div className="min-w-0">

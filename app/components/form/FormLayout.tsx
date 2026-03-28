@@ -5,6 +5,7 @@ type FormLayoutProps = {
   loading?: boolean;
   error?: string | null;
   submitLabel?: string;
+  submitingLabel?: string;
   children: React.ReactNode;
   buttonWidth?: string;
   buttonClassName?: string;
@@ -17,6 +18,7 @@ export function FormLayout({
   loading,
   error,
   submitLabel = "Guardar",
+  submitingLabel = "Guardando...",
   children,
   buttonWidth = "w-auto",
   buttonClassName = "",
@@ -54,7 +56,7 @@ export function FormLayout({
         bg-blue-500 text-white hover:bg-blue-400
         disabled:opacity-50 cursor-pointer ${buttonClassName}`}
         >
-          {loading ? "Guardando..." : submitLabel}
+          {loading ? submitingLabel : submitLabel}
         </button>
       </div>
     </form>

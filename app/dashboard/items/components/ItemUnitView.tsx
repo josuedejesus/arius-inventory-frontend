@@ -1,6 +1,5 @@
 import axios from "axios";
 import { use, useEffect, useState } from "react";
-import { ItemUnitViewModel } from "../types/item-unit-view.model";
 import {
   MdBrandingWatermark,
   MdBuild,
@@ -14,6 +13,7 @@ import LoadingScreen from "@/app/components/LoadingScreen";
 import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
 import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
 import { ITEM_UNIT_STATUS_CONFIG } from "@/constants/ItemUnitStatus";
+import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
 
 type Props = {
   itemUnidId: number;

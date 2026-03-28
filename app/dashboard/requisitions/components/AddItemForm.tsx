@@ -7,6 +7,10 @@ import FormSection from "../../../components/form/FormSection";
 import { toast } from "sonner";
 import ItemUnitCard from "../../items/cards/ItemUnitCard";
 import NumberSelector from "../../../components/NumberSelector";
+import EmptyList from "@/app/components/EmptyList";
+import { MdInventory } from "react-icons/md";
+import Button from "@/app/components/Button";
+import { variant } from "@/constants/VariantEnum";
 
 type Props = {
   itemUnit: any;
@@ -226,19 +230,11 @@ export default function AddItemForm({
           </div>
         </FormSection>
       ) : (
-        <div className="flex flex-col items-center justify-center py-10 text-gray-400 text-sm">
-          No hay accesorios disponibles para este artículo.
-        </div>
+        <EmptyList icon={MdInventory} message="No hay accesorios disponibles para este artículo."/>
       )}
 
-      <div className="flex justify-end mt-6">
-        <button
-          onClick={() => handleAdd(item)}
-          type="button"
-          className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg"
-        >
-          Agregar
-        </button>
+      <div className="flex justify-end mt-6 gap-3">
+        <Button label="Agregar" variant={variant.success} onClick={() => handleAdd(item)} />
       </div>
     </div>
   );

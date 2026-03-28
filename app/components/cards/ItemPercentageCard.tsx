@@ -53,7 +53,7 @@ export default function ItemPercentageCard({ item }: ItemPercentageCardProps) {
           </span>
         )}
         <span className={`text-[10px] font-medium ${textColor}`}>
-          {item.stock} / {item.minimum_stock}
+          {item.stock} / {item.minimum_stock} {item.unit_code ? item.unit_code : ""}
         </span>
       </div>
     </div>

@@ -1,7 +1,9 @@
+import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
 import MinimalItemUnitCard from "@/app/dashboard/items/cards/MinimalItemUnitCard";
 import { LocationViewModel } from "@/app/dashboard/locations/types/location-view-model";
 import MinimalPersonCard from "@/app/dashboard/persons/components/MinimalPersonCard";
 import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
+import { PERSON_ROLE_LABELS } from "@/constants/PersonRoles";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,10 +16,9 @@ import {
   MdPhone,
 } from "react-icons/md";
 import { toast } from "sonner";
-import { PrimaryBadge } from "./badges/PrimaryBadge";
-import { PersonViewModel } from "../dashboard/persons/types/person-view-model";
-import { PERSON_ROLE_LABELS } from "@/constants/PersonRoles";
-import MinimalLocationCard from "../dashboard/locations/cards/MinimalLocationCard";
+import MinimalLocationCard from "../locations/cards/MinimalLocationCard";
+import { PersonViewModel } from "../persons/types/person-view-model";
+
 
 type Props = {
   personId: number;

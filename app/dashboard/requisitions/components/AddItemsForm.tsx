@@ -10,8 +10,8 @@ import SupplyCard from "../../../components/cards/SupplyCard";
 import { RequisitionType } from "../types/requisition-type.enum";
 import EmptyList from "@/app/components/EmptyList";
 import { ITEM_TYPE_LABELS } from "@/constants/ItemTypeConfig";
-import { ItemType } from "../../items/types/item-type.enum";
 import { getItemKey } from "@/app/utils/requisition-utils";
+import { ItemType } from "@/app/types/item/item-type.enum";
 
 type AddItemsFormProps = {
   itemUnits: any[];

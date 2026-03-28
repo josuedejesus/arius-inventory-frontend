@@ -9,11 +9,11 @@ import FormField from "../../../components/form/FormField";
 import FormRadioGroup from "../../../components/form/FormRadioGroup";
 import FormText from "../../../components/form/FormText";
 import FormImageUpload from "../../../components/form/FormImageUpload";
-import { ItemUnitViewModel } from "../types/item-unit-view.model";
 import { ItemUnitStatus } from "@/app/components/item-units/types/item-units-status.enum";
-import { ItemViewModel } from "../types/item-view.model";
 import SavingScreen from "@/app/components/SavingScreen";
 import ItemCard from "../cards/ItemCard";
+import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
+import { ItemViewModel } from "@/app/types/item/item-view.model";
 
 type Props = {
   item?: ItemViewModel;
@@ -151,20 +151,6 @@ export default function ItemUnitForm({
 
   const handleUpdateItemUnit = async () => {
     try {
-      const payload: any = {
-        id: form.id,
-        item_id: form.item_id,
-        serial_number: form.serial_number,
-        internal_code: form.internal_code,
-        status: form.status,
-        condition: form.condition,
-        location_id: form.location_id,
-        description: form.description,
-        observations: form.observations,
-        image_path: form.image_path,
-        is_active: form.is_active,
-      };
-
       const formData = new FormData();
 
       formData.append("id", form.id);
@@ -233,21 +219,6 @@ export default function ItemUnitForm({
       <div className="relative">
         {saving && <SavingScreen />}
         <FormLayout title="" description="" onSubmit={handleSubmit}>
-          {/* Tabs / Sections */}
-          <div className="border-b flex gap-6 text-sm font-medium">
-            <button
-              type="button"
-              onClick={() => setSelectedTab("general")}
-              className={`pb-2 border-b-2 ${
-                selectedTab === "general"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              General
-            </button>
-          </div>
-
           <div className="flex">
             <ItemCard item={item} />
           </div>

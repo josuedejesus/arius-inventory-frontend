@@ -14,16 +14,16 @@ import FormTabs from "../../../components/form/FormTabs";
 import LoadingScreen from "@/app/components/LoadingScreen";
 import FormTabPanel from "@/app/components/form/FormTabPanel";
 import ItemUnitCard from "@/app/dashboard/items/cards/ItemUnitCard";
-import { ItemViewModel } from "../types/item-view.model";
-import { ItemType } from "../types/item-type.enum";
+import { ItemViewModel } from "@/app/types/item/item-view.model";
 import SearchBar from "@/app/components/SearchBar";
 import Modal from "@/app/components/Modal";
 import ItemUnitForm from "./ItemUnitForm";
-import { UpdateItemDto } from "../types/update-item.dto";
 import SavingScreen from "@/app/components/SavingScreen";
 import PagedDataGrid from "@/app/components/paged-datagrid/PagedDatagrid";
-import { ItemUnitViewModel } from "../types/item-unit-view.model";
 import ItemCard from "../cards/ItemCard";
+import { UpdateItemDto } from "@/app/types/item/update-item.dto";
+import { ItemType } from "@/app/types/item/item-type.enum";
+import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
 
 type ItemFormProps = {
   itemId?: () => void;

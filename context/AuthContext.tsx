@@ -8,23 +8,25 @@ import {
   ReactNode,
 } from "react";
 import axios from "axios";
+import { UserRole } from "@/app/dashboard/persons/types/user-role.enum";
+import { PersonRole } from "@/app/dashboard/persons/types/person-role.enums";
 
 type User = {
   person_id: string;
   name: string;
   email: string;
   phone: string;
-  person_role: string;
+  person_role: PersonRole;
   user_id: string;
   username: string;
-  user_role: string;
+  user_role: UserRole;
 };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   setUser: (user: User | null) => void;
-  reloadUser: () => Promise<void>;
+  reloadUser: () => Promise<User | null>;
   logout: () => void;
 };
 
@@ -36,22 +38,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const loadUser = async () => {
+  const loadUser = async (): Promise<User | null> => {
     const token = localStorage.getItem("access_token");
 
     if (!token) {
       setUser(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     try {
       const res = await axios.get(`${apiUrl}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUser(res.data.data);
+
+      const userData = res.data.data;
+
+      setUser(userData);
+
+      return userData; // 👈 🔥 CLAVE
     } catch {
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -67,7 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, setUser, logout, reloadUser: loadUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, setUser, logout, reloadUser: loadUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
