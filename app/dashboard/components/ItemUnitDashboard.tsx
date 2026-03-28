@@ -6,16 +6,10 @@ import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-  MdCategory,
-  MdInventory,
-  MdLocationOn,
-  MdPeople,
-  MdPerson,
   MdSwapHoriz,
   MdWarehouse,
 } from "react-icons/md";
 import { toast } from "sonner";
-import MinimalItemCard from "../items/cards/MinimalItemCard";
 import StockMoveCard from "@/app/components/cards/StockMoveCard";
 import ItemUnitCard from "../items/cards/ItemUnitCard";
 import PercentageCard from "@/app/components/cards/PercentageCard";
@@ -76,7 +70,6 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
         },
       );
 
-      console.log("logs de uso", response.data);
       setUsageLogs(response.data.locations);
       setTotalUsage(response.data.total_usage);
     } catch (error: any) {

@@ -251,7 +251,7 @@ export default function Dashboard() {
         </div>
 
         {/* BOTTOM */}
-        <div className="w-full flex gap-4">
+        <div className="grid lg-grid-cols-2 sm:grid-cols-1 gap-4">
           {/* LEFT */}
           <div className="w-full">
             <StatCard title="Resumen operativo" icon={<MdDashboard />}>
