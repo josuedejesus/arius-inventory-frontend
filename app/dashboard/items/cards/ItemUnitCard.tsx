@@ -60,7 +60,7 @@ export default function ItemUnitCard({
           </p>
         )}
         {/* Row 4: location */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           {!itemUnit?.location_id ? (
             <span className="flex items-center text-red-400 gap-1">
               <MdLocationOff className="text-xs" />
@@ -77,17 +77,15 @@ export default function ItemUnitCard({
             <span className="text-[11px] text-blue-400">En uso</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
           {itemUnit?.condition &&
             (() => {
               const conditionConfig = ITEM_CONDITION_CONFIG[itemUnit.condition];
               return (
-                <span className="text-[10px] text-gray-400 uppercase">
-                  <PrimaryBadge
-                    label={conditionConfig?.label}
-                    variant={conditionConfig?.className}
-                  />
-                </span>
+                <PrimaryBadge
+                  label={conditionConfig?.label}
+                  variant={conditionConfig?.className}
+                />
               );
             })()}
 
@@ -95,16 +93,14 @@ export default function ItemUnitCard({
             (() => {
               const statusConfig = ITEM_UNIT_STATUS_CONFIG[itemUnit.status];
               return (
-                <span className="text-[10px] text-gray-400 uppercase">
-                  <PrimaryBadge
-                    label={statusConfig?.label}
-                    className={statusConfig?.className}
-                  />
-                </span>
+                <PrimaryBadge
+                  label={statusConfig?.label}
+                  className={statusConfig?.className}
+                />
               );
             })()}
         </div>
-        \{/* Row 5: observations */}
+        {/* Row 5: observations */}
         {itemUnit?.observations && (
           <p className="text-[11px] text-gray-400 truncate mt-1">
             {itemUnit.observations}

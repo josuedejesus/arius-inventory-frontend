@@ -18,6 +18,8 @@ import {
 import { toast } from "sonner";
 import MinimalLocationCard from "../locations/cards/MinimalLocationCard";
 import { PersonViewModel } from "../persons/types/person-view-model";
+import SummaryCard from "./SummaryCard";
+import EmptyList from "@/app/components/EmptyList";
 
 
 type Props = {
@@ -153,15 +155,15 @@ export default function UserDashboard({ personId, userId }: Props) {
       </div>
 
       {/* 🔷 KPIs */}
-      <div className="grid grid-cols-3 gap-4">
-        <KpiCard title="Ubicaciones" value={locations?.length || 0} />
-        <KpiCard title="Equipos" value={itemUnits?.length || 0} />
+      <div className="grid grid-cols-2 gap-4">
+        <SummaryCard label="Ubicaciones" icon={<MdLocationOn />} color="green" value={locations?.length || 0} />
+        <SummaryCard label="Equipos" icon={<MdInventory />} color="blue" value={itemUnits?.length || 0} />
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
-      <div className="grid sm:grid-cols-1  gap-6">
+      <div className="grid sm:grid-cols-1 gap-6">
         {/* 👥 STAFF */}
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-white rounded-2xl">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">
             <MdLocationOn className="inline-block mr-2" />
             Ubicaciones asignadas
@@ -171,13 +173,13 @@ export default function UserDashboard({ personId, userId }: Props) {
             {locations?.length ? (
               locations.map((l) => <MinimalLocationCard key={l.id} location={l} />)
             ) : (
-              <p className="text-sm text-gray-400">Sin ubicaciones asignadas</p>
+              <EmptyList message="Sin ubicaciones asignadas" />
             )}
           </div>
         </div>
 
         {/* 📦 ITEM UNITS */}
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-white rounded-2xl">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">
             <MdInventory className="inline-block mr-2" />
             Equipos asignados
@@ -189,7 +191,7 @@ export default function UserDashboard({ personId, userId }: Props) {
                 <MinimalItemUnitCard key={iu.id} itemUnit={iu} />
               ))
             ) : (
-              <p className="text-sm text-gray-400">Sin equipos asignados</p>
+              <EmptyList message="Sin equipos asignados" />
             )}
           </div>
         </div>

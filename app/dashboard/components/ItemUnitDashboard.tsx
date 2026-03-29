@@ -5,15 +5,13 @@ import MinimalPersonCard from "@/app/dashboard/persons/components/MinimalPersonC
 import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import {
-  MdSwapHoriz,
-  MdWarehouse,
-} from "react-icons/md";
+import { MdSwapHoriz, MdWarehouse } from "react-icons/md";
 import { toast } from "sonner";
 import StockMoveCard from "@/app/components/cards/StockMoveCard";
 import ItemUnitCard from "../items/cards/ItemUnitCard";
 import PercentageCard from "@/app/components/cards/PercentageCard";
 import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
+import EmptyList from "@/app/components/EmptyList";
 
 type Props = {
   itemUnitId: number;
@@ -94,8 +92,6 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -119,16 +115,34 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
       <ItemUnitCard itemUnit={itemUnit!} />
 
       {/* 🔷 KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      {/*<div className="grid grid-cols-3 gap-4">
         <KpiCard title="Personal" value={usageLogs?.length || 0} />
         <KpiCard title="Equipos" value={itemUnit ? 1 : 0} />
         <KpiCard title="Suministros" value={items?.length || 0} />
-      </div>
+      </div>*/}
 
       {/* 🔷 GRID PRINCIPAL */}
       <div className="grid sm:grid-cols-1 gap-6">
         {/* USAGE */}
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-white rounded-2xl">
+          <h2 className="flex items-center font-semibold text-gray-600 mb-3">
+            <MdWarehouse className="inline-block mr-2" />
+            Uso en ubicación actual
+          </h2>
+
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="w-full max-w-xs rounded-xl bg-white shadow-sm border border-gray-100 p-4 flex flex-col">
+              <span className="text-sm text-gray-500">Uso actual</span>
+
+              <span className="text-3xl font-semibold text-gray-800">
+                {itemUnit?.estimated_usage_hours ? `${itemUnit.estimated_usage_hours} h` : "N/A"}
+              </span>
+            </div>{" "}
+          </div>
+        </div>
+
+        {/* USAGE */}
+        <div className="bg-white rounded-2xl">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">
             <MdWarehouse className="inline-block mr-2" />
             Uso registrado por ubicación
@@ -161,37 +175,37 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
                 </button>
               ))
             ) : (
-              <p className="text-sm text-gray-400">Sin uso registrado</p>
+              <EmptyList message="Sin uso registrado" />
             )}
           </div>
         </div>
-      </div>
 
-      {/* 🔷 MOVEMENTS */}
-      <div className="bg-white rounded-2xl shadow p-4">
-        <h2 className="flex items-center font-semibold text-gray-600 mb-3">
-          <MdSwapHoriz className="inline-block mr-2" />
-          Movimientos recientes
-        </h2>
+        {/* 🔷 MOVEMENTS */}
+        <div className="bg-white rounded-2xl">
+          <h2 className="flex items-center font-semibold text-gray-600 mb-3">
+            <MdSwapHoriz className="inline-block mr-2" />
+            Movimientos recientes
+          </h2>
 
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {movements?.length ? (
-            movements.map((m) => (
-              <StockMoveCard
-                key={m.id}
-                label={
-                  <p>
-                    {m.source_location_name
-                      ? m.source_location_name
-                      : m.destination_location_name}
-                  </p>
-                }
-                movement={m}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-gray-400">Sin movimientos recientes</p>
-          )}
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {movements?.length ? (
+              movements.map((m) => (
+                <StockMoveCard
+                  key={m.id}
+                  label={
+                    <p>
+                      {m.source_location_name
+                        ? m.source_location_name
+                        : m.destination_location_name}
+                    </p>
+                  }
+                  movement={m}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-gray-400">Sin movimientos recientes</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

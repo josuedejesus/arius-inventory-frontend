@@ -3,6 +3,7 @@ import { MdAccessTime, MdBuild, MdInventory } from "react-icons/md";
 import BooleanBadge from "@/app/components/badges/BooleanBadge";
 import { PrimaryBadge } from "@/app/components/badges/PrimaryBadge";
 import { ItemType } from "@/app/types/item/item-type.enum";
+import { ITEM_CONDITION_CONFIG } from "@/constants/ItemCondition";
 
 type Props = {
   item: any;
@@ -16,31 +17,20 @@ export default function ItemCard({ item }: Props) {
         <MdInventory className="text-blue-500 text-2xl" />
       </div>
 
-      {/* CONTENT */}
-      <div className="flex-1 min-w-0">
-        {/* HEADER */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-800 truncate">
-              {item?.name}
-            </p>
-
-            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              {item?.brand && (
-                <span className="text-xs text-gray-400">{item.brand}</span>
-              )}
-              {item?.model && (
-                <span className="text-xs text-gray-400">• {item.model}</span>
-              )}
-            </div>
-          </div>
-
-          <BooleanBadge
-            trueLabel="Activo"
-            falseLabel="Inactivo"
-            value={item?.is_active}
-          />
-        </div>
+      {/* Main content */}
+      <div className="flex-1 min-w-0 space-y-0.5">
+        {/* Row 1: code + type */}
+        <div className="flex items-center gap-2"></div>
+        {/* Row 2: name */}
+        <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
+          {item?.name}
+        </p>
+        {/* Row 3: brand · model */}
+        {(item?.brand || item?.model) && (
+          <p className="text-xs text-gray-500 truncate">
+            {[item?.brand, item?.model].filter(Boolean).join(" · ")}
+          </p>
+        )}
 
         {/* BADGES */}
         <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -49,23 +39,11 @@ export default function ItemCard({ item }: Props) {
             return <PrimaryBadge label={typeConfig?.label ?? item?.type} />;
           })()}
 
-          <BooleanBadge
-            trueLabel="Traceable"
-            falseLabel="No traceable"
-            value={item?.type === ItemType.TOOL}
-          />
-
           <PrimaryBadge label={item?.unit_name} />
         </div>
 
         {/* DETAILS */}
         <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 flex-wrap">
-          {/* STOCK */}
-          <div className="flex items-center gap-1">
-            <MdBuild className="text-gray-400" />
-            <span>Inventario mínimo: {item?.minimum_stock}</span>
-          </div>
-
           {/* USAGE */}
           {item?.usage_hours && (
             <div className="flex items-center gap-1">

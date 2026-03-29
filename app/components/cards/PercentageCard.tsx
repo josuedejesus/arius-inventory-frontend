@@ -4,12 +4,15 @@ type ItemPercentageCardProps = {
   label: string;
   stock: number;
   total: number;
+  color?: string
 };
 
 export default function PercentageCard({
   label,
   stock,
   total,
+  color,
+
 }: ItemPercentageCardProps) {
   const ratio = total > 0 ? stock / total : 0;
   const percentage = Math.min(Math.max(ratio * 100, 0), 100);
@@ -29,8 +32,8 @@ export default function PercentageCard({
     }
   }, [percentage]);
 
-  let barColor = "bg-green-500";
-  let textColor = "text-green-500";
+  let barColor = color ? `bg-${color}-500` : "bg-green-500";
+  let textColor = color ? `text-${color}-500` : "text-green-500";
 
   return (
     <div className="flex flex-col gap-1 w-full">

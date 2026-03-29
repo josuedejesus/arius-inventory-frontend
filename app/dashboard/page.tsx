@@ -39,6 +39,7 @@ import SidePanel from "../components/SidePanel";
 import PercentageCard from "../components/cards/PercentageCard";
 import ItemUnitDashboard from "./components/ItemUnitDashboard";
 import PermissionGuard from "../components/guards/PermissionGuard";
+import SummaryCard from "./components/SummaryCard";
 
 export default function Dashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -199,41 +200,33 @@ export default function Dashboard() {
     <PermissionGuard permission="VIEW_UNITS">
       <div className="space-y-6">
         <div className="grid grid-cols-2  lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Equipos"
-            count={summary?.totalItemUnits}
+          <SummaryCard
+            label="Equipos"
             icon={<MdInventory />}
-            textColor="text-blue-400"
-          >
-            <div></div>
-          </StatCard>
+            value={summary?.totalItemUnits}
+            color="blue"
+          />
 
-          <StatCard
-            title="Ubicaciones activas"
-            count={summary?.totalActiveLocations}
+          <SummaryCard
+            label="Ubicaciones activas"
             icon={<MdLocationOn />}
-            textColor="text-green-400"
-          >
-            <div></div>
-          </StatCard>
+            value={summary?.totalActiveLocations}
+            color="green"
+          />
 
-          <StatCard
-            title="Usuarios activos"
-            count={summary?.totalActiveUsers}
+          <SummaryCard
+            label="Usuarios activos"
             icon={<MdPerson />}
-            textColor="text-yellow-400"
-          >
-            <div></div>
-          </StatCard>
+            value={summary?.totalActiveUsers}
+            color="yellow"
+          />
 
-          <StatCard
-            title="Insumos"
-            count={summary?.totalSupplies}
-            icon={<MdInventory />}
-            textColor="text-orange-400"
-          >
-            <div></div>
-          </StatCard>
+          <SummaryCard
+            label="Insumos"
+            icon={<MdCategory />}
+            value={summary?.totalSupplies}
+            color="orange"
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -251,12 +244,12 @@ export default function Dashboard() {
         </div>
 
         {/* BOTTOM */}
-        <div className="grid lg-grid-cols-2 sm:grid-cols-1 gap-4">
+        <div className="grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-4">
           {/* LEFT */}
           <div className="w-full">
             <StatCard title="Resumen operativo" icon={<MdDashboard />}>
               {/* 🔥 TOP: DONUT + LOCATIONS */}
-              <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+              <div className="grid grid-cols-1 gap-6 items-center">
                 <h4 className="text-sm font-semibold text-gray-700">
                   Estado de los equipos
                 </h4>
@@ -289,27 +282,13 @@ export default function Dashboard() {
 
                     {/* Barra */}
                     <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${
-                            totalActiveUnits > 0
-                              ? (location.total_units / totalActiveUnits) * 100
-                              : 0
-                          }%`,
-                        }}
+                      <PercentageCard
+                        label="artículos"
+                        stock={location.total_units}
+                        total={totalActiveUnits}
+                        color="blue"
                       />
                     </div>
-
-                    {/* % */}
-                    <span className="text-xs font-semibold text-gray-700 w-10 text-right">
-                      {totalActiveUnits > 0
-                        ? Math.round(
-                            (location.total_units / totalActiveUnits) * 100,
-                          )
-                        : 0}
-                      %
-                    </span>
                   </button>
                 ))}
               </div>

@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { PrimaryBadge } from "../../components/badges/PrimaryBadge";
 import MinimalItemCard from "../items/cards/MinimalItemCard";
 import StockMoveCard from "../../components/cards/StockMoveCard";
+import SummaryCard from "./SummaryCard";
+import EmptyList from "@/app/components/EmptyList";
 
 type Props = {
   locationId: number;
@@ -195,15 +197,30 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
 
       {/* 🔷 KPIs */}
       <div className="grid grid-cols-3 gap-4">
-        <KpiCard title="Personal" value={staff?.length || 0} />
-        <KpiCard title="Equipos" value={itemUnits?.length || 0} />
-        <KpiCard title="Suministros" value={items?.length || 0} />
+        <SummaryCard
+          label="Personal"
+          icon={<MdPeople />}
+          color="yellow"
+          value={staff?.length || 0}
+        />
+        <SummaryCard
+          label="Equipos"
+          icon={<MdInventory />}
+          color="blue"
+          value={itemUnits?.length || 0}
+        />
+        <SummaryCard
+          label="Suministros"
+          icon={<MdInventory />}
+          color="orange"
+          value={items?.length || 0}
+        />
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
       <div className="grid sm:grid-cols-1 gap-6">
         {/* 👥 STAFF */}
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-white rounded-2xl ">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">
             <MdPeople className="inline-block mr-2" />
             Personal asignado
@@ -213,13 +230,13 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
             {staff?.length ? (
               staff.map((s) => <MinimalPersonCard key={s.id} person={s} />)
             ) : (
-              <p className="text-sm text-gray-400">Sin personal asignado</p>
+              <EmptyList message="Sin personal asignado" />
             )}
           </div>
         </div>
 
         {/* 📦 ITEM UNITS */}
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-white rounded-2xl ">
           <h2 className="flex items-center font-semibold text-gray-600 mb-3">
             <MdInventory className="inline-block mr-2" />
             Equipos asignados
@@ -235,60 +252,60 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
                 />
               ))
             ) : (
-              <p className="text-sm text-gray-400">Sin equipos asignados</p>
+              <EmptyList message="Sin equipos asignados" />
             )}
           </div>
         </div>
-      </div>
 
-      {/* 🔷 SUPPLIES */}
-      <div className="bg-white rounded-2xl shadow p-4">
-        <h2 className="flex items-center font-semibold text-gray-600 mb-3">
-          <MdInventory className="inline-block mr-2" />
-          Inventario de suministros
-        </h2>
+        {/* 🔷 SUPPLIES */}
+        <div className="bg-white rounded-2xl">
+          <h2 className="flex items-center font-semibold text-gray-600 mb-3">
+            <MdInventory className="inline-block mr-2" />
+            Inventario de suministros
+          </h2>
 
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {items?.length ? (
-            items
-              .sort((a, b) => a.stock - b.stock) // 🔥 menor stock primero
-              .map((s) => <MinimalItemCard key={s.id} item={s} />)
-          ) : (
-            <p className="text-sm text-gray-400">Sin inventario disponible</p>
-          )}
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {items?.length ? (
+              items
+                .sort((a, b) => a.stock - b.stock) // 🔥 menor stock primero
+                .map((s) => <MinimalItemCard key={s.id} item={s} />)
+            ) : (
+              <EmptyList message="Sin inventario disponible" />
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* 🔷 MOVEMENTS */}
-      <div className="bg-white rounded-2xl shadow p-4">
-        <h2 className="flex items-center font-semibold text-gray-600 mb-3">
-          <MdSwapHoriz className="inline-block mr-2" />
-          Movimientos recientes
-        </h2>
+        {/* 🔷 MOVEMENTS */}
+        <div className="bg-white rounded-2xl ">
+          <h2 className="flex items-center font-semibold text-gray-600 mb-3">
+            <MdSwapHoriz className="inline-block mr-2" />
+            Movimientos recientes
+          </h2>
 
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {movements?.length ? (
-            movements.map((m) => (
-              <StockMoveCard
-                key={m.id}
-                label={
-                  <>
-                    {m.item_name}
-                    {(m.item_brand || m.item_model) && (
-                      <span className="text-gray-400 font-normal">
-                        {" "}
-                        • {m.item_brand}
-                        {m.item_model && ` ${m.item_model}`}
-                      </span>
-                    )}
-                  </>
-                }
-                movement={m}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-gray-400">Sin movimientos recientes</p>
-          )}
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {movements?.length ? (
+              movements.map((m) => (
+                <StockMoveCard
+                  key={m.id}
+                  label={
+                    <>
+                      {m.item_name}
+                      {(m.item_brand || m.item_model) && (
+                        <span className="text-gray-400 font-normal">
+                          {" "}
+                          • {m.item_brand}
+                          {m.item_model && ` ${m.item_model}`}
+                        </span>
+                      )}
+                    </>
+                  }
+                  movement={m}
+                />
+              ))
+            ) : (
+              <EmptyList message="Sin movimientos recientes" />
+            )}
+          </div>
         </div>
       </div>
     </div>
