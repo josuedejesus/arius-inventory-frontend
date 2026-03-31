@@ -131,7 +131,7 @@ export default function AddItemForm({
       return_of_id: item?.return_of_id || null,
       accessories: itemAccessories,
       location_id: item?.location_id,
-      location_name: item?.location,
+      location_name: item?.location_name,
     };
 
     onAdd(payload);

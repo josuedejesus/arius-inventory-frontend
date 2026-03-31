@@ -17,24 +17,11 @@ import { UserRole } from "../types/user-role.enum";
 import { CreatePersonDto } from "../types/create-person.dto";
 import { set } from "date-fns";
 import SavingScreen from "@/app/components/SavingScreen";
-import { formatHNPhone } from "@/app/utils/phone";
-
-type Person = {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  role: PersonRole;
-  address: string;
-  rtn: string;
-  user_id: number;
-  username: string;
-  //
-  user: {
-    id: string;
-    name: string;
-  };
-};
+import { formatHNPhone, unformatPhone } from "@/app/utils/phone";
+import FormSelectSearch from "@/app/components/form/FormSelectSearch";
+import AddedItemsContainer from "@/app/components/AddedItemsContainer";
+import { LocationViewModel } from "../../locations/types/location-view-model";
+import { formatHNRTN, unformatRTN } from "@/app/utils/rtn";
 
 type NewPersonFormProps = {
   personId?: number;
@@ -54,6 +41,7 @@ export default function PersonsForm({
     address: "",
     rtn: "",
     //user
+    user_id: undefined,
     username: "",
     //locations
     location_count: 0,
@@ -75,6 +63,8 @@ export default function PersonsForm({
   const [saving, setSaving] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<string>("general");
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [locations, setLocations] = useState<LocationViewModel[]>([]);
+  const [userLocations, setUserLocations] = useState<any[]>([]);
 
   useEffect(() => {
     if (personId) {
@@ -84,7 +74,6 @@ export default function PersonsForm({
         try {
           await Promise.all([handleGetPerson(), handleGetUser()]);
         } catch (error) {
-          console.error("Error fetching data:", error);
           toast.error(
             "El servidor no está disponible en este momento. Intente más tarde.",
           );
@@ -94,6 +83,7 @@ export default function PersonsForm({
       };
       fetchData();
     }
+    handleGetLocations();
   }, []);
 
   const handleChange = (
@@ -112,11 +102,31 @@ export default function PersonsForm({
     setUserForm({ ...userForm, [e.target.name]: e.target.value });
   };
 
+  const addLocation = (accessory: any) => {
+    setUserLocations((prev) => {
+      if (prev.some((a) => a.id === accessory.id)) {
+        return prev;
+      }
+
+      return [
+        ...prev,
+        {
+          id: accessory.id,
+          name: accessory.name,
+        },
+      ];
+    });
+  };
+
+  const removeLocation = (id: number) => {
+    setUserLocations((prev) => prev.filter((a) => a.id !== id));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (isEditing) {
-      handleEdit();
+      handleUpdate();
     } else {
       handleCreate();
     }
@@ -124,20 +134,27 @@ export default function PersonsForm({
 
   const handleCreate = async () => {
     try {
+      setSaving(true);
+
+      const locationsPayload = userLocations.map((l: any) => l.id);
+
       const personPayload: CreatePersonDto = {
         name: form?.name,
-        phone: form?.phone,
+        phone: unformatPhone(form?.phone),
         email: form?.email,
         role: form?.role,
         address: form?.address || "",
-        rtn: form?.rtn || "",
+        rtn: unformatRTN(form?.rtn || ""),
         user: {
           username: userForm?.username,
           password: userForm?.password || "",
           role: userForm?.role,
           is_active: userForm?.is_active,
         },
+        locations: locationsPayload,
       };
+      
+      console.log(personPayload);
 
       const response = await axios.post(`${apiUrl}/persons`, personPayload, {
         headers: {
@@ -151,25 +168,30 @@ export default function PersonsForm({
         error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
       toast.error(message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleEdit = async () => {
+  const handleUpdate = async () => {
     try {
       setSaving(true);
+      const locationsPayload = userLocations.map((l: any) => l.id);
+
       const payload = {
         name: form?.name,
-        phone: form?.phone,
+        phone: unformatPhone(form?.phone),
         email: form?.email,
         role: form?.role,
         address: form?.address || "",
-        rtn: form?.rtn || "",
+        rtn: unformatRTN(form?.rtn || ""),
         user: {
           username: userForm?.username,
           password: userForm?.password || "",
           role: userForm?.role,
           is_active: userForm?.is_active,
         },
+        locations: locationsPayload,
       };
 
       const response = await axios.put(
@@ -211,11 +233,46 @@ export default function PersonsForm({
   const handleGetUser = async () => {
     try {
       const response = await axios.get(`${apiUrl}/users/${personId}/person`);
+      handleGetUserLocations(response.data.id);
       setUserForm(response.data);
     } catch (error: any) {
       const message =
         error?.response?.data?.message ??
         "El servidor no está disponible en este momento. Intente más tarde.";
+      toast.error(message);
+    }
+  };
+
+  const handleGetLocations = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/locations`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      setLocations(response.data.data);
+    } catch (error: any) {
+      const message =
+        error?.response?.data.message ?? "Error obteniendo ubicaciones";
+      toast.error(message);
+    }
+  };
+
+  const handleGetUserLocations = async (userId: number | string) => {
+    try {
+      const response = await axios.get(
+        `${apiUrl}/locations/${userId}/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      );
+      setUserLocations(response.data);
+    } catch (error: any) {
+      const message =
+        error?.response?.data.message ??
+        "Error obteniendo ubicaciones de usuario";
       toast.error(message);
     }
   };
@@ -248,9 +305,13 @@ export default function PersonsForm({
             tabs={[
               { key: "general", label: "General" },
               { key: "user", label: "Usuario" },
+              { key: "locations", label: "Ubicaciones" },
             ]}
             value={selectedTab}
-            onChange={setSelectedTab}
+            onChange={(e: any) => {
+              setSelectedTab(e);
+              
+            }}
           />
           <FormTabPanel when="general" value={selectedTab}>
             <FormSection
@@ -277,8 +338,9 @@ export default function PersonsForm({
                 label="RTN"
                 placeholder=""
                 name="rtn"
-                value={form?.rtn}
+                value={formatHNRTN(form?.rtn)}
                 onChange={handleChange}
+                maxLength={16}
               />
 
               <FormRadioGroup
@@ -308,6 +370,7 @@ export default function PersonsForm({
                 name="phone"
                 value={formatHNPhone(form?.phone || "")}
                 onChange={handleChange}
+                maxLength={9}
               />
             </FormSection>
           </FormTabPanel>
@@ -361,6 +424,25 @@ export default function PersonsForm({
                 name="is_active"
                 value={userForm?.is_active}
                 onChange={handleChangeUser}
+              />
+            </FormSection>
+          </FormTabPanel>
+
+          <FormTabPanel when="locations" value={selectedTab}>
+            <FormSection
+              title="Ubicaciones asignadas"
+              description="Ubicaciones a las que esta persona tiene acceso para administrar el inventario"
+            >
+              <FormSelectSearch
+                label="Ubicaciones"
+                options={locations}
+                onSelect={addLocation}
+              />
+
+              <AddedItemsContainer
+                placeholder="ubicaciones"
+                items={userLocations}
+                onRemove={removeLocation}
               />
             </FormSection>
           </FormTabPanel>

@@ -1,7 +1,13 @@
 "use client";
 import Button from "@/app/components/Button";
+import EmptyList from "@/app/components/EmptyList";
 import StatCard from "@/app/components/StatCard";
+import MinimalItemCard from "@/app/dashboard/items/cards/MinimalItemCard";
+import MinimalItemUnitCard from "@/app/dashboard/items/cards/MinimalItemUnitCard";
 import { LocationViewModel } from "@/app/dashboard/locations/types/location-view-model";
+import RequisitionCard from "@/app/dashboard/requisitions/components/RequisitionCard";
+import { RequisitionViewModel } from "@/app/dashboard/requisitions/dto/requisition-view-model.dto";
+import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
 import { variant } from "@/constants/VariantEnum";
 import {
   MdOutlineInventory2,
@@ -29,13 +35,6 @@ type Order = {
   date: string;
 };
 
-type RentedItem = {
-  id: string;
-  internal_code: string;
-  name: string;
-  return_date: string; // ISO string
-};
-
 type DashboardSummary = {
   pending: number;
   in_progress: number;
@@ -56,8 +55,8 @@ type ClientDashboardProps = {
   activeLocation: LocationViewModel; // proyecto actualmente seleccionado
   onChangeLocation: (location: LocationViewModel) => void; // callback al cambiar
   summary: DashboardSummary;
-  recent_orders: Order[];
-  rented_items: RentedItem[];
+  recent_orders: RequisitionViewModel[];
+  rented_items: ItemUnitViewModel[];
   onNewEquipmentOrder: () => void;
   onNewMaterialOrder: () => void;
   onReturn: () => void;
@@ -231,7 +230,12 @@ export default function ClientDashboard({
           </div>
         </div>
 
-        <Button label="Nueva orden" onClick={onNewEquipmentOrder} variant={variant.dark} icon={<MdAdd/>}/>
+        <Button
+          label="Nueva orden"
+          onClick={onNewEquipmentOrder}
+          variant={variant.dark}
+          icon={<MdAdd />}
+        />
       </div>
 
       {/* MÉTRICAS */}
@@ -274,101 +278,39 @@ export default function ClientDashboard({
       </div>
 
       {/* BODY */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* ÓRDENES RECIENTES */}
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="text-sm font-medium">Órdenes recientes</span>
-            <button
-              type="button"
-              onClick={onViewAllOrders}
-              className="text-[11px] text-gray-400 hover:text-gray-700 font-mono transition"
-            >
-              ver todas →
-            </button>
-          </div>
+      <div className="grid grid-cols-2 gap-4 space">
+        {/* RECENT ORDERS */}
+        <div className="bg-white rounded-2xl p-2">
+          <span className="text-sm font-medium">Órdenes recientes</span>
 
-          {recent_orders.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-400">
-              Sin órdenes recientes
-            </div>
-          ) : (
-            recent_orders.map((order) => (
-              <div
-                key={order.id}
-                className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-b-0"
-              >
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="text-xs text-gray-400 font-mono">
-                    {order.code}
-                  </span>
-                  <span className="text-sm font-medium truncate">
-                    {order.description}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {ORDER_TYPE_LABELS[order.type]}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <StatusBadge status={order.status} />
-                  <span className="text-[11px] text-gray-400 font-mono">
-                    {formatDate(order.date)}
-                  </span>
-                </div>
-              </div>
-            ))
-          )}
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {recent_orders?.length ? (
+              recent_orders.map((iu) => (
+                <RequisitionCard key={iu.id} requisition={iu} />
+              ))
+            ) : (
+              <EmptyList message="Sin ordenes recientes" />
+            )}
+          </div>
         </div>
 
-        {/* ARTÍCULOS EN PROYECTO */}
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="text-sm font-medium">Artículos en proyecto</span>
-            <button
-              type="button"
-              onClick={onViewAllItems}
-              className="text-[11px] text-gray-400 hover:text-gray-700 font-mono transition"
-            >
-              ver todos →
-            </button>
-          </div>
+        {/* RENTED ITEMS */}
+        <div className="bg-white rounded-2xl p-2">
+          <span className="text-sm font-medium">Equipos asignados</span>
 
-          {rented_items.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-400">
-              Sin artículos rentados
-            </div>
-          ) : (
-            rented_items.map((item) => {
-              const soon = isDueSoon(item.return_date);
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-b-0"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
-                    <MdOutlineInventory2 size={15} className="text-gray-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[11px] text-gray-400 font-mono">
-                      {item.internal_code}
-                    </div>
-                    <div className="text-sm font-medium truncate">
-                      {item.name}
-                    </div>
-                  </div>
-                  <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded border flex-shrink-0 ${
-                      soon
-                        ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                        : "bg-gray-50 text-gray-500 border-gray-200"
-                    }`}
-                  >
-                    Dev. {formatDate(item.return_date)}
-                  </span>
-                </div>
-              );
-            })
-          )}
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {rented_items?.length ? (
+              rented_items.map((iu) => (
+                <MinimalItemUnitCard
+                  key={iu.id}
+                  itemUnit={iu}
+                  showStats={true}
+                />
+              ))
+            ) : (
+              <EmptyList message="Sin equipos asignados" />
+            )}
+          </div>
         </div>
 
         {/* ACCIONES RÁPIDAS */}

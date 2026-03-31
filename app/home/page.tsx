@@ -13,6 +13,7 @@ import PermissionGuard from "../components/guards/PermissionGuard";
 import { PERMISSIONS } from "../lib/auth/permissions";
 import { MovementType } from "../dashboard/requisitions/types/movement-type";
 import { ItemUnitViewModel } from "../types/item/item-unit-view.model";
+import { RequisitionViewModel } from "../dashboard/requisitions/dto/requisition-view-model.dto";
 
 type SummaryDto = {
   totalItemUnits: number;
@@ -31,6 +32,7 @@ export default function Home() {
   const [activeLocation, setActiveLocation] = useState<LocationViewModel>();
   const [showForm, setShowForm] = useState<boolean>(false);
   const [itemUnits, setItemUnits] = useState<ItemUnitViewModel[]>([]);
+  const [requisitions, setRequisitions] = useState<RequisitionViewModel[]>([]);
   const [requisitionType, setRequisitionType] = useState<
     RequisitionType | undefined
   >(undefined);
@@ -46,6 +48,8 @@ export default function Home() {
         handleGetDashboardData(),
         handleGetLocations(),
         handleGetItemUnitStats(),
+        handleGetRentedItems(),
+        handleGetRequisitions(),
       ]);
       setLoading(false);
     };
@@ -83,21 +87,6 @@ export default function Home() {
     }
   };
 
-  const handleGetItemUnits = async (filters: any) => {
-    try {
-      const response = await axios.get(`${apiUrl}/item-units`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        params: filters,
-      });
-
-      setItemUnits(response.data.data);
-    } catch (error) {
-      toast.error("Error obteniendo artículos");
-    }
-  };
-
   const handleGetDashboardData = async () => {
     try {
       const response = await axios.get(`${apiUrl}/dashboard/summary/external`, {
@@ -115,6 +104,40 @@ export default function Home() {
     }
   };
 
+  const handleGetRentedItems = async () => {
+    try {
+      const response = await axios.get(
+        `${apiUrl}/item-units/${user?.user_id}/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      );
+
+      setItemUnits(response.data);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ?? "Error obteniendo artículos rentados";
+      toast.error(message);
+    }
+  };
+
+  const handleGetRequisitions = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/requisitions`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      console.log("requisitions", response.data);
+      setRequisitions(response.data.items);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ?? "Error obteniendo artículos rentados";
+      toast.error(message);
+    }
+  };
   return (
     <PermissionGuard permission={PERMISSIONS.VIEW_HOME}>
       <ClientDashboard
@@ -130,28 +153,23 @@ export default function Home() {
           rented: summary?.rented || 0,
           due_soon: summary?.dueSoon || 0,
         }}
-        recent_orders={[]}
-        rented_items={[]}
+        recent_orders={requisitions}
+        rented_items={itemUnits}
         onNewEquipmentOrder={() => {
           setShowForm(true);
           setMovementType(MovementType.OUT);
           setRequisitionType(RequisitionType.RENT);
-          handleGetItemUnits({ status: ItemUnitStatus.AVAILABLE });
         }}
         onNewMaterialOrder={() => {
           setShowForm(true);
           setMovementType(MovementType.OUT);
           setRequisitionType(RequisitionType.CONSUMPTION);
-          handleGetItemUnits({ status: ItemUnitStatus.AVAILABLE });
         }}
         onReturn={() => {
           setShowForm(true);
           setMovementType(MovementType.IN);
+          console.log(movementType);
           setRequisitionType(RequisitionType.RETURN);
-          handleGetItemUnits({
-            status: ItemUnitStatus.RENTED,
-            locationId: activeLocation?.id,
-          });
         }}
         onViewHistory={() => {}}
         onViewAllOrders={() => {}}
@@ -169,8 +187,9 @@ export default function Home() {
         }
       >
         <RequisitionForm
-          movement={MovementType.OUT}
+          movement={movementType}
           type={requisitionType}
+          userLocations={locations}
           onSuccess={() => setShowForm(false)}
         />
       </Modal>

@@ -4,11 +4,12 @@ import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import { Toaster } from "sonner";
 import AuthGuard from "../components/guards/AuthGuard";
-
+import { useConfirm } from "@/hooks/userConfirm";
 
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { ConfirmDialog } = useConfirm();
 
   return (
     <AuthGuard>
@@ -26,6 +27,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
+      <ConfirmDialog />
     </AuthGuard>
   );
 }

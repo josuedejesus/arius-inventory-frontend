@@ -15,4 +15,6 @@ export interface CreatePersonDto {
   rtn: string;
 
   user: CreateUserDto;
+
+  locations: any[]
 }

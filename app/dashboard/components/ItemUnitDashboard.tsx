@@ -24,6 +24,7 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
   const [itemUnit, setItemUnit] = useState<ItemUnitViewModel | null>(null);
   const [movements, setMovements] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastUsageLog, setLastUsageLog] = useState<any>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -34,6 +35,7 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
         handleGetItemUnit(),
         handleGetUsageLogs(),
         handleGetMovements(),
+        handleGetLastUsageLog(),
       ]);
     };
     fetchData();
@@ -70,6 +72,19 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
 
       setUsageLogs(response.data.locations);
       setTotalUsage(response.data.total_usage);
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    }
+  };
+
+  const handleGetLastUsageLog = async () => {
+    try {
+      const response = await axios.get(
+        `${apiUrl}/item-unit-usage-logs/${itemUnitId}/last-active`,
+      );
+      console.log("último log de uso", response.data);
+      setLastUsageLog(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
       toast.error(message);
@@ -124,22 +139,23 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
       {/* 🔷 GRID PRINCIPAL */}
       <div className="grid sm:grid-cols-1 gap-6">
         {/* USAGE */}
-        <div className="bg-white rounded-2xl">
-          <h2 className="flex items-center font-semibold text-gray-600 mb-3">
-            <MdWarehouse className="inline-block mr-2" />
-            Uso en ubicación actual
-          </h2>
+        {lastUsageLog && (
+          <div className="bg-white rounded-2xl">
+            <h2 className="flex items-center font-semibold text-gray-600 mb-3">
+              <MdWarehouse className="inline-block mr-2" />
+              Uso en ubicación actual
+            </h2>
 
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            <div className="w-full max-w-xs rounded-xl bg-white shadow-sm border border-gray-100 p-4 flex flex-col">
-              <span className="text-sm text-gray-500">Uso actual</span>
-
-              <span className="text-3xl font-semibold text-gray-800">
-                {itemUnit?.estimated_usage_hours ? `${itemUnit.estimated_usage_hours} h` : "N/A"}
-              </span>
-            </div>{" "}
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="w-full max-w-xs rounded-xl bg-white shadow-sm border border-gray-100 p-4 flex flex-col">
+                <span className="text-sm text-gray-500">Uso actual</span>
+                <span className="text-3xl font-semibold text-gray-800">
+                  {lastUsageLog.usage_hours} h
+                </span>
+              </div>{" "}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* USAGE */}
         <div className="bg-white rounded-2xl">

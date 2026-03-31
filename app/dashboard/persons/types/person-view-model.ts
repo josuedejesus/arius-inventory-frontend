@@ -12,6 +12,7 @@ export interface PersonViewModel {
     rtn: string;
 
     //extras user
+    user_id?: number;
     username: string;
 
     //extras locations

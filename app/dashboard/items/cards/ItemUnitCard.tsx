@@ -48,7 +48,9 @@ export default function ItemUnitCard({
       {/* Main content */}
       <div className="flex-1 min-w-0 space-y-0.5">
         {/* Row 1: code + type */}
-        <div className="flex items-center gap-2"></div>
+        <div className="flex items-center gap-2">
+          <PrimaryBadge label={itemUnit?.internal_code} />
+        </div>
         {/* Row 2: name */}
         <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
           {itemUnit?.name ?? item?.name}

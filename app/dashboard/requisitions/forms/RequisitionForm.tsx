@@ -37,10 +37,13 @@ import { useRequisitionLines } from "@/hooks/useRequisitionLines";
 import { AddedLineViewModel } from "../dto/added-line-view-model.dto";
 import { is } from "date-fns/locale";
 import { on } from "events";
+import { LocationViewModel } from "../../locations/types/location-view-model";
+import { useConfirm } from "@/hooks/userConfirm";
 
 type Props = {
   requisition?: RequisitionViewModel;
   movement?: MovementType;
+  userLocations?: LocationViewModel[];
   type?: RequisitionType;
   onSuccess: () => void;
 };
@@ -50,6 +53,7 @@ export default function NewRequisitionForm({
   movement,
   type,
   onSuccess,
+  userLocations,
 }: Props) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [step, setStep] = useState<number>(1);
@@ -65,8 +69,10 @@ export default function NewRequisitionForm({
   const [itemUnits, setItemUnits] = useState<any[]>([]);
   const [filteredItemUnits, setFilteredItemUnits] = useState<any[]>([]);
   const [filteredLines, setFilteredLines] = useState<any[]>([]);
-  const [locations, setLocations] = useState<any[]>([]);
-  const [filteredLocations, setFilteredLocations] = useState<any[]>([]);
+  const [locations, setLocations] = useState<LocationViewModel[]>([]);
+  const [filteredLocations, setFilteredLocations] = useState<
+    LocationViewModel[]
+  >([]);
   const [requisitionItems, setRequisitionItems] = useState<any[]>([]);
   const [selectedItem, setSelectedItem] = useState<any>(undefined);
   const [lines, setLines] = useState<any[]>([]);
@@ -100,6 +106,7 @@ export default function NewRequisitionForm({
   });
 
   const { create: createRequisition } = useRequisitions();
+  const { confirm: openConfirm, ConfirmDialog } = useConfirm();
 
   useEffect(() => {
     if (requisition) {
@@ -121,6 +128,12 @@ export default function NewRequisitionForm({
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+    if (type && movement && locations.length) {
+      handleFilterLocations(type, movement);
+    }
+  }, [type, movement, locations]);
 
   const { getById: getRequisition } = useRequisitions();
   const { getByRequisitionId: getRequisitionLines } = useRequisitionLines();
@@ -179,13 +192,15 @@ export default function NewRequisitionForm({
     e.preventDefault();
     setLoading(true);
 
+
+
     const lines = requisitionItems.map((i: any) => ({
       item_id: i.item_id,
       item_unit_id: i.item_unit_id || null,
       quantity: i.quantity,
       accessories: i.accessories || null,
       return_of_line_id: i.return_of_id || null,
-      source_location_id: i.internal_code === null ? i.source_location_id : null,
+      source_location_id: i.source_location_id,
     }));
 
     const payload: CreateRequisitionDto = {
@@ -212,7 +227,6 @@ export default function NewRequisitionForm({
     setLoading(true);
 
     try {
-      console.log("Requisition items to update:", requisitionItems);
       const lines = requisitionItems.map((i: any) => ({
         id: i.id,
         item_id: i.item_id,
@@ -224,8 +238,6 @@ export default function NewRequisitionForm({
           i.internal_code === null ? i.source_location_id : null,
       }));
 
-      console.log("Lines to update:", lines);
-
       const payload: CreateRequisitionDto = {
         requested_by: form?.requested_by || "",
         destination_location_id: Number(form?.destination_location_id) || null,
@@ -236,8 +248,6 @@ export default function NewRequisitionForm({
         lines: lines,
         schedulled_at: form?.schedulled_at,
       };
-
-      console.log("Payload for update:", payload);
 
       const response = await axios.put(
         `${apiUrl}/requisitions/${form.id}`,
@@ -278,7 +288,6 @@ export default function NewRequisitionForm({
     }
   };
   const handleGetCatalog = async (movement: string, type: string) => {
-    console.log("Fetching catalog with movement:", movement, "and type:", type);
     try {
       const response = await axios.get(`${apiUrl}/items/get-catalog`, {
         params: { movement, type },
@@ -286,7 +295,6 @@ export default function NewRequisitionForm({
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
-      console.log("Catalog response:", response);
       setItemUnits(response.data.itemUnits);
       setFilteredItemUnits(response.data.itemUnits);
       setSupples(response.data.supplies);
@@ -318,6 +326,7 @@ export default function NewRequisitionForm({
       currentMovement as MovementType,
     );
     setFilteredLocations(filtered);
+    console.log("ubicaciones filtradas", filtered);
     setRequireDestination(
       requiresDestination(requisitionType, currentMovement as MovementType),
     );
@@ -340,7 +349,7 @@ export default function NewRequisitionForm({
   };
 
   const handleAddItem = (item: any) => {
-    console.log("Selected item:", item);
+    console.log("item seleccionado", item);
     const itemKey = getItemKey(item); // 👈
 
     const newItem = {
@@ -365,8 +374,6 @@ export default function NewRequisitionForm({
       destination_location_id: form?.destination_location_id,
       destination_location_name: form?.destination_location_name,
     };
-
-    console.log("New item to add:", newItem);
 
     setRequisitionItems((prev) => {
       const exists = prev.some((a) => a.item_key === itemKey); // 👈
@@ -405,7 +412,11 @@ export default function NewRequisitionForm({
   };
 
   useEffect(() => {
-    handleGetLocations();
+    if (type === RequisitionType.RENT || type === RequisitionType.CONSUMPTION) {
+      setLocations(userLocations || []);
+    } else {
+      handleGetLocations();
+    }
   }, []);
 
   useEffect(() => {
@@ -415,7 +426,7 @@ export default function NewRequisitionForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-2">
+      <div className="space-y-2">
         {/* STEPPER */}
         <div className="relative w-full flex items-start mb-8">
           {[1, 2, 3].map((s, idx) => {
@@ -478,10 +489,7 @@ export default function NewRequisitionForm({
 
         {/* STEP 1 */}
         {step === 1 && (
-          <FormSection
-            title="Información general"
-            description="Datos básicos de la requisición"
-          >
+          <FormSection title="" description="">
             {type ? (
               <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
                 <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -505,6 +513,25 @@ export default function NewRequisitionForm({
               </div>
             ) : (
               <>
+                {}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                  <div>
+                    <div className="text-sm font-medium text-blue-700">
+                      {
+                        ROLE_REASON_OPTIONS[role ? role : ""]?.find(
+                          (o) => o.reason === form?.type,
+                        )?.label
+                      }
+                    </div>
+                    <div className="text-xs text-blue-500">
+                      {
+                        ROLE_REASON_OPTIONS[role ? role : ""]?.find(
+                          (o) => o.reason === form?.type,
+                        )?.description
+                      }
+                    </div>
+                  </div>
+                </div>
                 <FormRadioGroup
                   label="Movimiento"
                   name="movement"
@@ -513,6 +540,7 @@ export default function NewRequisitionForm({
                     { label: "Entrada", value: "IN" },
                     { label: "Salida", value: "OUT" },
                     { label: "Interno", value: "INT" },
+                    { label: "Externo", value: "EXT" },
                   ]}
                   onChange={(e: any) => {
                     handleChange(e);
@@ -787,7 +815,17 @@ export default function NewRequisitionForm({
               </button>
 
               <button
-                type="submit"
+                type="button"
+                onClick={(e) => {
+                  openConfirm({
+                    title: isEdit
+                      ? "Actualizar Requisición"
+                      : "Crear Requisición",
+                    description: "¿Está seguro que desea continuar?",
+                    variant: "info",
+                    onConfirm: () => handleSubmit(e),
+                  });
+                }}
                 className="bg-green-600 text-white px-6 py-2 rounded-lg"
               >
                 {isEdit ? "Actualizar Requisición" : "Crear Requisición"}
@@ -795,7 +833,7 @@ export default function NewRequisitionForm({
             </div>
           </>
         )}
-      </form>
+      </div>
 
       {/*ADD ITEMS FORM*/}
       {showAddItems && (
@@ -854,7 +892,6 @@ export default function NewRequisitionForm({
           requisitionType={RequisitionType[form?.type as RequisitionType]}
           onAdd={handleAddItem}
           onClose={() => {
-            console.log("Closing AddSupplyForm");
             setSelectedItem(undefined);
             setItem(undefined);
             setShowAddSupply(false);
@@ -870,6 +907,8 @@ export default function NewRequisitionForm({
       >
         <AddLinesForm lines={filteredLines} onAdd={handleAddItem} />
       </Modal>
+
+      <ConfirmDialog />
     </>
   );
 }

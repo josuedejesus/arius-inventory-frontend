@@ -11,6 +11,8 @@ export default function MovementCard({ label, movement }: Props) {
 
   const quantity = Number(movement.quantity || 0);
 
+  console.log('data', movement);
+
   const date = movement.movement_date;
 
   return (

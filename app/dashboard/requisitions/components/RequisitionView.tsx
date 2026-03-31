@@ -28,6 +28,7 @@ import BooleanBadge from "@/app/components/badges/BooleanBadge";
 import RequisitionTimeline from "./RequisitionTimeline";
 import SavingScreen from "@/app/components/SavingScreen";
 import { RequisitionLineViewModel } from "../dto/requisition-line-view-model.dto";
+import { useConfirm } from "@/hooks/userConfirm";
 
 enum modes {
   VIEW,
@@ -50,15 +51,22 @@ export default function RequisitionView({
   onEdit,
 }: Props) {
   const [form, setForm] = useState<RequisitionViewModel>(undefined!);
-  const [selectedItem, setSelectedItem] = useState<RequisitionLineViewModel | null>(null);
+  const [selectedItem, setSelectedItem] =
+    useState<RequisitionLineViewModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddPhotos, setShowAddPhotos] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [requisitionLines, setRequisitionLines] = useState<RequisitionLineViewModel[]>([]);
+  const [requisitionLines, setRequisitionLines] = useState<
+    RequisitionLineViewModel[]
+  >([]);
 
-  const canEdit = [
+  const canEdit = [RequisitionStatus.DRAFT].includes(requisition?.status);
+
+  const canCancel = [
     RequisitionStatus.DRAFT,
+    RequisitionStatus.APPROVED,
+    RequisitionStatus.IN_PROGRESS,
   ].includes(requisition?.status);
 
   const {
@@ -105,6 +113,8 @@ export default function RequisitionView({
   const isApprove = mode === modes.APPROVE;
   const isExecute = mode === modes.EXECUTE;
   const isReceive = mode === modes.RECEIVE;
+
+  const { confirm: openConfirm, ConfirmDialog } = useConfirm();
 
   const handleGeneratePDF = async () => {
     try {
@@ -170,11 +180,38 @@ export default function RequisitionView({
     }
   };
 
+  const handleCancel = async () => {
+    try {
+      const response = await axios.delete(
+        `${apiUrl}/requisitions/${requisition?.id}/cancel`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      );
+      onSuccess();
+      toast.success("Requisición cancelada exitosamente");
+    } catch (error: any) {
+      console.log(error);
+      const message = error?.response?.data?.message ?? 
+      "Error cancelando la requisición";
+      toast.error(message);
+    }
+  };
+
   const ActionBar = () => (
     <div className="flex justify-end gap-3 mt-6">
       {isApprove && (
         <button
-          onClick={() => handleApprove()}
+          onClick={() => {
+            openConfirm({
+              title: "Aprobar requisición",
+              description: "¿Está seguro que desea aprobar esta requisición?",
+              variant: "info",
+              onConfirm: () => handleApprove(),
+            });
+          }}
           className="bg-yellow-500 text-white px-4 py-2 rounded-md"
           disabled={actionLoading}
         >
@@ -184,7 +221,14 @@ export default function RequisitionView({
 
       {isExecute && (
         <button
-          onClick={() => handleExecute()}
+          onClick={() => {
+            openConfirm({
+              title: "Ejecutar movimientos",
+              description: "¿Está seguro que desea ejecutar estos movimientos?",
+              variant: "info",
+              onConfirm: () => handleExecute(),
+            });
+          }}
           className="bg-green-600 text-white px-4 py-2 rounded-md"
           disabled={actionLoading}
         >
@@ -194,7 +238,14 @@ export default function RequisitionView({
 
       {isReceive && (
         <button
-          onClick={() => handleReceive()}
+          onClick={() => {
+            openConfirm({
+              title: "Confirmar recepción",
+              description: "¿Está seguro que desea confirmar la recepción de esta requisición?",
+              variant: "info",
+              onConfirm: () => handleReceive(),
+            });
+          }}
           className="bg-green-600 text-white px-4 py-2 rounded-md"
           disabled={actionLoading}
         >
@@ -297,9 +348,30 @@ export default function RequisitionView({
                 Editar
               </button>
 
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+              <button
+                onClick={() => {
+                  openConfirm({
+                    title: "Cancelar requisición",
+                    description: "¿Está seguro que desea cancelar esta requisición?",
+                    variant: "danger",
+                    onConfirm: () => handleCancel(),
+                  });
+                }}
+                disabled={!canCancel}
+                title={
+                  !canCancel
+                    ? "Solo se puede cancelar en estado borrador o aprobado"
+                    : undefined
+                }
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors
+                ${
+                  canCancel
+                    ? "text-gray-600 hover:text-gray-900 hover:bg-gray-100 cursor-pointer"
+                    : "text-gray-300 cursor-not-allowed"
+                }`}
+              >
                 <MdArchive size={16} />
-                Archivar
+                Cancelar
               </button>
 
               <button
@@ -428,6 +500,8 @@ export default function RequisitionView({
           onClose={() => setShowAddPhotos(false)}
         />
       </Modal>
+
+      <ConfirmDialog />
     </>
   );
 }

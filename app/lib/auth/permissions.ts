@@ -24,7 +24,6 @@ export const rolePermissions: Record<UserRole, readonly string[]> = {
   ],
   [UserRole.ADMINISTRATIVE_MANAGER]: [
     PERMISSIONS.VIEW_DASHBOARD,
-    PERMISSIONS.VIEW_USERS,
     PERMISSIONS.VIEW_LOCATIONS,
     PERMISSIONS.VIEW_ITEMS,
     PERMISSIONS.VIEW_UNITS,

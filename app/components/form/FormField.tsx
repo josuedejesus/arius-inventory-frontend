@@ -7,6 +7,7 @@ type FormFieldProps = {
   placeholder?: string;
   type?: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  maxLength?: number;
 };
 
 export default function FormField({
@@ -16,6 +17,7 @@ export default function FormField({
   placeholder,
   type = "text",
   onChange,
+  maxLength,
 }: FormFieldProps) {
   const [focused, setFocused] = useState(false);
   const isFloating = focused || value?.length > 0;
@@ -23,6 +25,7 @@ export default function FormField({
   return (
     <div className="relative">
       <input
+        maxLength={maxLength}
         name={name}
         type={type}
         value={value}
@@ -34,18 +37,16 @@ export default function FormField({
         className={`
           w-full rounded-lg border px-3 pt-5 pb-2 text-sm text-gray-800
           focus:outline-none focus:ring-1 transition-colors
-          ${focused
-            ? "border-blue-500 focus:ring-blue-500"
-            : "border-gray-300"
-          }
+          ${focused ? "border-blue-500 focus:ring-blue-500" : "border-gray-300"}
         `}
       />
       <label
         className={`
           absolute left-3 transition-all duration-150 pointer-events-none
-          ${isFloating
-            ? "top-1.5 text-[10px] font-semibold tracking-wide"
-            : "top-3.5 text-sm"
+          ${
+            isFloating
+              ? "top-1.5 text-[10px] font-semibold tracking-wide"
+              : "top-3.5 text-sm"
           }
           ${focused ? "text-blue-500" : "text-gray-400"}
         `}

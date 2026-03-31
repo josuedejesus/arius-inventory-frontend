@@ -66,7 +66,6 @@ export default function Requisitions() {
   );
   const [showNewRequisition, setShowNewRequisition] = useState<boolean>(false);
   const [showRequisition, setShowRequisition] = useState<boolean>(false);
-  useState<boolean>(false);
   const [locations, setLocations] = useState<LocationViewModel[]>([]);
 
   const { getAll: getRequisitions, loading } = useRequisitions();
@@ -119,6 +118,10 @@ export default function Requisitions() {
       handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });
       toast.info("Una requisición fue recibida");
     },
+    "requisition.cancelled": () => {
+      handleGetRequisitions({ skip: (page - 1) * pageSize, take: pageSize });
+      toast.info("Una requisición fue cancelada");
+    },
   });
 
   const handleViewRequisition = (requisition: any) => {
@@ -168,36 +171,12 @@ export default function Requisitions() {
             )}
           </PagedDataGrid.Column>
 
-          <PagedDataGrid.Column field="movement" title="Movimiento">
-            {(row: RequisitionViewModel) => {
-              const movementType = row.movement
-                ? MOVEMENT_TYPE_CONFIG[row.movement]
-                : null;
-              return (
-                <div className="flex items-center gap-2">
-                  {movementType && (
-                    <PrimaryBadge
-                      variant={movementType?.variant}
-                      label={movementType?.label}
-                      icon={
-                        movementType.icon ? <movementType.icon /> : undefined
-                      }
-                    />
-                  )}
-                </div>
-              );
-            }}
-          </PagedDataGrid.Column>
-
           <PagedDataGrid.Column field="type" title="Razón">
             {(row: RequisitionViewModel) => {
               const typeConfig = REQUISITION_TYPE_CONFIG[row.type];
               return (
                 <div className="flex items-center gap-2">
-                  <PrimaryBadge
-                    label={typeConfig.label}
-                    icon={typeConfig.icon ? <typeConfig.icon /> : undefined}
-                  />
+                  {typeConfig.label}
                 </div>
               );
             }}

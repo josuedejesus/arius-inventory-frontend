@@ -62,7 +62,7 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<any>(null);
   const [totalActiveUnits, setTotalActiveUnits] = useState<number>(0);
   useEffect(() => {
-    setLoading(true);
+    //setLoading(true);
     refreshAll();
   }, []);
 
@@ -140,7 +140,6 @@ export default function Dashboard() {
 
   const handleGetData = async () => {
     try {
-      setLoading(true);
       const response = await axios.get(`${apiUrl}/dashboard/summary/internal`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -190,6 +189,10 @@ export default function Dashboard() {
       toast.info("Una requisición fue recibida");
       refreshAll();
     },
+    "requisition.cancelled": () => {
+      toast.info("Una requisición fue cancelada");
+      refreshAll();
+    }
   });
 
   if (loading) {

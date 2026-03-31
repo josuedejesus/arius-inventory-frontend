@@ -12,6 +12,7 @@ import PermissionGuard from "@/app/components/guards/PermissionGuard";
 import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
 import { ItemViewModel } from "@/app/types/item/item-view.model";
 import { ItemType } from "@/app/types/item/item-type.enum";
+import SearchBar from "@/app/components/SearchBar";
 
 export default function Items() {
   //API
@@ -21,6 +22,13 @@ export default function Items() {
   const [items, setItems] = useState<any>([]);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [searchValue, setSearchValue] = useState<string>("");
+
+  const filteredItems = items.filter((u: any) =>
+    `${u.name} ${u.brand} ${u.model} ${ITEM_TYPE_LABELS[u.type as ItemType]?.label}`
+      .toLowerCase()
+      .includes(searchValue.toLowerCase()),
+  );
 
   const handleGetItems = async () => {
     try {
@@ -47,27 +55,34 @@ export default function Items() {
   }
 
   return (
-    <PermissionGuard permission="VIEW_DASHBOARD">
+    <PermissionGuard permission="VIEW_ITEMS">
       <div className="">
-        <div className="flex items-start justify-between space-x-2 pb-4">
-          <h1 className="text-2xl font-semibold text-gray-800 mb-6">
-            Articulos
+        <div className="flex items-start justify-between">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-2">
+            Personas
           </h1>
+        </div>
 
+        <div className="flex justify-between items-center mb-4">
+          <SearchBar
+            placeholder="Buscar artículo..."
+            value={searchValue}
+            onChange={(e: any) => setSearchValue(e)}
+          />
           <button
             onClick={() => setShowItemForm(true)}
             className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
-                     hover:bg-blue-500 transition text-sm font-medium"
+                             hover:bg-blue-500 transition text-sm font-medium"
           >
             <span className="text-lg">＋</span>
           </button>
         </div>
 
         <PagedDataGrid
-          data={items}
+          data={filteredItems}
           page={1}
           pageSize={1}
-          total={items?.length}
+          total={filteredItems?.length}
           pagination={false}
           onLoadData={handleGetItems}
           onRowClick={(row: ItemUnitViewModel) => {
