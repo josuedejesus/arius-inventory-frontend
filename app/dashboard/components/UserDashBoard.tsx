@@ -21,7 +21,6 @@ import { PersonViewModel } from "../persons/types/person-view-model";
 import SummaryCard from "./SummaryCard";
 import EmptyList from "@/app/components/EmptyList";
 
-
 type Props = {
   personId: number;
   userId: number;
@@ -66,11 +65,14 @@ export default function UserDashboard({ personId, userId }: Props) {
   const handleGetLocations = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${apiUrl}/locations/${userId}/user`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      const response = await axios.get(
+        `${apiUrl}/location-members/${userId}/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
         },
-      });
+      );
       setLocations(response.data);
     } catch (error: any) {
       const message = error?.response?.data?.message ?? "";
@@ -119,7 +121,7 @@ export default function UserDashboard({ personId, userId }: Props) {
         <div className="space-y-1">
           {/* 🔷 Nombre + rol */}
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-semibold text-gray-800">
+            <h1 className="text-lg font-semibold text-gray-800">
               {person?.name}
             </h1>
 
@@ -147,17 +149,29 @@ export default function UserDashboard({ personId, userId }: Props) {
           </div>
 
           {/* 📍 Dirección */}
-          <p className="text-sm text-gray-500 flex items-center gap-1">
-            <MdLocationOn className="text-blue-400" />
-            {person?.address || "Sin dirección"}
-          </p>
+          {person?.address && (
+            <p className="text-sm text-gray-500 flex items-center gap-1">
+              <MdLocationOn className="text-blue-400" />
+              {person?.address || "Sin dirección"}
+            </p>
+          )}
         </div>
       </div>
 
       {/* 🔷 KPIs */}
       <div className="grid grid-cols-2 gap-4">
-        <SummaryCard label="Ubicaciones" icon={<MdLocationOn />} color="green" value={locations?.length || 0} />
-        <SummaryCard label="Equipos" icon={<MdInventory />} color="blue" value={itemUnits?.length || 0} />
+        <SummaryCard
+          label="Ubicaciones"
+          icon={<MdLocationOn />}
+          color="green"
+          value={locations?.length || 0}
+        />
+        <SummaryCard
+          label="Equipos"
+          icon={<MdInventory />}
+          color="blue"
+          value={itemUnits?.length || 0}
+        />
       </div>
 
       {/* 🔷 GRID PRINCIPAL */}
@@ -171,7 +185,9 @@ export default function UserDashboard({ personId, userId }: Props) {
 
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {locations?.length ? (
-              locations.map((l) => <MinimalLocationCard key={l.id} location={l} />)
+              locations.map((l) => (
+                <MinimalLocationCard key={l.id} location={l} />
+              ))
             ) : (
               <EmptyList message="Sin ubicaciones asignadas" />
             )}

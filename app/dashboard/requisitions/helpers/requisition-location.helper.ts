@@ -74,7 +74,7 @@ const LOCATION_RULES: Record<
   },
   [RequisitionType.TRANSFER]: {
     [MovementType.IN]: { allowed: null, requiresDestination: false },
-    [MovementType.OUT]: { allowed: null, requiresDestination: false },
+    [MovementType.OUT]: { allowed: [LocationType.PROJECT], requiresDestination: true },
     [MovementType.INT]: { allowed: null, requiresDestination: false },
     [MovementType.EXT]: {
       allowed: [LocationType.PROJECT],

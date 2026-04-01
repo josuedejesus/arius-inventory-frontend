@@ -73,6 +73,12 @@ export const ROLE_REASON_OPTIONS: Record<
       description: "Material consumible despachado a un proyecto",
     },
     {
+      movement: "OUT",
+      reason: RequisitionType.TRANSFER,
+      label: "Traslado",
+      description: "Movimiento entre proyectos o bodegas",
+    },
+    {
       movement: "INT",
       reason: RequisitionType.INTERNAL_TRANSFER,
       label: "Transferencia interna",

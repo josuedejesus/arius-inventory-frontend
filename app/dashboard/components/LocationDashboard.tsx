@@ -18,6 +18,7 @@ import MinimalItemCard from "../items/cards/MinimalItemCard";
 import StockMoveCard from "../../components/cards/StockMoveCard";
 import SummaryCard from "./SummaryCard";
 import EmptyList from "@/app/components/EmptyList";
+import LocationCard from "../locations/cards/LocationCard";
 
 type Props = {
   locationId: number;
@@ -164,36 +165,7 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
   return (
     <div className="space-y-6">
       {/* 🔷 HEADER */}
-      <div className="bg-white rounded-2xl shadow p-6 flex justify-between items-center">
-        <div className="space-y-1">
-          {/* 🔷 Nombre + tipo */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-semibold text-gray-800">
-              {location?.name}
-            </h1>
-
-            {location?.type &&
-              (() => {
-                const typeConfig = LOCATION_TYPE_CONFIG[location.type];
-                const Icon = typeConfig?.icon;
-
-                return (
-                  <PrimaryBadge
-                    icon={Icon ? <Icon /> : null}
-                    label={typeConfig?.label || ""}
-                    className={typeConfig?.className}
-                  />
-                );
-              })()}
-          </div>
-
-          {/* 📍 Dirección */}
-          <p className="text-sm text-gray-500 flex items-center gap-1">
-            <MdLocationOn className="text-blue-400" />{" "}
-            {location?.location || "Sin ubicación"}
-          </p>
-        </div>
-      </div>
+      <LocationCard location={location!}/>
 
       {/* 🔷 KPIs */}
       <div className="grid grid-cols-3 gap-4">

@@ -27,10 +27,6 @@ export default function MinimalPersonCard({ person }: Props) {
           {person.name}
         </p>
 
-        <p className="text-xs text-gray-400 truncate">
-          {PERSON_ROLE_LABELS[person.role as any] || "Sin rol"}
-        </p>
-
         <div className="flex gap-2 mt-1 flex-wrap text-gray-500">
           {person.email && (
             <button

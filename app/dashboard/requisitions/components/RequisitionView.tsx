@@ -194,8 +194,8 @@ export default function RequisitionView({
       toast.success("Requisición cancelada exitosamente");
     } catch (error: any) {
       console.log(error);
-      const message = error?.response?.data?.message ?? 
-      "Error cancelando la requisición";
+      const message =
+        error?.response?.data?.message ?? "Error cancelando la requisición";
       toast.error(message);
     }
   };
@@ -241,7 +241,8 @@ export default function RequisitionView({
           onClick={() => {
             openConfirm({
               title: "Confirmar recepción",
-              description: "¿Está seguro que desea confirmar la recepción de esta requisición?",
+              description:
+                "¿Está seguro que desea confirmar la recepción de esta requisición?",
               variant: "info",
               onConfirm: () => handleReceive(),
             });
@@ -352,7 +353,8 @@ export default function RequisitionView({
                 onClick={() => {
                   openConfirm({
                     title: "Cancelar requisición",
-                    description: "¿Está seguro que desea cancelar esta requisición?",
+                    description:
+                      "¿Está seguro que desea cancelar esta requisición?",
                     variant: "danger",
                     onConfirm: () => handleCancel(),
                   });
@@ -470,13 +472,17 @@ export default function RequisitionView({
             {requisition.type === RequisitionType.RENT ||
             requisition.type === RequisitionType.TRANSFER ? (
               <PagedDataGrid.Column field="return" title="Retorno">
-                {(row) => (
-                  <BooleanBadge
-                    value={row.has_return}
-                    trueIcon={<MdCheckCircle />}
-                    falseIcon={<MdWarning />}
-                  />
-                )}
+                {(row) =>
+                  row.item_unit_id ? (
+                    <BooleanBadge
+                      value={row.has_return}
+                      trueIcon={<MdCheckCircle />}
+                      falseIcon={<MdWarning />}
+                    />
+                  ) : (
+                    <span></span>
+                  )
+                }
               </PagedDataGrid.Column>
             ) : null}
           </PagedDataGrid>

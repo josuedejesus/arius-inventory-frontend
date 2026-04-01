@@ -39,6 +39,7 @@ import { is } from "date-fns/locale";
 import { on } from "events";
 import { LocationViewModel } from "../../locations/types/location-view-model";
 import { useConfirm } from "@/hooks/userConfirm";
+import { MOVEMENT_REASON_OPTIONS } from "../types/movement-reason-options copy";
 
 type Props = {
   requisition?: RequisitionViewModel;
@@ -514,24 +515,7 @@ export default function NewRequisitionForm({
             ) : (
               <>
                 {}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
-                  <div>
-                    <div className="text-sm font-medium text-blue-700">
-                      {
-                        ROLE_REASON_OPTIONS[role ? role : ""]?.find(
-                          (o) => o.reason === form?.type,
-                        )?.label
-                      }
-                    </div>
-                    <div className="text-xs text-blue-500">
-                      {
-                        ROLE_REASON_OPTIONS[role ? role : ""]?.find(
-                          (o) => o.reason === form?.type,
-                        )?.description
-                      }
-                    </div>
-                  </div>
-                </div>
+               
                 <FormRadioGroup
                   label="Movimiento"
                   name="movement"
@@ -557,12 +541,13 @@ export default function NewRequisitionForm({
                     name="type"
                     value={form?.type}
                     options={
-                      ROLE_REASON_OPTIONS[role ? role : ""]
-                        ?.filter((o: any) => o.movement === form?.movement)
-                        .map((o: any) => ({
-                          label: o.label,
-                          value: o.reason,
-                        })) ?? []
+                      MOVEMENT_REASON_OPTIONS[form.movement as MovementType]?.map((opt) => ({
+                        label:
+                          MOVEMENT_REASON_OPTIONS[form.movement as MovementType]?.find(
+                            (o) => o.reason === opt.reason,
+                          )?.label ?? opt.label,
+                        value: opt.reason,
+                      })) || []
                     }
                     onChange={(e: any) => {
                       handleChange(e);

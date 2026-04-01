@@ -3,7 +3,6 @@
 import Modal from "@/app/components/Modal";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import LocationCard from "@/app/dashboard/locations/components/LocationCard";
 import { toast } from "sonner";
 import DataGrid, { ColumnDef } from "@/app/components/DataGrid";
 import LoadingScreen from "@/app/components/LoadingScreen";
