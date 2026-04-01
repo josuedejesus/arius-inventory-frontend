@@ -12,6 +12,7 @@ import ItemUnitCard from "../items/cards/ItemUnitCard";
 import PercentageCard from "@/app/components/cards/PercentageCard";
 import { ItemUnitViewModel } from "@/app/types/item/item-unit-view.model";
 import EmptyList from "@/app/components/EmptyList";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 type Props = {
   itemUnitId: number;
@@ -37,9 +38,9 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
         handleGetMovements(),
         handleGetLastUsageLog(),
       ]);
+      setLoading(false);
     };
     fetchData();
-    setLoading(false);
   }, [itemUnitId]);
 
   const handleGetItemUnit = async () => {
@@ -110,18 +111,8 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
     }
   };
 
-  const skeleton = [1, 2, 3].map((i) => (
-    <div
-      key={i}
-      className="animate-pulse flex justify-between items-center p-2 border rounded-lg"
-    >
-      <div className="h-4 w-1/3 bg-gray-300 rounded"></div>
-      <div className="h-3 w-1/4 bg-gray-300 rounded"></div>
-    </div>
-  ));
-
   if (loading) {
-    return skeleton;
+    return <LoadingScreen />;
   }
 
   return (
@@ -209,11 +200,9 @@ const ItemUnitDashboard: React.FC<Props> = ({ itemUnitId }) => {
                 <StockMoveCard
                   key={m.id}
                   label={
-                    <p>
-                      {m.source_location_name
-                        ? m.source_location_name
-                        : m.destination_location_name}
-                    </p>
+                    m.source_location_name
+                      ? m.source_location_name
+                      : m.destination_location_name
                   }
                   movement={m}
                 />

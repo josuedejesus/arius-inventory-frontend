@@ -1,24 +1,16 @@
 import MinimalItemUnitCard from "@/app/dashboard/items/cards/MinimalItemUnitCard";
 import { LocationViewModel } from "@/app/dashboard/locations/types/location-view-model";
 import MinimalPersonCard from "@/app/dashboard/persons/components/MinimalPersonCard";
-import { LOCATION_TYPE_CONFIG } from "@/constants/LocationTypeConfig";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import {
-  MdCategory,
-  MdInventory,
-  MdLocationOn,
-  MdPeople,
-  MdPerson,
-  MdSwapHoriz,
-} from "react-icons/md";
+import { MdInventory, MdPeople, MdSwapHoriz } from "react-icons/md";
 import { toast } from "sonner";
-import { PrimaryBadge } from "../../components/badges/PrimaryBadge";
 import MinimalItemCard from "../items/cards/MinimalItemCard";
 import StockMoveCard from "../../components/cards/StockMoveCard";
 import SummaryCard from "./SummaryCard";
 import EmptyList from "@/app/components/EmptyList";
 import LocationCard from "../locations/cards/LocationCard";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 type Props = {
   locationId: number;
@@ -44,6 +36,7 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
         handleGetItemUnits({ locationId: locationId }),
         handleGetMovements({ locationId: locationId }),
       ]);
+      setLoading(false);
     };
     fetchData();
   }, [locationId]);
@@ -159,13 +152,13 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
   ));
 
   if (loading) {
-    return skeleton;
+    return <LoadingScreen />;
   }
 
   return (
     <div className="space-y-6">
       {/* 🔷 HEADER */}
-      <LocationCard location={location!}/>
+      <LocationCard location={location!} />
 
       {/* 🔷 KPIs */}
       <div className="grid grid-cols-3 gap-4">
@@ -259,18 +252,8 @@ const LocationDashboard: React.FC<Props> = ({ locationId }) => {
               movements.map((m) => (
                 <StockMoveCard
                   key={m.id}
-                  label={
-                    <>
-                      {m.item_name}
-                      {(m.item_brand || m.item_model) && (
-                        <span className="text-gray-400 font-normal">
-                          {" "}
-                          • {m.item_brand}
-                          {m.item_model && ` ${m.item_model}`}
-                        </span>
-                      )}
-                    </>
-                  }
+                  label={`${m.internal_code || ""} ${m.item_name}`}
+                  description={`${m.item_brand || m.item_model ? `${m.item_brand} • ${m.item_model}` : ""} `}
                   movement={m}
                 />
               ))

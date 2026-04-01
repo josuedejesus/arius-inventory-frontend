@@ -17,9 +17,13 @@ import {
   MdCategory,
   MdDashboard,
   MdInventory,
+  MdInventory2,
   MdLocationOn,
+  MdMoveToInbox,
   MdNotifications,
+  MdOutbox,
   MdPerson,
+  MdSwapHoriz,
   MdWarningAmber,
 } from "react-icons/md";
 import ItemPercentageCard from "../components/cards/ItemPercentageCard";
@@ -40,6 +44,14 @@ import PercentageCard from "../components/cards/PercentageCard";
 import ItemUnitDashboard from "./components/ItemUnitDashboard";
 import PermissionGuard from "../components/guards/PermissionGuard";
 import SummaryCard from "./components/SummaryCard";
+import { MovementType } from "./requisitions/types/movement-type";
+import MinimalCard from "./components/MinimalCard";
+import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
+import { RequisitionType } from "./requisitions/types/requisition-type.enum";
+import BooleanBadge from "../components/badges/BooleanBadge";
+import { RequisitionStatus } from "./requisitions/types/requisition-status.enum";
+import { FaTruck } from "react-icons/fa6";
+import { PrimaryBadge } from "../components/badges/PrimaryBadge";
 
 export default function Dashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -61,6 +73,8 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [totalActiveUnits, setTotalActiveUnits] = useState<number>(0);
+  const [pendingLines, setPendingLines] = useState<any[]>([]);
+
   useEffect(() => {
     //setLoading(true);
     refreshAll();
@@ -154,6 +168,23 @@ export default function Dashboard() {
     }
   };
 
+  const handleGetItemsToSend = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/requisition-lines/to-send`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+
+      setPendingLines(response.data);
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? "";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const refreshAll = useCallback(async () => {
     try {
       await Promise.all([
@@ -164,6 +195,7 @@ export default function Dashboard() {
         handleGetSuppliesStats(),
         handleGetUsersStats(),
         handleGetStockLevels(),
+        handleGetItemsToSend(),
       ]);
     } catch (error: any) {
       toast.error(error.message);
@@ -192,7 +224,7 @@ export default function Dashboard() {
     "requisition.cancelled": () => {
       toast.info("Una requisición fue cancelada");
       refreshAll();
-    }
+    },
   });
 
   if (loading) {
@@ -267,33 +299,36 @@ export default function Dashboard() {
                 <h4 className="text-sm font-semibold text-gray-700">
                   Ubicaciones activas
                 </h4>
-
-                {locations.map((location: any) => (
-                  <button
-                    key={location.id}
-                    onClick={() => setSelectedLocation(location)}
-                    className="group flex items-center gap-3 w-full px-2 py-2 rounded-lg
+                {locations.length > 0 ? (
+                  locations.map((location: any) => (
+                    <button
+                      key={location.id}
+                      onClick={() => setSelectedLocation(location)}
+                      className="group flex items-center gap-3 w-full px-2 py-2 rounded-lg
             hover:bg-gray-50 transition"
-                  >
-                    {/* Nombre */}
-                    <div className="flex items-center gap-2 w-36 shrink-0">
-                      <span className="text-blue-400">●</span>
-                      <span className="text-xs truncate text-gray-700">
-                        {location.name}
-                      </span>
-                    </div>
+                    >
+                      {/* Nombre */}
+                      <div className="flex items-center gap-2 w-36 shrink-0">
+                        <span className="text-blue-400">●</span>
+                        <span className="text-xs truncate text-gray-700">
+                          {location.name}
+                        </span>
+                      </div>
 
-                    {/* Barra */}
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <PercentageCard
-                        label="artículos"
-                        stock={location.total_units}
-                        total={totalActiveUnits}
-                        color="blue"
-                      />
-                    </div>
-                  </button>
-                ))}
+                      {/* Barra */}
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <PercentageCard
+                          label="artículos"
+                          stock={location.total_units}
+                          total={totalActiveUnits}
+                          color="blue"
+                        />
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">Sin datos</p>
+                )}
               </div>
 
               {/* 🔥 DIVIDER */}
@@ -406,6 +441,108 @@ export default function Dashboard() {
               </div>
             </StatCard>
           </div>
+        </div>
+
+        {/* BOTTOM */}
+        <div className="grid lg:grid-cols-1 md:grid-cols-1 sm:grid-cols-1 gap-4">
+          <StatCard title="Movimientos activos" icon={<MdSwapHoriz />}>
+            <div className="grid grid-cols-1 gap-6 items-center">
+              <PagedDataGrid
+                data={pendingLines}
+                total={pendingLines.length}
+                page={1}
+                pageSize={1}
+                pagination={false}
+                onLoadData={handleGetItemsToSend}
+              >
+                <PagedDataGrid.Column field="movement" title="Movimiento">
+                  {(row: any) => (
+                    <div className="flex justify-start items-center gap-2">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-md ${
+                          row.movement === MovementType.IN
+                            ? "bg-green-100"
+                            : "bg-red-100"
+                        }`}
+                      >
+                        {row.movement === MovementType.IN ? (
+                          <MdMoveToInbox className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <MdOutbox className="w-4 h-4 text-red-600" />
+                        )}
+                      </div>
+                      <span className="text-gray-700">
+                        {
+                          REQUISITION_TYPE_CONFIG[row.type as RequisitionType]
+                            ?.label
+                        }
+                      </span>
+                    </div>
+                  )}
+                </PagedDataGrid.Column>
+
+                <PagedDataGrid.Column field="item" title="Artículo">
+                  {(row: any) => (
+                    <MinimalCard
+                      topLabel={row.internal_code ? row.internal_code : ""}
+                      primaryLabel={row.name}
+                      secondaryLabel={`${row.brand || row.model ? `${row.brand} · ${row.model}` : ""}`}
+                    />
+                  )}
+                </PagedDataGrid.Column>
+
+                <PagedDataGrid.Column
+                  field="source_location_name"
+                  title="Origen"
+                >
+                  {(row: any) => (
+                    <span className="text-gray-600">
+                      {row.source_location_name
+                        ? row.source_location_name
+                        : "Sin ubicación"}
+                    </span>
+                  )}
+                </PagedDataGrid.Column>
+
+                <PagedDataGrid.Column
+                  field="destination_location_name"
+                  title="Destino"
+                >
+                  {(row: any) => (
+                    <span className="text-gray-600">
+                      {row.destination_location_name
+                        ? row.destination_location_name
+                        : "Sin ubicación"}
+                    </span>
+                  )}
+                </PagedDataGrid.Column>
+                <PagedDataGrid.Column field="quantity" title="Cantidad">
+                  {(row: any) => (
+                    <span className="text-gray-600">
+                      {row.quantity} {row.unit_code}
+                    </span>
+                  )}
+                </PagedDataGrid.Column>
+                <PagedDataGrid.Column field="status" title="Estado">
+                  {(row: any) =>
+                    row.requisition_status === RequisitionStatus.IN_PROGRESS ? (
+                      <PrimaryBadge
+                        label="En tránsito"
+                        icon={<FaTruck />}
+                        variant="warning"
+                      />
+                    ) : (
+                      <PrimaryBadge
+                        label={row.movement === MovementType.IN ? "Pendiente de recepción" : "Pendiente de envío"}
+                        icon={<MdInventory2 />}
+                        variant="danger"
+                      />
+                    )
+                  }
+                </PagedDataGrid.Column>
+              </PagedDataGrid>
+            </div>
+          </StatCard>
         </div>
 
         <Modal

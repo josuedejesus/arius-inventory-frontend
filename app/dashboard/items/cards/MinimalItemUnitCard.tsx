@@ -18,12 +18,13 @@ export default function MinimalItemUnitCard({
     >
       {/* Info */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-gray-800 truncate">
+        <span className="text-xs text-gray-500">{itemUnit.internal_code}</span>
+
+        <p className="text-sm font-medium text-gray-700 truncate">
           {itemUnit.name}
         </p>
-        <p className="text-xs text-gray-400 truncate">
-          <span className="font-mono">{itemUnit.internal_code}</span>
-          {itemUnit.brand && ` · ${itemUnit.brand}`}
+        <p className="text-xs text-gray-500 truncate">
+          {itemUnit.brand && `${itemUnit.brand}`}
           {itemUnit.model && ` · ${itemUnit.model}`}
         </p>
       </div>

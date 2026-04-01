@@ -59,7 +59,7 @@ export default function Items() {
       <div className="">
         <div className="flex items-start justify-between">
           <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-            Personas
+            Artículos
           </h1>
         </div>
 

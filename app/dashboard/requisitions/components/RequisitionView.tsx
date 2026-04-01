@@ -7,7 +7,6 @@ import Modal from "../../../components/Modal";
 import RequisitionLinePhotosForm from "./RequisitionLinePhotosForm";
 import { useAuth } from "@/context/AuthContext";
 import RequisitionHeader from "./RequisitionHeader";
-import { DataGrid } from "@/app/components/datagrid/DataGrid";
 import { RequisitionViewModel } from "../dto/requisition-view-model.dto";
 import { VIEW_MODE_BY_ROLE_STATUS } from "@/permissions/requisition.permissions";
 import {
@@ -402,7 +401,7 @@ export default function RequisitionView({
             data={requisitionLines}
             total={requisitionLines.length}
             page={1}
-            pageSize={DataGrid.length}
+            pageSize={1}
             onLoadData={() => {}}
             pagination={false}
           >

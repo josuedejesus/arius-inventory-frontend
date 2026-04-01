@@ -15,9 +15,6 @@ import { RETURN_STATUS_CONFIG } from "@/constants/ReturnStatusConfig";
 import { REQUISITION_TYPE_CONFIG } from "@/constants/RequisitionType";
 import { REQUISITION_STATUS_CONFIG } from "@/constants/RequisitionStatus";
 import RequisitionForm from "./forms/RequisitionForm";
-import axios from "axios";
-import { LocationViewModel } from "../locations/types/location-view-model";
-import { MOVEMENT_TYPE_CONFIG } from "@/constants/MovementTypeConfig";
 import PermissionGuard from "@/app/components/guards/PermissionGuard";
 
 enum modes {
@@ -56,7 +53,6 @@ const VIEW_MODE_BY_ROLE_STATUS: Record<string, Record<string, modes>> = {
 export default function Requisitions() {
   //User
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(18);
   const [total, setTotal] = useState(0);
@@ -66,7 +62,7 @@ export default function Requisitions() {
   );
   const [showNewRequisition, setShowNewRequisition] = useState<boolean>(false);
   const [showRequisition, setShowRequisition] = useState<boolean>(false);
-  const [locations, setLocations] = useState<LocationViewModel[]>([]);
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
   const { getAll: getRequisitions, loading } = useRequisitions();
 
@@ -86,19 +82,6 @@ export default function Requisitions() {
     });
     setRequisitions(data.items);
     setTotal(data.total);
-  };
-
-  const handleGetLocations = async () => {
-    try {
-      const response = await axios.get(`${apiUrl}/locations`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      setLocations(response.data.data);
-    } catch (error: any) {
-      toast.error("Error obteniendo ubicaciones");
-    }
   };
 
   useSSE({
@@ -130,10 +113,14 @@ export default function Requisitions() {
   };
 
   useEffect(() => {
-    handleGetRequisitions({ skip: 0, take: pageSize });
+    const loadInitialData = async () => {
+      await handleGetRequisitions({ skip: 0, take: pageSize });
+      setInitialLoading(false);
+    };
+    loadInitialData();
   }, []);
 
-  if (loading) {
+  if (initialLoading) {
     return <LoadingScreen />;
   }
 
@@ -148,7 +135,6 @@ export default function Requisitions() {
           <button
             onClick={() => {
               setShowNewRequisition(true);
-              handleGetLocations();
             }}
             className="flex items-center gap-2 bg-blue-400 text-white px-4 h-[40px] rounded-lg
                      hover:bg-blue-500 transition text-sm font-medium"

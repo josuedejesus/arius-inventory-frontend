@@ -6,5 +6,5 @@ export const getItemKey = (item: any): string => {
   }
   const itemId = item.item_id ?? item.id; // 👈
   const locationId = item.location_id ?? item.source_location_id; // 👈
-  return `supply-${itemId}-${locationId}`;
+  return `supply-${itemId}-${locationId || null}`;
 };

@@ -11,6 +11,7 @@ import EmptyList from "@/app/components/EmptyList";
 import { MdInventory } from "react-icons/md";
 import Button from "@/app/components/Button";
 import { variant } from "@/constants/VariantEnum";
+import LoadingScreen from "@/app/components/LoadingScreen";
 
 type Props = {
   itemUnit: any;
@@ -30,7 +31,7 @@ export default function AddItemForm({
   const [itemAccessories, setItemAccessories] =
     useState<any[]>(addedAccessories);
   const [searchValue, setSearchValue] = useState<string>("");
-  
+  const [loading, setLoading] = useState<boolean>(true);
   const filteredItems = accessories.filter((u: any) =>
     `${u.name}`.toLowerCase().includes(searchValue.toLowerCase()),
   );
@@ -151,12 +152,21 @@ export default function AddItemForm({
   };
 
   useEffect(() => {
-    Promise.all([
-      handleGetItemByStatus(),
-      handleGetAccessories(),
-      handleGetExistingAccessories(),
-    ]);
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([
+        handleGetItemByStatus(),
+        handleGetAccessories(),
+        handleGetExistingAccessories(),
+      ]);
+      setLoading(false);
+    };
+    loadData();
   }, []);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="space-y-2 gap-4">
@@ -230,11 +240,18 @@ export default function AddItemForm({
           </div>
         </FormSection>
       ) : (
-        <EmptyList icon={MdInventory} message="No hay accesorios disponibles para este artículo."/>
+        <EmptyList
+          icon={MdInventory}
+          message="No hay accesorios disponibles para este artículo."
+        />
       )}
 
       <div className="flex justify-end mt-6 gap-3">
-        <Button label="Agregar" variant={variant.success} onClick={() => handleAdd(item)} />
+        <Button
+          label="Agregar"
+          variant={variant.success}
+          onClick={() => handleAdd(item)}
+        />
       </div>
     </div>
   );
