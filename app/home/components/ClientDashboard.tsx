@@ -257,24 +257,6 @@ export default function ClientDashboard({
         >
           <div></div>
         </StatCard>
-
-        <StatCard
-          title="Solicitudes pendientes"
-          count={0}
-          icon={<MdPendingActions />}
-          textColor="text-yellow-400"
-        >
-          <div></div>
-        </StatCard>
-
-        <StatCard
-          title=""
-          count={0}
-          icon={<MdInventory />}
-          textColor="text-orange-400"
-        >
-          <div></div>
-        </StatCard>
       </div>
 
       {/* BODY */}
@@ -347,13 +329,7 @@ export default function ClientDashboard({
               iconBg="bg-yellow-50"
               onClick={onReturn}
             />
-            <QuickActionButton
-              icon={<MdOutlineHistory size={15} className="text-violet-500" />}
-              label="Ver historial"
-              sub="Todas mis órdenes"
-              iconBg="bg-violet-50"
-              onClick={onViewHistory}
-            />
+           
           </div>
         </div>
       </div>

@@ -288,12 +288,14 @@ export default function NewRequisitionForm({
   };
   const handleGetCatalog = async (movement: string, type: string) => {
     try {
+      console.log("obteniendo catalogo con movimiento", movement, "y tipo", type);
       const response = await axios.get(`${apiUrl}/items/get-catalog`, {
         params: { movement, type },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       });
+      console.log("respuesta del catalogo", response.data);
       setItemUnits(response.data.itemUnits);
       setFilteredItemUnits(response.data.itemUnits);
       setSupples(response.data.supplies);

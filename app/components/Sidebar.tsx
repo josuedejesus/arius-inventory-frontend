@@ -115,15 +115,6 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
 
         {/* Footer */}
         <div className="border-t border-gray-800 px-2 py-3 space-y-1">
-          <Link
-            href="/dashboard/settings"
-            onClick={onClose}
-            className="flex items-center gap-3 px-4 py-2 rounded text-gray-300 hover:bg-gray-800 transition"
-          >
-            <MdSettings size={20} />
-            {!collapsed && <span>Configuración</span>}
-          </Link>
-
           <button
             onClick={() => {
               logout();
